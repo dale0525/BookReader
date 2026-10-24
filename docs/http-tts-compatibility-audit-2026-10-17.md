@@ -225,10 +225,10 @@ calm     -> neutral
 - 同一句换音色或情绪时不会命中其他声音的缓存。
 - debug 与开启 R8 的 release 均验证序列化兼容，特别是新目录模型的字段名稳定性。此点尚未证明存在独立的 R8 缺陷。
 
-后续实现遵循仓库 `AGENTS.md` 和相应实现 skill；新增数据操作通过 Gateway/Repository/UseCase 承载，不继续向 ViewModel 增加 DAO/网络直连。
+后续实现中，新增数据操作通过 Gateway/Repository/UseCase 承载，不继续向 ViewModel 增加 DAO/网络直连。
 
 按最终改动选择验证命令，通常包含针对性单元/数据库测试、`:app:compileAppDebugKotlin` 和 `git diff --check`。本次审查未改业务代码，没有运行完整构建；不要将隔离探针通过当作整个应用修复已经验收。
 
 ## 在正确项目中继续时可使用的任务描述
 
-> 请先阅读 `AGENTS.md` 和 `docs/http-tts-compatibility-audit-2026-10-17.md`，核对当前 HEAD 与文档中的代码差异。目标是继续处理外部 HTTP TTS 兼容问题，参考提交 `d41dc7eeaf2c6d29ee9b17bf31c6094b832bec66`，外部格式参考 `D:\Project\Legado-Arc\legado`。文档记录了诊断证据，修复尚未实现；按照本次实际授权的范围继续，不要假定任何问题已经修好。保留工作区已有改动，不修改用户原数据库来绕过问题。
+> 请先阅读 `docs/http-tts-compatibility-audit-2026-10-17.md`，核对当前 HEAD 与文档中的代码差异。目标是继续处理外部 HTTP TTS 兼容问题，参考提交 `d41dc7eeaf2c6d29ee9b17bf31c6094b832bec66`，外部格式参考 `D:\Project\Legado-Arc\legado`。文档记录了诊断证据，修复尚未实现；按照本次实际授权的范围继续，不要假定任何问题已经修好。保留工作区已有改动，不修改用户原数据库来绕过问题。

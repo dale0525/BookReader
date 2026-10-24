@@ -1,7 +1,5 @@
 # Track C1 ReaderRenderModel Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
-
 **Goal:** 在不改变旧 `ReadView` 渲染行为的前提下，暴露可供后续 Compose 阅读表面消费的只读结构渲染流与高频 viewport 流。
 
 **Architecture:** `ReaderRenderStateStore` 维护两个彼此独立的 `StateFlow`：低频 `ReaderRenderModel` 聚合 `LegacyReaderSnapshot`、三页绘制数据、页索引、选择、朗读高亮与 loading；高频 `ReaderRenderViewport` 只承载尺寸、触点、方向和归一化动画进度。`ReadBookController` 负责从现有 `ReadBook`/`ReadView` 真源取样，旧 View 只在已有状态变化点通知控制器，不转移状态所有权，也不改变任何绘制调用顺序。

@@ -11,7 +11,7 @@ Compose Multiplatform 工程：
 - 共享稳定的模型、领域规则、UseCase、Repository 组合逻辑和适合共享的 Compose UI。
 - Android、Desktop、iOS 等宿主只组装平台实现与能力差异。
 - 用 Gradle 依赖边界和 CI 门禁替代仅靠包名与评审维持的约定。
-- 让 AI 与人工开发使用同一套 AGENTS、专项 Skill、架构文档、源码与测试证据。
+- 让 AI 与人工开发使用同一套架构文档、源码与测试证据。
 
 非目标：不一次性重写 `:app`；不承诺首个非 Android 目标功能齐平；不把所有代码移入 `commonMain`；不以
 Compose 替换成熟阅读器渲染为前置；不在同一批同时替换数据库、网络、导航、DI、UI 和模块系统；不照搬 Now in
@@ -232,13 +232,11 @@ PR 必备证据：前后依赖变化、行为不变量与测试、`expect/actual
 ## 9. AI 上下文与工作流
 
 ```text
-AGENTS.md                 全局不变量、资料优先级、最低验证
-.agents/skills/           专项执行与审查流程
 docs/dev/                 架构理由、路线图、能力矩阵
 source + tests + Gradle   当前真实 API、行为和可执行证据
 ```
 
-推荐流程：明确目标/验收 → AGENTS → 专项 Skill → 设计文档与相邻实现 → 依赖/行为基线 → 单一切片 →
+推荐流程：明确目标/验收 → 设计文档与相邻实现 → 依赖/行为基线 → 单一切片 →
 风险匹配门禁 → diff 与未验证项报告。
 
 AI 不得根据目标结构虚构当前模块、task 或 API；文档建议 KMP 不等于获得大规模移动或删除权限。

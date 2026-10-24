@@ -177,8 +177,7 @@ B 类字段是 `var x get/set config.x`（:310+，可变）。同一个对象两
 
 **为什么改**：60 字段的投影要把 `curTextColor()`/`curUnderlineColor()` 这类**模式相关的解析
 逻辑**整体搬进 repository，是 ~200 行的机械映射 + 逐字段核对风险；而它对「弹层显示旧值」这个
-实际症状的贡献，与 20 行的 revision 方案**完全相同**。按 CLAUDE.md 的 Simplicity First，
-先取小的。
+实际症状的贡献，与 20 行的 revision 方案**完全相同**。按简单优先原则，先取小的。
 
 **关键前提（原计划和外部审计都没写出来的那一步）**：`ReadStyleState` 只投影
 items/selectedIndex/shareLayout 三项，「只改了字号」不会让这三项变化 ——

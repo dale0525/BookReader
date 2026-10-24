@@ -259,7 +259,7 @@ dependencies {
     implementation(libs.markwon.ext.tables)
     implementation(libs.markwon.html)
     implementation(libs.quick.chinese.transfer.core)
-    // 书源 JS 通过 Packages.cn.hutool.* 调用，保留在 classpath（应用代码不依赖，见 AGENTS.md）
+    // 书源 JS 通过 Packages.cn.hutool.* 调用，保留在 classpath（应用代码不依赖）
     implementation(libs.hutool.crypto)
     //noinspection GradleDependency
     implementation(platform(libs.firebase.bom))

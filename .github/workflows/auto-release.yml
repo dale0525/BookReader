@@ -8,7 +8,6 @@ on:
       - '**'
       # - '!**/assets/**'
       # - '!**.md'
-      - '!**/ISSUE_TEMPLATE/**'
       - '!**/modules/web/**'
   pull_request:
     paths-ignore:

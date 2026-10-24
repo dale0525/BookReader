@@ -17,7 +17,6 @@ node_modules/
 # Kotlin 2.0
 .kotlin/
 /.vscode/settings.json
-/.codex/skills
 /.workbuddy/
 /.debug-runs/
 __pycache__/

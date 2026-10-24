@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.update
  * 多角色规则页 ViewModel。
  *
  * 数据读写收口在 VoicePoolStore / VoiceAssignmentStore（BaseViewModel.execute 跑后台线程），
- * UiState 全 immutable（架构护栏 + AGENTS.md Compose 边界约束）。
+ * UiState 全 immutable（架构护栏 + Compose 边界约束）。
  * 树的拉平/拖动规则与背景音乐池共用，见 [CastPoolTree]。
  */
 class MultiRoleRuleViewModel(
