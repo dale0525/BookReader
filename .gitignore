@@ -25,3 +25,7 @@ __pycache__/
 hs_err_pid*.log
 replay_pid*.log
 *.hprof
+# pixi 开发环境：SDK 与模拟器数据都落在仓库内，不入库
+/.pixi/
+/.android-sdk/
+/.android-avd/

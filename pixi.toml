@@ -1,0 +1,17 @@
+[workspace]
+name = "bookreader"
+channels = ["conda-forge"]
+platforms = ["osx-arm64"]
+
+[dependencies]
+openjdk = "21.0.10.*"
+socat = "1.8.1.3.*"
+
+[tasks]
+# 首次使用执行一次：从国内镜像把 Android SDK 装进 .android-sdk/，并建好模拟器。
+sdk = "bash scripts/setup-android-sdk.sh"
+# 起模拟器 → 装调试包 → 打开 web 服务开关 → 打印本机与局域网地址，Ctrl-C 收工。
+web = "bash scripts/dev-web.sh"
+
+[activation]
+scripts = ["scripts/activate.sh"]
