@@ -32,3 +32,4 @@ replay_pid*.log
 
 # 本地构建产物：APK 交付走 WebDAV，不入库
 /dist/
+.worktrees/
