@@ -174,12 +174,6 @@ private fun MaterialAboutScreen(
             ) {
                 SettingItemWithDivider {
                     SettingItem(
-                        title = stringResource(R.string.contributors),
-                        onClick = { onIntent(AboutIntent.OpenUrl("https://github.com/HapeLee/legado-with-MD3")) }
-                    )
-                }
-                SettingItemWithDivider {
-                    SettingItem(
                         title = stringResource(R.string.privacy_policy),
                         onClick = {
                             onIntent(

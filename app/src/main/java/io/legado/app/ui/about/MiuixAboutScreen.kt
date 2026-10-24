@@ -390,13 +390,6 @@ private fun AboutContent(
                             title = stringResource(R.string.check_update),
                             onClick = { onIntent(AboutIntent.CheckUpdate) },
                         )
-                        ArrowPreference(
-                            title = stringResource(R.string.contributors),
-                            endActions = {
-                                ValueText("GitHub")
-                            },
-                            onClick = { onIntent(AboutIntent.OpenUrl("https://github.com/HapeLee/legado-with-MD3")) },
-                        )
                     }
 
                     Card(
@@ -506,14 +499,4 @@ private fun AboutContent(
             trackPadding = scrollPadding,
         )
     }
-}
-
-@Suppress("FunctionName")
-@Composable
-private fun ValueText(text: String) {
-    Text(
-        text = text,
-        fontSize = MiuixTheme.textStyles.body2.fontSize,
-        color = MiuixTheme.colorScheme.onSurfaceVariantActions,
-    )
 }

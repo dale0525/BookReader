@@ -3,12 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <io.legado.app.lib.prefs.Preference
-        android:key="contributors"
-        android:summary="@string/contributors_summary"
-        android:title="@string/contributors"
-        app:iconSpaceReserved="false" />
-
-    <io.legado.app.lib.prefs.Preference
         android:key="update_log"
         android:title="@string/update_log"
         app:allowDividerAbove="false"
