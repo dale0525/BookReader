@@ -29,6 +29,7 @@ class DefaultAssetPathsTest {
         assertTrue(DefaultData.txtTocRules.isNotEmpty())
         assertTrue(DefaultData.themeConfigs.isNotEmpty())
         assertTrue(DefaultData.rssSources.isEmpty())
+        assertTrue(DefaultData.bookSources.isNotEmpty())
         assertNotNull(DefaultData.coverRule)
         assertTrue(DefaultData.dictRules.isNotEmpty())
         assertTrue(DefaultData.keyboardAssists.isNotEmpty())

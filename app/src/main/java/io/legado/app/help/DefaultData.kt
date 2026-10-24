@@ -2,6 +2,7 @@ package io.legado.app.help
 
 import io.legado.app.constant.AppConst
 import io.legado.app.data.appDb
+import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.DictRule
 import io.legado.app.data.entities.HttpTTS
 import io.legado.app.data.entities.KeyboardAssist
@@ -21,8 +22,15 @@ import splitties.init.appCtx
 object DefaultData {
 
     fun upVersion() {
-        if (LocalConfig.versionCode < AppConst.appInfo.versionCode) {
-            Coroutine.async {
+        Coroutine.async {
+            // 内置书源用独立的 bookSourceVersion 计数，不能挂在 app 版本号门禁里：
+            // 本地构建的 versionCode 恒为 32640（无 COMMIT_NUMBER 时的兜底值），
+            // 覆盖安装时 LocalConfig.versionCode 已是同一个值，外层判断为 false，
+            // 规则更新会被整段跳过。删除重装才会走到，所以只有重装才「修好」。
+            if (LocalConfig.needUpBookSources) {
+                importDefaultBookSources()
+            }
+            if (LocalConfig.versionCode < AppConst.appInfo.versionCode) {
                 if (LocalConfig.needUpHttpTTS) {
                     importDefaultHttpTTS()
                 }
@@ -35,9 +43,9 @@ object DefaultData {
                 if (LocalConfig.needUpDictRule) {
                     importDefaultDictRules()
                 }
-            }.onError {
-                it.printOnDebug()
             }
+        }.onError {
+            it.printOnDebug()
         }
     }
 
@@ -85,6 +93,14 @@ object DefaultData {
         GSON.fromJsonArray<RssSource>(json).getOrDefault(emptyList())
     }
 
+    val bookSources: List<BookSource> by lazy {
+        val json = String(
+            appCtx.assets.open("defaultData/bookSources.json")
+                .readBytes()
+        )
+        GSON.fromJsonArray<BookSource>(json).getOrDefault(emptyList())
+    }
+
     val coverRule: BookCover.CoverRule by lazy {
         val json = String(
             appCtx.assets.open("defaultData/coverRule.json")
@@ -122,6 +138,29 @@ object DefaultData {
     fun importDefaultRssSources() {
         appDb.rssSourceDao.deleteDefault()
         appDb.rssSourceDao.insert(*rssSources.toTypedArray())
+    }
+
+    /**
+     * 内置源随版本更新规则：规则字段用 asset 里的新值覆盖，用户自己的开关/分组/排序保留。
+     * 内置源的规则是随包发布的代码资产，用户不该改也不该被旧版本锁死；
+     * 只按 has() 判重会在升级时留下旧规则，正是发现页报错的成因。
+     */
+    fun importDefaultBookSources() {
+        bookSources.forEach { incoming ->
+            val existing = appDb.bookSourceDao.getBookSource(incoming.bookSourceUrl)
+            if (existing == null) {
+                appDb.bookSourceDao.insert(incoming)
+            } else {
+                appDb.bookSourceDao.insert(
+                    incoming.copy(
+                        enabled = existing.enabled,
+                        bookSourceGroup = existing.bookSourceGroup,
+                        customOrder = existing.customOrder,
+                        enabledExplore = existing.enabledExplore,
+                    )
+                )
+            }
+        }
     }
 
     /**

@@ -107,6 +107,9 @@ by appCtx.getSharedPreferences("local", Context.MODE_PRIVATE) {
     val needUpDictRule: Boolean
         get() = !isLastVersion(3, "needUpDictRule")
 
+    val needUpBookSources: Boolean
+        get() = !isLastVersion(2, "bookSourceVersion")
+
     var versionCode
         get() = getLong(versionCodeKey, 0)
         set(value) {

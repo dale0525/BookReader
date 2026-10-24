@@ -29,3 +29,6 @@ replay_pid*.log
 /.pixi/
 /.android-sdk/
 /.android-avd/
+
+# 本地构建产物：APK 交付走 WebDAV，不入库
+/dist/
