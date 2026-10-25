@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>重生之逆袭1990 - 播放</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            surface: "#F9FAEF",
+            onSurface: "#1A1C16",
+            surfaceContainerLowest: "#FFFFFF",
+            surfaceContainerLow: "#F3F4E9",
+            surfaceContainer: "#EEEFE3",
+            surfaceContainerHigh: "#E8E9DE",
+            surfaceContainerHighest: "#E2E3D8",
+            surfaceVariant: "#E1E4D5",
+            onSurfaceVariant: "#44483D",
+            primary: "#4C662B",
+            onPrimary: "#FFFFFF",
+            primaryContainer: "#CDEDA3",
+            onPrimaryContainer: "#354E16",
+            secondary: "#586249",
+            secondaryContainer: "#DCE7C8",
+            tertiary: "#386663",
+            tertiaryContainer: "#BCECE7",
+            outline: "#75796C",
+            outlineVariant: "#C5C8BA"
+          },
+          borderRadius: {
+            DEFAULT: "0.5rem",
+            lg: "1rem",
+            xl: "1.5rem",
+            full: "9999px"
+          },
+          fontFamily: {
+            headline: ["Inter", "sans-serif"],
+            display: ["Inter", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      line-height: 1;
+    }
+    .material-symbols-fill {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-onSurface font-body min-h-screen antialiased flex justify-center">
+<!-- Mobile Screen Wrapper (Android 竖屏框架) -->
+<main class="w-full max-w-md min-h-screen flex flex-col bg-surface relative pb-28">
+<!-- 1. 顶部栏 (TopAppBar) -->
+<header class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 w-full max-w-md mx-auto bg-surface/80 backdrop-blur-md border-b border-outline-variant/30">
+<button aria-label="返回" class="w-12 h-12 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-variant/40 active:scale-95 transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h1 class="text-lg font-semibold font-headline text-on-surface truncate px-2 text-center flex-1">
+        重生之逆袭1990
+      </h1>
+<button aria-label="更多操作" class="w-12 h-12 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-variant/40 active:scale-95 transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[24px]">more_vert</span>
+</button>
+</header>
+<!-- 主内容区：规避固定顶栏 -->
+<div class="mt-14 flex flex-col w-full">
+<!-- 2. 16:9 视频画面区域 -->
+<section class="relative w-full aspect-video bg-[#1A1C16] overflow-hidden select-none group">
+<!-- 视频主背景图层 -->
+<img class="w-full h-full object-cover opacity-85" data-alt="A vintage 1990s rural Chinese courtyard drama scene with warm cinematic sunlight filtering through wooden window panes. Two actors in period attire converse passionately amidst textured old brick walls, tea pots, and rustic furniture. The color palette features nostalgic warm ochres, deep earth tones, and authentic olive green ambient reflections, rendered in ultra-detailed cinematic 4K resolution." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFhc5ZokxVHeRm3o_j5lLRyMlZR74LaHv0pRDZN8le-kak9KCZOgCMkhcotTJYL5PBOhbsTUHSScyBfLxAtf3yJfnzYZZShS4i39OrXSMJ0RCeiUPIT3HXd7zovkRtrBwFAkeMJUCUBnBU7kfnE7oNHW2VYAd2s29keJL1FewAwmyUcvyyx0vHPlKzoQG2IZGza0p7d9u5HnGXlT2SBFXehXenlURInT4y0_gx-nvQ0aeWmqNBumfG-vVJKyyDghXsY1GIouqkv6fK"/>
+<!-- 柔和遮罩光影层 -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/30 pointer-events-none"></div>
+<!-- 居中：大号圆形播放/暂停按钮 (AnimatedPlayPauseButton) -->
+<div class="absolute inset-0 flex items-center justify-center">
+<button aria-label="播放或暂停" class="w-16 h-16 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur-sm shadow-sm active:scale-90 transition-transform duration-150" type="button">
+<span class="material-symbols-outlined material-symbols-fill text-[36px] translate-x-0.5">play_arrow</span>
+</button>
+</div>
+<!-- 画面内部右下角：胶囊形状「锁定横屏」切换按钮 (SmallAnimatedButton) -->
+<div class="absolute bottom-10 right-3 z-10">
+<button class="flex items-center gap-1.5 h-8 px-3 rounded-full bg-black/60 text-white/95 text-xs font-medium backdrop-blur-md active:scale-95 transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[16px]">screen_lock_rotation</span>
+<span>锁定横屏</span>
+</button>
+</div>
+<!-- 画面下方进度条 (PlayerProgressSlider) -->
+<div class="absolute bottom-0 inset-x-0 px-3 pb-1 pt-4 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end">
+<div class="flex items-center justify-between text-[11px] font-medium font-mono text-white/90 px-0.5 mb-1 tracking-tight">
+<span>03:12</span>
+<span>12:45</span>
+</div>
+<!-- 进度条轨道与滑块 -->
+<div class="relative w-full h-4 flex items-center cursor-pointer group/slider">
+<!-- 底轨 -->
+<div class="w-full h-1 bg-white/30 rounded-full overflow-hidden">
+<!-- 已缓冲部分 -->
+<div class="h-full bg-white/20 w-[45%]"></div>
+</div>
+<!-- 已播放部分 (Primary 色) -->
+<div class="absolute top-1.5 left-0 h-1 bg-primary rounded-full w-[25.6%] pointer-events-none"></div>
+<!-- 滑动圆点 (Thumb) -->
+<div class="absolute top-1 left-[25.6%] -translate-x-1/2 w-2.5 h-2.5 bg-onPrimary rounded-full shadow-md scale-100 group-hover/slider:scale-125 transition-transform pointer-events-none ring-2 ring-primary"></div>
+</div>
+</div>
+</section>
+<!-- 3. 次要操作胶囊按钮行 (Chips Row) -->
+<section class="px-4 pt-3.5 pb-2">
+<div class="grid grid-cols-4 gap-2">
+<!-- 上一集 -->
+<button class="h-10 px-2 flex items-center justify-center gap-1 rounded-full bg-surfaceContainerLow border border-outlineVariant/40 text-onSurfaceVariant active:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[18px]">skip_previous</span>
+<span class="text-xs font-medium">上一集</span>
+</button>
+<!-- 下一集 -->
+<button class="h-10 px-2 flex items-center justify-center gap-1 rounded-full bg-surfaceContainerLow border border-outlineVariant/40 text-onSurfaceVariant active:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[18px]">skip_next</span>
+<span class="text-xs font-medium">下一集</span>
+</button>
+<!-- 选集 -->
+<button class="h-10 px-2 flex items-center justify-center gap-1 rounded-full bg-surfaceContainerLow border border-outlineVariant/40 text-onSurfaceVariant active:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[18px]">playlist_play</span>
+<span class="text-xs font-medium">选集</span>
+</button>
+<!-- 倍速 -->
+<button class="h-10 px-2 flex items-center justify-center gap-1 rounded-full bg-surfaceContainerLow border border-outlineVariant/40 text-onSurfaceVariant active:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[18px]">speed</span>
+<span class="text-xs font-medium">1.0x</span>
+</button>
+</div>
+</section>
+<!-- 4. 「选集」区块 -->
+<section class="px-4 py-2 flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<h2 class="text-sm font-semibold text-onSurface tracking-tight">选集</h2>
+<span class="text-xs text-outline font-normal">已更新 93 集</span>
+</div>
+<!-- 选集数字网格: 6列 x 2行，共12集 -->
+<div class="grid grid-cols-6 gap-2">
+<!-- 第01集（播放高亮激活状态） -->
+<button class="h-11 rounded-lg bg-primary text-onPrimary font-semibold text-sm flex flex-col items-center justify-center relative shadow-sm active:scale-95 transition-transform duration-150" type="button">
+<span>01</span>
+<!-- 微型播放波动标记 -->
+<div class="flex items-end gap-0.5 h-1.5 mt-0.5">
+<span class="w-0.5 h-1.5 bg-white/90 rounded-full animate-pulse"></span>
+<span class="w-0.5 h-2.5 bg-white/90 rounded-full animate-pulse" style="animation-delay: 150ms"></span>
+<span class="w-0.5 h-1 bg-white/90 rounded-full animate-pulse" style="animation-delay: 300ms"></span>
+</div>
+</button>
+<!-- 第02集至第12集 -->
+<button class="h-11 rounded-lg bg-surfaceContainerLow border border-outlineVariant/50 text-onSurface text-sm font-medium flex items-center justify-center hover:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+            02
+          </button>
+<button class="h-11 rounded-lg bg-surfaceContainerLow border border-outlineVariant/50 text-onSurface text-sm font-medium flex items-center justify-center hover:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+            03
+          </button>
+<button class="h-11 rounded-lg bg-surfaceContainerLow border border-outlineVariant/50 text-onSurface text-sm font-medium flex items-center justify-center hover:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+            04
+          </button>
+<button class="h-11 rounded-lg bg-surfaceContainerLow border border-outlineVariant/50 text-onSurface text-sm font-medium flex items-center justify-center hover:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+            05
+          </button>
+<button class="h-11 rounded-lg bg-surfaceContainerLow border border-outlineVariant/50 text-onSurface text-sm font-medium flex items-center justify-center hover:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+            06
+          </button>
+<button class="h-11 rounded-lg bg-surfaceContainerLow border border-outlineVariant/50 text-onSurface text-sm font-medium flex items-center justify-center hover:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+            07
+          </button>
+<button class="h-11 rounded-lg bg-surfaceContainerLow border border-outlineVariant/50 text-onSurface text-sm font-medium flex items-center justify-center hover:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+            08
+          </button>
+<button class="h-11 rounded-lg bg-surfaceContainerLow border border-outlineVariant/50 text-onSurface text-sm font-medium flex items-center justify-center hover:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+            09
+          </button>
+<button class="h-11 rounded-lg bg-surfaceContainerLow border border-outlineVariant/50 text-onSurface text-sm font-medium flex items-center justify-center hover:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+            10
+          </button>
+<button class="h-11 rounded-lg bg-surfaceContainerLow border border-outlineVariant/50 text-onSurface text-sm font-medium flex items-center justify-center hover:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+            11
+          </button>
+<button class="h-11 rounded-lg bg-surfaceContainerLow border border-outlineVariant/50 text-onSurface text-sm font-medium flex items-center justify-center hover:bg-surfaceContainer active:scale-95 transition-all duration-150" type="button">
+            12
+          </button>
+</div>
+</section>
+<!-- 5. 剧集信息区 (NormalCard) -->
+<section class="px-4 py-2 mb-2">
+<div class="p-4 rounded-xl bg-surfaceContainerLow border border-outlineVariant/30 flex flex-col gap-2">
+<!-- 剧名大标题 -->
+<h3 class="text-base font-semibold text-onSurface leading-snug">
+            重生之逆袭1990
+          </h3>
+<!-- 辅助信息行 -->
+<p class="text-xs text-onSurfaceVariant">
+            侯冠杰 / 王格格 · 都市 重生 致富
+          </p>
+<!-- 简介文本：恰好展示三行，省略号截断 -->
+<p class="text-[13px] leading-[20px] text-onSurface/80 line-clamp-3 text-justify">
+            二十一世纪商界巨鳄意外身亡，一朝醒来重回一九九零年代贫瘠乡村。面对一贫如洗的破旧家境、病弱妻女的哀婉企盼，以及心怀叵测的乡邻欺凌，他凭借超前三十年的商业认知与雷霆手腕，一步步逆天改命...
+          </p>
+</div>
+</section>
+</div>
+<!-- 6. 底部固定播放控制栏 (Bottom Playback Bar) -->
+<footer class="fixed bottom-0 left-0 right-0 z-40 max-w-md mx-auto bg-surface/90 backdrop-blur-md border-t border-outlineVariant/20 px-6 py-2.5 flex flex-col items-center">
+<!-- 紧凑的三联控制按钮 -->
+<div class="flex items-center justify-center gap-8 w-full">
+<!-- 上一集按钮 -->
+<button aria-label="上一集" class="w-12 h-12 flex items-center justify-center rounded-full text-onSurfaceVariant hover:bg-surfaceVariant/40 active:scale-90 transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[28px]">skip_previous</span>
+</button>
+<!-- 主播放/暂停圆形大按钮 (Primary 圆形) -->
+<button aria-label="播放或暂停" class="w-14 h-14 rounded-full bg-primary text-onPrimary flex items-center justify-center shadow-sm active:scale-95 transition-all duration-150" type="button">
+<span class="material-symbols-outlined material-symbols-fill text-[32px] translate-x-0.5">play_arrow</span>
+</button>
+<!-- 下一集按钮 -->
+<button aria-label="下一集" class="w-12 h-12 flex items-center justify-center rounded-full text-onSurfaceVariant hover:bg-surfaceVariant/40 active:scale-90 transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[28px]">skip_next</span>
+</button>
+</div>
+<!-- Android 底部手势操作横条 -->
+<div class="w-32 h-1 bg-onSurface/20 rounded-full mt-2"></div>
+</footer>
+</main>
+</body></html>
