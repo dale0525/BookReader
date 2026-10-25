@@ -60,6 +60,9 @@ import io.legado.app.ui.book.audio.AudioPlayEffect
 import io.legado.app.ui.book.audio.AudioPlayIntent
 import io.legado.app.ui.book.audio.AudioPlayScreenContent
 import io.legado.app.ui.book.audio.AudioPlayViewModel
+import io.legado.app.ui.book.video.VideoPlayIntent
+import io.legado.app.ui.book.video.VideoPlayScreen
+import io.legado.app.ui.book.video.VideoPlayViewModel
 import io.legado.app.ui.book.bookmark.AllBookmarkRouteScreen
 import io.legado.app.ui.book.cache.manage.BookCacheManageRouteScreen
 import io.legado.app.ui.book.explore.ExploreShowIntent
@@ -541,7 +544,14 @@ fun MainActivity.mainEntryProvider(
                 onNavigateToRoute(MainRouteBookCacheManage)
             },
             onOpenBookshelfBook = { book, sharedCoverKey ->
-                if (book.isAudio) {
+                if (book.isVideo) {
+                    onNavigateToRoute(
+                        MainRouteVideoPlay(
+                            bookUrl = book.bookUrl,
+                            sharedCoverKey = sharedCoverKey
+                        )
+                    )
+                } else if (book.isAudio) {
                     onNavigateToRoute(
                         MainRouteAudioPlay(
                             bookUrl = book.bookUrl,
@@ -1148,6 +1158,24 @@ fun MainActivity.mainEntryProvider(
         }
     }
 
+    entry<MainRouteVideoPlay>(metadata = modalOverlayEntryMetadata()) { route ->
+        val videoViewModel = koinViewModel<VideoPlayViewModel>(
+            key = "VideoPlay:${route.bookUrl ?: "last"}"
+        )
+        LaunchedEffect(route) {
+            videoViewModel.onIntent(VideoPlayIntent.Init(route.bookUrl.orEmpty()))
+        }
+        val state by videoViewModel.uiState.collectAsStateWithLifecycle()
+        VideoPlayScreen(
+            state = state,
+            onIntent = videoViewModel::onIntent,
+            onBack = { onNavigateBack() },
+            onPlaybackStateChanged = videoViewModel::onPlaybackStateChanged,
+            onProgress = videoViewModel::onProgress,
+            onPlaybackEnded = videoViewModel::onPlaybackEnded,
+        )
+    }
+
     // 兼容已保存的导航栈。新入口在 MainActivity 直接打开同窗口播放浮层。
     entry<MainRouteAudioPlay>(metadata = modalOverlayEntryMetadata()) { route ->
         LaunchedEffect(route) {
@@ -1409,6 +1437,15 @@ fun MainActivity.mainEntryProvider(
                         inBookshelf = inBookshelf,
                         chapterChanged = chapterChanged,
                         // 与详情页封面登记在同一个 key 上，封面才能从详情页继续飞进阅读页。
+                        sharedCoverKey = route.sharedCoverKey ?: bookCoverSharedElementKey(bookUrl),
+                    )
+                )
+            },
+            onOpenVideoPlay = { bookUrl, inBookshelf ->
+                onNavigateToRoute(
+                    MainRouteVideoPlay(
+                        bookUrl = bookUrl,
+                        inBookshelf = inBookshelf,
                         sharedCoverKey = route.sharedCoverKey ?: bookCoverSharedElementKey(bookUrl),
                     )
                 )

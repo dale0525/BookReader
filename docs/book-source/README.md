@@ -1,8 +1,8 @@
 # 聚合书源
 
-这 7 个书源已作为**内置书源**打进 APK：全新安装首次启动时自动写入书源表，用户无需导入。源码副本在 `app/src/main/assets/defaultData/bookSources.json`（与 `aggregate-sources.json` 内容一致，另含仓库原有的 1 个音频源）。
+这些书源已作为**内置书源**打进 APK：全新安装首次启动时自动写入书源表，用户无需导入。源码副本在 `app/src/main/assets/defaultData/bookSources.json`（与 `aggregate-sources.json` 内容一致，另含仓库原有的 1 个音频源和 4 个短剧源）。
 
-导入阅读后书源列表只多 7 个条目，背后覆盖 18 个站点。
+导入阅读后书源列表只多这些条目，背后覆盖 22 个站点。
 
 | 书源 | 类型 | 站点数 | 分组 |
 | --- | --- | --- | --- |
@@ -12,6 +12,10 @@
 | 小说·成人 | 文本 | 3 | 小说·18+ |
 | 漫画·成人 | 图片 | 2 | 漫画·18+ |
 | 视频·成人 | 视频 | 2 | 视频·18+ |
+| 饭果短剧 | 视频 | 1 | 视频 |
+| 河果短剧 | 视频 | 1 | 视频 |
+| 黄果短剧 | 视频 | 1 | 视频·18+ |
+| 猫果短剧 | 视频 | 1 | 视频 |
 | 全站发现 | 文本 | 18 | 发现 |
 
 ## 内置机制
@@ -54,7 +58,27 @@ var SITES = [ { id, n, base, kind, search, s:{…}, b:{…}, t:{…}, c:{…}, e
 
 ## 视频说明
 
-`bookSourceType=4` 在本仓库 APK 里没有视频播放器渲染路径，导入后行为和文本源一致：能看到搜索结果、剧集列表和 m3u8 地址，但不会在阅读界面里播放。这两个条目是**语义存档**，不是可播放的阅读体验。要真播放需要客户端支持。
+`bookSourceType=4` 的书源不再走阅读界面，点开后是「详情页 + 全屏播放器」两段：
+
+- **详情页**（`VideoPlayScreen`）：封面、书名、标签、总集数、简介、一个播放按钮、选集网格。不内嵌播放器，也没有常驻控制条。
+- **播放器**：点播放按钮或任意一集后以全屏浮层打开，播放控制全在这一层。控制层隐藏时单击任意处唤出；双击左半屏退 10 秒、右半屏进 10 秒；长按 3 倍速。控制层含返回、播放/暂停、可拖动进度条、倍速（1x / 1.25x / 1.5x / 2x / 3x）、全屏、静音。
+- 倍速与静音跨集保持；播放中控制层 3 秒自动隐藏。全屏开关走裁切铺满，供横版片源使用；默认等比适配，竖屏片源居中留黑边、不裁切。
+
+播放地址复用正文链路：`ruleContent` 留空时 `WebBook.getContentAwait` 直接返回章节 URL，视频源把播放直链放在 `ruleToc` 的章节 URL 里。这样不必为视频另开一套规则，也不会去下载媒体文件。
+
+书源里的 `header` 只作用于规则请求，**不覆盖播放器**。分片和密钥放在独立 CDN 域名上的站点（黄果的 m3u8 指向 `tp*.drleao.cn`）会对裸请求直接断连，必须在播放器这一层再注入一次 `Referer` / `Origin` / `User-Agent`：`VideoPlayViewModel` 把书源 `header` 里这三项挑出来放进 `mediaHeaders`，`PlayerSurface` 用 `DefaultHttpDataSource.Factory().setDefaultRequestProperties()` 喂给 ExoPlayer。规则层能看到地址、却放不出画面的，基本都缺这一步。
+
+短剧源（`book-sources/video-short-drama.json`、`book-sources/maoguo-source.json`）另走一路：四个站点都没有公开采集接口，靠 `jsLib` 解页面里的 `__NEXT_DATA__` 或接口 JSON。河果只放出免费集，付费集的 `chapterVideoVo` 为空，因此 `ruleToc` 会过滤掉没有 `mp4`/`m3u8` 的集。
+
+猫果（qmplaylet）是接口型源，三处都要签名，签名密钥为固定串：
+
+- 搜索 `api-store.qmplaylet.com/api/v1/playlet/search`，`sign = MD5("extend=page=1read_preference=0track_id=<TRACK>wd=<关键词><KEY>")`。
+- 详情 `api-read.qmplaylet.com/player/api/v1/playlet/info`，`sign = MD5("playlet_id=<id><KEY>")`。
+- 请求头 `qm-params` 是设备信息 JSON 的 Base64 再做一次字符替换表映射，`sign` 是该串的 MD5；两者都必须**每次请求现算**，写死会因过期而返回「验签失败」。
+
+书源规则里的 JS 拿不到 `java.security.MessageDigest`（`java` 绑定的是 `JsExtensions`，且 `RhinoClassShutter` 拦截反射），所以签名用纯 JS 的 MD5 实现，不要用 Java 加密类。
+
+猫果标题带 `<font color=...>` 关键词高亮，`bookList` 必须剥标签后再作为书名，否则搜索页的精确匹配会把条目全部过滤掉。
 
 ## 站点
 

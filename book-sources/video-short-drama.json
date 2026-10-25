@@ -1,0 +1,151 @@
+[
+  {
+    "bookSourceUrl": "https://xifan-api-cn.youlishipin.com",
+    "bookSourceName": "饭果短剧",
+    "bookSourceGroup": "视频",
+    "bookSourceType": 4,
+    "bookSourceComment": "搜索与详情走 xifan 接口，正文返回可直连的 mp4 链接。",
+    "enabled": true,
+    "enabledExplore": true,
+    "enabledCookieJar": true,
+    "customOrder": 0,
+    "weight": 0,
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36\"}",
+    "searchUrl": "/xifan/search/getSearchList?reqType=search&offset=0&keyword={{key}}&quickEngineVersion=-1&scene=",
+    "ruleSearch": {
+      "bookList": "$.result.elements[*].contents[*].duanjuVo",
+      "name": "$.title",
+      "bookUrl": "@js:'https://xifan-api-cn.youlishipin.com/xifan/drama/getDuanjuInfo?duanjuId='+String(result.duanjuId)+'&source='+String(result.source)",
+      "author": "",
+      "intro": "$.desc",
+      "coverUrl": "$.coverImageUrl",
+      "kind": "@js:(result.categories instanceof Array ? result.categories.join(' ') : String(result.categories || ''))"
+    },
+    "exploreUrl": "[{\"title\":\"都市\",\"url\":\"/xifan/search/getSearchList?reqType=search&offset=0&keyword=都市&quickEngineVersion=-1&scene=\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.5}},{\"title\":\"甜宠\",\"url\":\"/xifan/search/getSearchList?reqType=search&offset=0&keyword=甜宠&quickEngineVersion=-1&scene=\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.5}},{\"title\":\"逆袭\",\"url\":\"/xifan/search/getSearchList?reqType=search&offset=0&keyword=逆袭&quickEngineVersion=-1&scene=\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.5}},{\"title\":\"豪门\",\"url\":\"/xifan/search/getSearchList?reqType=search&offset=0&keyword=豪门&quickEngineVersion=-1&scene=\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.5}}]",
+    "ruleExplore": {
+      "bookList": "$.result.elements[*].contents[*].duanjuVo",
+      "name": "$.title",
+      "bookUrl": "@js:'https://xifan-api-cn.youlishipin.com/xifan/drama/getDuanjuInfo?duanjuId='+String(result.duanjuId)+'&source='+String(result.source)",
+      "author": "",
+      "intro": "$.desc",
+      "coverUrl": "$.coverImageUrl",
+      "kind": "@js:(result.categories instanceof Array ? result.categories.join(' ') : String(result.categories || ''))"
+    },
+    "ruleBookInfo": {
+      "name": "$.result.title",
+      "author": "",
+      "intro": "$.result.desc",
+      "kind": "@js:var o=JSON.parse(String(result));var c=o.result.categories;(c instanceof Array?c.join(' '):String(c||''))",
+      "coverUrl": "$.result.coverImageUrl",
+      "lastChapter": "@js:var o=JSON.parse(String(result));'全'+String(o.result.total)+'集'",
+      "tocUrl": "baseUrl"
+    },
+    "ruleToc": {
+      "chapterList": "$.result.episodeList[*]",
+      "chapterName": "@js:'第'+String(result.index)+'集'",
+      "chapterUrl": "$.playUrl"
+    },
+    "ruleContent": {}
+  },
+  {
+    "bookSourceUrl": "https://www.kuaikaw.cn",
+    "bookSourceName": "河果短剧",
+    "bookSourceGroup": "视频",
+    "bookSourceType": 4,
+    "bookSourceComment": "搜索为 POST JSON，详情页内嵌 __NEXT_DATA__，正文返回可直连的 mp4 链接。",
+    "enabled": true,
+    "enabledExplore": true,
+    "enabledCookieJar": true,
+    "customOrder": 0,
+    "weight": 0,
+    "header": "{\"User-Agent\":\"Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36\",\"pname\":\"www.kuaikaw.cn\",\"Referer\":\"https://www.kuaikaw.cn/\"}",
+    "searchUrl": "https://www.kuaikaw.cn/seo/video/6007,{\"method\":\"POST\",\"body\":\"{\\\"sourceType\\\":1,\\\"keyword\\\":\\\"{{key}}\\\",\\\"index\\\":{{page}}}\",\"headers\":{\"Content-Type\":\"application/json\"}}",
+    "ruleSearch": {
+      "bookList": "$.data.bookList[*]",
+      "name": "$.bookName",
+      "bookUrl": "@js:'https://www.kuaikaw.cn/drama/'+String(result.bookId)",
+      "author": "@js:String(result.actor || '') + (result.actress ? ' / ' + String(result.actress) : '')",
+      "intro": "$.introduction",
+      "coverUrl": "$.coverWap",
+      "kind": "@js:(result.bookTypeThree instanceof Array ? result.bookTypeThree.map(function(x){return x.name}).join(' ') : '')",
+      "lastChapter": "@js:'全'+String(result.totalChapterNum)+'集 '+String(result.statusDesc || '')"
+    },
+    "exploreUrl": "[{\"title\":\"都市\",\"url\":\"https://www.kuaikaw.cn/browse/1129/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}},{\"title\":\"甜宠\",\"url\":\"https://www.kuaikaw.cn/browse/462/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}},{\"title\":\"豪门恩怨\",\"url\":\"https://www.kuaikaw.cn/browse/585/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}},{\"title\":\"闪婚\",\"url\":\"https://www.kuaikaw.cn/browse/713/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}},{\"title\":\"现代言情\",\"url\":\"https://www.kuaikaw.cn/browse/1145/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}},{\"title\":\"总裁\",\"url\":\"https://www.kuaikaw.cn/browse/1147/{{page}}\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}}]",
+    "ruleExplore": {
+      "bookList": "@js:var p=kgPP(result);p?p.bookList:[]",
+      "name": "$.bookName",
+      "bookUrl": "@js:'https://www.kuaikaw.cn/drama/'+String(result.bookId)",
+      "author": "",
+      "intro": "$.introduction",
+      "coverUrl": "$.coverWap",
+      "kind": "@js:kgTags(result.bookTypeThree)",
+      "lastChapter": "@js:'全'+String(result.totalChapterNum)+'集'"
+    },
+    "ruleBookInfo": {
+      "name": "@js:var p=kgPP(result);p?String(p.bookInfoVo.bookName||''):''",
+      "author": "@js:var p=kgPP(result);if(!p)'';var v=p.bookInfoVo;String(v.actor||'')+(v.actress?' / '+String(v.actress):'')",
+      "intro": "@js:var p=kgPP(result);p?String(p.bookInfoVo.introduction||''):''",
+      "kind": "@js:var p=kgPP(result);p?kgTags(p.bookInfoVo.bookTypeThree):''",
+      "coverUrl": "@js:var p=kgPP(result);p?String(p.bookInfoVo.coverWap||''):''",
+      "lastChapter": "@js:var p=kgPP(result);if(!p)'';var v=p.bookInfoVo;'全'+String(v.totalChapterNum)+'集 '+String(v.statusDesc||'')",
+      "tocUrl": "baseUrl"
+    },
+    "ruleToc": {
+      "chapterList": "@js:var p=kgPP(result);var out=[];if(p&&p.chapterList){for(var i=0;i<p.chapterList.length;i++){var c=p.chapterList[i];var v=c.chapterVideoVo;if(v&&(v.mp4||v.m3u8))out.push(c)}}out",
+      "chapterName": "$.chapterName",
+      "chapterUrl": "@js:var v=result.chapterVideoVo;String(v.mp4||v.m3u8||'')"
+    },
+    "ruleContent": {},
+    "jsLib": "function kgPP(src){var h=String(src);var m=h.match(/id=\"__NEXT_DATA__\"[^>]*>([\\s\\S]*?)<\\/script>/);if(!m)return null;var o=null;try{o=JSON.parse(m[1])}catch(e){return null}return o&&o.props?o.props.pageProps:null}\nfunction kgTags(list){if(!(list instanceof Array))return '';var out=[];for(var i=0;i<list.length;i++){if(list[i]&&list[i].name)out.push(String(list[i].name))}return out.join(' ')}\n"
+  },
+  {
+    "bookSourceUrl": "https://huangguoai.com",
+    "bookSourceName": "黄果短剧",
+    "bookSourceGroup": "视频·18+",
+    "bookSourceType": 4,
+    "bookSourceComment": "网页版搜索与详情，正文返回 HLS(m3u8) 播放地址。",
+    "enabled": true,
+    "enabledExplore": true,
+    "enabledCookieJar": true,
+    "customOrder": 0,
+    "weight": 0,
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36\", \"Referer\": \"https://huangguoai.com/\", \"Origin\": \"https://huangguoai.com\"}",
+    "searchUrl": "/search/?q={{key}}",
+    "ruleSearch": {
+      "bookList": ".hg-search-results@.hg-drama-card",
+      "name": ".hg-drama-card__title@a@ownText",
+      "bookUrl": ".hg-drama-card__title@a@href",
+      "author": ".hg-drama-card__episode@text",
+      "intro": ".hg-drama-card__desc@text",
+      "coverUrl": ".hg-drama-card__cover-link@img@data-src",
+      "kind": ".hg-drama-card__tags@.hg-tag@text"
+    },
+    "exploreUrl": "[{\"title\":\"都市\",\"url\":\"/tag/dushi/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}},{\"title\":\"古风\",\"url\":\"/tag/gufeng/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}},{\"title\":\"现代\",\"url\":\"/tag/xiandai/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}},{\"title\":\"职场\",\"url\":\"/tag/zhichang/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}},{\"title\":\"校园\",\"url\":\"/tag/xiaoyuan/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}},{\"title\":\"逆袭\",\"url\":\"/tag/nixi/\",\"style\":{\"layout_flexGrow\":1,\"layout_flexBasisPercent\":0.33}}]",
+    "ruleExplore": {
+      "bookList": ".hg-card-grid@.hg-drama-card",
+      "name": ".hg-drama-card__title@a@ownText",
+      "bookUrl": ".hg-drama-card__title@a@href",
+      "author": ".hg-drama-card__episode@text",
+      "intro": ".hg-drama-card__desc@text",
+      "coverUrl": ".hg-drama-card__cover-link@img@data-src",
+      "kind": ".hg-drama-card__tags@.hg-tag@text"
+    },
+    "ruleBookInfo": {
+      "name": ".hg-web-play__title@text",
+      "author": ".hg-web-play__title-ep@text",
+      "intro": "meta[name=description]@content",
+      "kind": ".hg-breadcrumb@a.1@text",
+      "coverUrl": ".hg-web-play__poster@img@data-src",
+      "lastChapter": ".hg-web-play__side-current@text",
+      "tocUrl": "baseUrl"
+    },
+    "ruleToc": {
+      "chapterList": ".hg-web-play__ep-grid@a",
+      "chapterName": "text",
+      "chapterUrl": "href@js:var u=String(result);(u.indexOf('http')===0?u:'https://huangguoai.com'+u)"
+    },
+    "ruleContent": {
+      "content": "@js:var h=String(java.ajax(baseUrl));var m=h.match(/<source\\s+src=\"([^\"]+)\"/);(m?m[1]:'').replace(/&amp;/g,'&')"
+    }
+  }
+]

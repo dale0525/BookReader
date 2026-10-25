@@ -239,6 +239,7 @@ import io.legado.app.ui.association.ImportRssSourceViewModel
 import io.legado.app.ui.association.ImportTxtTocRuleViewModel
 import io.legado.app.ui.book.audio.AudioPlayCoordinator
 import io.legado.app.ui.book.audio.AudioPlayViewModel
+import io.legado.app.ui.book.video.VideoPlayViewModel
 import io.legado.app.ui.book.bookmark.AllBookmarkViewModel
 import io.legado.app.ui.book.cache.manage.BookCacheManageViewModel
 import io.legado.app.ui.book.changecover.ChangeCoverViewModel
@@ -689,6 +690,12 @@ val appModule = module {
             otherSettingsGateway = get(),
             readAloudSettingsGateway = get(),
             readSettingsGateway = get(),
+        )
+    }
+    viewModel {
+        VideoPlayViewModel(
+            application = get(),
+            bookRepository = get(),
         )
     }
     singleOf(::AudioPlayCoordinator)
