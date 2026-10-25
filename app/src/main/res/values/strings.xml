@@ -3855,4 +3855,17 @@
     <string name="battery_optimization_status_ignored">Unrestricted (Tap to check OEM background policy)</string>
     <string name="battery_optimization_status_not_ignored">Restricted or not configured; service may be killed in background</string>
     <string name="reader_paragraph_image_action_unsupported">This image uses a paragraph-rule action that this version does not support.</string>
+    <string name="play_pause">Play or pause</string>
+    <string name="video_play">Play</string>
+    <string name="video_fullscreen">Fullscreen</string>
+    <string name="video_exit_fullscreen">Exit fullscreen</string>
+    <string name="video_mute">Mute</string>
+    <string name="video_unmute">Unmute</string>
+    <string name="video_episodes">Episodes</string>
+    <string name="video_fast_forwarding">%1$d× fast-forward</string>
+    <string name="video_episode_total">%1$d episodes</string>
+    <string name="video_speed_menu">Playback speed</string>
+    <string name="video_speed">%1$.2fx</string>
+    <string name="video_episode">Episode %1$d</string>
+    <string name="video">Video</string>
 </resources>

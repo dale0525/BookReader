@@ -275,6 +275,16 @@ open class MainActivity : BaseComposeActivity(), AudioPlay.CallBack {
             inBookshelf = inBookshelf,
         )
 
+        fun createVideoPlayIntent(
+            context: Context,
+            bookUrl: String? = null,
+            inBookshelf: Boolean = true,
+        ): Intent = MainIntent.createVideoPlayIntent(
+            context = context,
+            bookUrl = bookUrl,
+            inBookshelf = inBookshelf,
+        )
+
         fun createSearchIntent(
             context: Context,
             key: String? = null,
@@ -558,7 +568,8 @@ open class MainActivity : BaseComposeActivity(), AudioPlay.CallBack {
         val backStack = rememberNavBackStack(*startRoutes)
         val paneStack = backStack.dropLastWhile {
             it is MainRouteSourceLogin || it is MainRouteSearchContent ||
-                    it is MainRouteAudioPlay || it == MainRouteReadAloudPlayer
+                    it is MainRouteAudioPlay || it is MainRouteVideoPlay ||
+                    it == MainRouteReadAloudPlayer
         }
         val paneParentIsHome = paneStack.getOrNull(paneStack.lastIndex - 1) == MainRouteHome ||
                 paneStack.size == 1 && paneStack.firstOrNull() == MainRouteHome
@@ -570,7 +581,8 @@ open class MainActivity : BaseComposeActivity(), AudioPlay.CallBack {
         val fullScreenContent =
             activeRoute is MainRouteReadBook || activeRoute is MainRouteReadManga ||
                     activeRoute is MainRouteWebView || activeRoute is io.legado.app.ui.rss.read.MainRouteRssRead ||
-                    activeRoute is MainRouteAudioPlay || activeRoute == MainRouteReadAloudPlayer
+                    activeRoute is MainRouteAudioPlay || activeRoute is MainRouteVideoPlay ||
+                    activeRoute == MainRouteReadAloudPlayer
         val singleRegion = if (!hasAdaptivePair && !fullScreenContent &&
             adaptiveEnvironment.safeRegions().size > 1
         ) adaptiveEnvironment.singlePaneBounds() else null
