@@ -62,4 +62,21 @@ class ExploreKindAggregatorTest {
 
     private fun kind(title: String, url: String?, rank: String = "") =
         ExploreKind(title = title, url = url, rank = rank)
+
+    @Test
+    fun categoryTabIndexIsMinusOneOnRankPages() {
+        // 分类占 pager 的第 0、1 页，榜单占第 2、3 页。停在第 2 页时分类行不该高亮任何一项。
+        val categoryPages = listOf(0, 1)
+
+        assertEquals(0, selectedCategoryTabIndex(categoryPages, 0))
+        assertEquals(1, selectedCategoryTabIndex(categoryPages, 1))
+        assertEquals(-1, selectedCategoryTabIndex(categoryPages, 2))
+        assertEquals(-1, selectedCategoryTabIndex(categoryPages, 3))
+    }
+
+    @Test
+    fun categoryTabIndexIsMinusOneWhenNoCategoryExists() {
+        // 整页只有榜单档位时，分类行整块不渲染；若渲染了也不能给出 0。
+        assertEquals(-1, selectedCategoryTabIndex(emptyList(), 0))
+    }
 }

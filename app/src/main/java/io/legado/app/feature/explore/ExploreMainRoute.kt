@@ -216,8 +216,10 @@ fun ExploreMainRoute(
                                             ) {
                                                 AppTabRow(
                                                     tabTitles = categoryEntries.map { it.value.title },
-                                                    selectedTabIndex = categoryEntries
-                                                        .indexOfFirst { it.index == pagerState.targetPage },
+                                                    selectedTabIndex = selectedCategoryTabIndex(
+                                                        categoryEntries.map { it.index },
+                                                        pagerState.targetPage,
+                                                    ),
                                                     onTabSelected = { index ->
                                                         scope.launch {
                                                             pagerState.animateScrollToPage(
