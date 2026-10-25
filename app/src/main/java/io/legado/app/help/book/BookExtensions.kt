@@ -120,6 +120,7 @@ fun Book.getBookTypeName(): String {
         isMobi       -> "MOBI"
         isAudio      -> "有声书"
         isImage      -> "漫画"
+        isVideo      -> "视频"
         isOnLineTxt  -> "小说"
         isWebFile    -> "网页文件"
         else         -> "未知类型"
@@ -332,6 +333,7 @@ fun Book.upType() {
             BookSourceType.image -> BookType.image
             BookSourceType.audio -> BookType.audio
             BookSourceType.file -> BookType.webFile
+            BookSourceType.video -> BookType.video
             else -> BookType.text
         }
         if (origin == BookType.localTag || origin.startsWith(BookType.webDavTag)) {
