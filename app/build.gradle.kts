@@ -8,7 +8,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.room)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.google.services)
     alias(libs.plugins.baselineprofile)
 }
 
@@ -53,10 +52,12 @@ android {
     }
 
     defaultConfig {
-        applicationId = "io.legato.kazusa"
+        applicationId = "com.logiconsole.bookreader"
         minSdk = 26
         targetSdk = 37
-        versionCode = System.getenv("COMMIT_NUMBER")?.toInt()?.let { 10000 + it } ?: 32640
+        // 偏移量必须让 CI 产出的 versionCode 始终高于无 COMMIT_NUMBER 时的兜底值 32640，
+        // 否则发布包无法覆盖安装本地构建出来的同版本包（Android 拒绝降级安装）。
+        versionCode = System.getenv("COMMIT_NUMBER")?.toInt()?.let { 40000 + it } ?: 32640
         versionName = System.getenv("APP_VERSION_NAME") ?: projectVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -263,10 +264,6 @@ dependencies {
     implementation(libs.quick.chinese.transfer.core)
     // 书源 JS 通过 Packages.cn.hutool.* 调用，保留在 classpath（应用代码不依赖）
     implementation(libs.hutool.crypto)
-    //noinspection GradleDependency
-    implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics)
-    implementation(libs.firebase.perf)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.palette)
     implementation(libs.androidx.biometric)

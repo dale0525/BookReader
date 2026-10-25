@@ -11,7 +11,6 @@ import io.legado.app.utils.fromJsonArray
 import io.legado.app.utils.fromJsonObject
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.withTimeoutOrNull
 import okhttp3.Headers
 import okhttp3.Request
 import java.time.Instant
@@ -22,11 +21,8 @@ object AppUpdateGitHub : AppUpdate.AppUpdateInterface {
 
     private val otherSettingsGateway get() = org.koin.core.context.GlobalContext.get().get<io.legado.app.domain.gateway.OtherSettingsGateway>()
 
-    private const val repoPath = "HapeLee/legado-with-MD3"
+    private const val repoPath = "dale0525/BookReader"
     private const val githubApiBaseUrl = "https://api.github.com/repos/$repoPath/releases"
-    private const val updateManifestBaseUrl =
-        "https://raw.githubusercontent.com/$repoPath/update-manifests"
-    private const val manifestTimeoutMillis = 2500L
 
     private val checkVariant: AppVariant
         get() = when (otherSettingsGateway.currentSettings.updateToVariant) {
@@ -37,53 +33,9 @@ object AppUpdateGitHub : AppUpdate.AppUpdateInterface {
         }
 
     private suspend fun getLatestRelease(variant: AppVariant): List<AppReleaseInfo> {
-        val releases = getManifestReleases(variant) ?: getApiReleases(variant)
-        return releases
+        return getApiReleases(variant)
             .flatMap { it.gitReleaseToAppReleaseInfo() }
             .sortedByDescending { it.createdAt }
-    }
-
-    private suspend fun getManifestReleases(variant: AppVariant): List<GithubRelease>? {
-        val releases = when (variant) {
-            AppVariant.OFFICIAL -> listOfNotNull(getManifestRelease(AppVariant.OFFICIAL))
-            AppVariant.BETA_RELEASE -> listOfNotNull(getManifestRelease(AppVariant.BETA_RELEASE))
-            AppVariant.ALL -> listOfNotNull(
-                getManifestRelease(AppVariant.OFFICIAL),
-                getManifestRelease(AppVariant.BETA_RELEASE)
-            )
-            else -> emptyList()
-        }
-        val expectedCount = if (variant == AppVariant.ALL) 2 else 1
-        return releases.takeIf { it.size == expectedCount }
-    }
-
-    private suspend fun getManifestRelease(variant: AppVariant): GithubRelease? {
-        val channel = when (variant) {
-            AppVariant.OFFICIAL -> "official"
-            AppVariant.BETA_RELEASE -> "beta"
-            else -> return null
-        }
-        return try {
-            withTimeoutOrNull(manifestTimeoutMillis) {
-                val response = okHttpClient.newCallResponse {
-                    url("$updateManifestBaseUrl/$channel.json")
-                }
-                response.use {
-                    if (!it.isSuccessful) return@withTimeoutOrNull null
-                    val release = GSON.fromJsonObject<GithubRelease>(it.body.text()).getOrNull()
-                        ?: return@withTimeoutOrNull null
-                    val expectedPreRelease = variant == AppVariant.BETA_RELEASE
-                    release.takeIf {
-                        it.isPreRelease == expectedPreRelease &&
-                            it.assets.orEmpty().any { asset -> asset.isValid }
-                    }
-                }
-            }
-        } catch (error: CancellationException) {
-            throw error
-        } catch (_: Exception) {
-            null
-        }
     }
 
     private suspend fun getApiReleases(variant: AppVariant): List<GithubRelease> {
@@ -124,8 +76,7 @@ object AppUpdateGitHub : AppUpdate.AppUpdateInterface {
     }
 
     suspend fun getReleaseByTag(tag: String): AppUpdate.UpdateInfo? {
-        val manifestRelease = findManifestRelease(tag)
-        val release = manifestRelease ?: getApiReleaseByTag(tag) ?: return null
+        val release = getApiReleaseByTag(tag) ?: return null
         val info = release.gitReleaseToAppReleaseInfo().firstOrNull() ?: return null
 
         return AppUpdate.UpdateInfo(
@@ -134,20 +85,6 @@ object AppUpdateGitHub : AppUpdate.AppUpdateInterface {
             downloadUrl = info.downloadUrl,
             fileName = info.name
         )
-    }
-
-    private suspend fun findManifestRelease(tag: String): GithubRelease? {
-        val variants = if (tag.contains("beta", ignoreCase = true)) {
-            listOf(AppVariant.BETA_RELEASE, AppVariant.OFFICIAL)
-        } else {
-            listOf(AppVariant.OFFICIAL, AppVariant.BETA_RELEASE)
-        }
-        variants.forEach { variant ->
-            getManifestRelease(variant)?.let { release ->
-                if (release.tagName == tag) return release
-            }
-        }
-        return null
     }
 
     private suspend fun getApiReleaseByTag(tag: String): GithubRelease? {

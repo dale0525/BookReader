@@ -21,7 +21,7 @@ from datetime import datetime
 from pathlib import Path
 
 
-PACKAGE_DEFAULT = "io.legato.kazusa.debug"
+PACKAGE_DEFAULT = "com.logiconsole.bookreader.debug"
 MAIN_ACTIVITY_CLASS = "io.legado.app.ui.main.MainActivity"
 LAB_ROUTE = "settings/lab_config"
 READ_ROUTE = "book/read"

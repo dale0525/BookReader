@@ -118,7 +118,6 @@ object AppConfig {
     val bitmapCacheSize get() = cache.bitmapCacheSize
     val sourceEditMaxLine get() = other.sourceEditMaxLine
     val audioPlayUseWakeLock get() = other.audioPlayUseWakeLock
-    val firebaseEnable get() = other.firebaseEnable
     val pureBlack get() = theme.isPureBlack
     val systemMediaControlCompatibilityChange get() = aloud.systemMediaControlCompatibilityChange
     val isPredictiveBackEnabled get() = shell.predictiveBackEnabled

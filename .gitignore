@@ -33,3 +33,8 @@ replay_pid*.log
 # 本地构建产物：APK 交付走 WebDAV，不入库
 /dist/
 .worktrees/
+
+# 正式签名密钥库：只留在本机与 GitHub 仓库 Secret，绝不入库
+/keystore/
+*.jks
+*.keystore

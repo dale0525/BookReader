@@ -38,7 +38,7 @@ python3 tools/capture_reader_c3_baseline.py \
 `--prev-x-ratio` 调整；默认执行五轮往返，冒烟时可传 `--rounds 1`。默认使用“最后阅读的书”；
 需要指定书籍时再传 `--book-url`。
 
-脚本默认目标为当前工程的 `io.legato.kazusa.debug`；采集前须安装本次构建的 `appDebug`。
+脚本默认目标为当前工程的 `com.logiconsole.bookreader.debug`；采集前须安装本次构建的 `appDebug`。
 
 字体/字号场景只需先在应用中设置一次目标样式，再运行同一条脚本；章节边界场景将测试书定位到
 边界附近后运行。两者都不再需要逐页手动截图。
@@ -85,7 +85,7 @@ C3 的性能数据是 C7 停止双重绘制后的对照物，不作为 C3 的优
 
 | 项目 | 结果 |
 |---|---|
-| 设备 | Samsung SM-S9310，1080×2340，`io.legato.kazusa.debug` |
+| 设备 | Samsung SM-S9310，1080×2340，`com.logiconsole.bookreader.debug` |
 | 测试书 | 最后阅读书《斗破苍穹》，第 8 章第 5/9 页 |
 | 操作 | Legacy / Compose 各 20 页前进 + 20 页后退 |
 | 产物 | `build/reader-c3-baseline/20260721-galaxy-s25-run2/` |
