@@ -292,6 +292,16 @@ class ExploreShowViewModel(
             }
         }
 
+        // 切走再切回会重建 ViewModel；有缓存就直接恢复，不重跑整页抓取。
+        val cached = ExplorePageCache.get(incomingSourceUrl, incomingExploreUrl)
+        if (cached != null) {
+            _rawBooks.value = cached.books
+            page = cached.nextPage
+            _pageState.update { it.copy(currentPage = (cached.nextPage - 1).coerceAtLeast(1)) }
+            _loadState.update { it.copy(isEnd = cached.isEnd) }
+            return
+        }
+
         loadMore(isRefresh = true)
     }
 
@@ -394,6 +404,8 @@ class ExploreShowViewModel(
 
         loadJob = viewModelScope.launch {
             if (isRefresh) {
+                // 下拉刷新是用户明确要求重拉，丢掉这一页的缓存。
+                ExplorePageCache.remove(source, url)
                 page = 1
                 autoPageCount = 0
                 _rawBooks.value = emptyList()
@@ -482,12 +494,29 @@ class ExploreShowViewModel(
         }
     }
 
+    /** 把当前已加载的书与分页位置写回缓存，供切回时恢复。 */
+    private fun rememberPage(sourceUrl: String, url: String?) {
+        ExplorePageCache.put(
+            sourceUrl,
+            url,
+            ExplorePageCache.Entry(
+                books = _rawBooks.value,
+                nextPage = page,
+                isEnd = _loadState.value.isEnd,
+            )
+        )
+    }
+
     private fun finishLoading() {
         _loadState.update {
             it.copy(
                 isLoading = false,
                 isRefreshing = false,
             )
+        }
+        val src = sourceUrl
+        if (src != null && _rawBooks.value.isNotEmpty()) {
+            rememberPage(src, exploreUrl)
         }
     }
 
