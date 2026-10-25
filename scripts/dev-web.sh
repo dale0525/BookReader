@@ -6,7 +6,7 @@ set -euo pipefail
 
 ROOT="$PIXI_PROJECT_ROOT"
 AVD_NAME="legado-api37"
-APP_ID="io.legato.kazusa.debug"
+APP_ID="com.logiconsole.bookreader.debug"
 WEB_PORT=1122          # OtherConfigContract.kt 里 webPort 的默认值
 ACTIVITY="$APP_ID/io.legado.app.ui.main.MainActivity"
 APK="$ROOT/app/build/outputs/apk/app/debug/app-app-arm64-v8a-debug.apk"

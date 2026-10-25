@@ -53,7 +53,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "io.legato.kazusa"
+        applicationId = "com.logiconsole.bookreader"
         minSdk = 26
         targetSdk = 37
         versionCode = System.getenv("COMMIT_NUMBER")?.toInt()?.let { 10000 + it } ?: 32640
