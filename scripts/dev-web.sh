@@ -22,8 +22,10 @@ if ! adb devices | grep -q "emulator.*device$"; then
   # AVD 根目录不存在时 emulator 会静默失败，先补上。
   mkdir -p "$ANDROID_AVD_HOME"
   # -netdelay/-netspeed none：避免模拟器默认的弱网模拟拖慢局域网请求。
+  # -gpu host：走宿主 Metal。原先固定 swiftshader_indirect 是纯 CPU 软渲染，
+  # 在 Apple Silicon 上会把 system_server 拖到 ANR（Compose 界面尤其明显）。
   nohup emulator -avd "$AVD_NAME" -no-snapshot-save -no-boot-anim \
-    -gpu swiftshader_indirect -netdelay none -netspeed full \
+    -gpu host -netdelay none -netspeed full \
     >"$ANDROID_AVD_HOME/emulator.log" 2>&1 &
   adb wait-for-device
   # wait-for-device 只等到 adbd 可用，sys.boot_completed 出现才算系统起来。
