@@ -206,8 +206,9 @@ internal fun resolveExploreMainSource(
         ?.url ?: sources.firstOrNull()?.url
 
 internal fun loadableExploreMainKinds(kinds: List<ExploreKind>): List<ExploreKind> =
-    kinds.filter { it.type == ExploreKind.Type.url && !it.url.isNullOrBlank() }
-        .distinctBy { it.title to it.url }
+    aggregateExploreKinds(
+        kinds.filter { it.type == ExploreKind.Type.url && !it.url.isNullOrBlank() }
+    )
 
 /** 分类在偏好与 ViewModel 之间的稳定标识：标题可能重复，必须带上探索地址。 */
 internal fun exploreKindKey(kind: ExploreKind): String =

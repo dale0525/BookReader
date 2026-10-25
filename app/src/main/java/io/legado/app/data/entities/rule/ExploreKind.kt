@@ -11,7 +11,9 @@ data class ExploreKind(
     val chars: Array<String?>? = null,
     val default: String? = null,
     var viewName: String? = null,
-    val style: FlexChildStyle? = null
+    val style: FlexChildStyle? = null,
+    /** 榜单档位：update/week/month/all；空表示普通分类 */
+    val rank: String = ""
 ) {
 
     @Suppress("ConstPropertyName")

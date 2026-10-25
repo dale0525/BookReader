@@ -15,10 +15,14 @@ import io.legado.app.domain.usecase.ExploreBooksUseCase
 import io.legado.app.domain.usecase.ResolveBookShelfStateUseCase
 import io.legado.app.domain.usecase.ResolveBookshelfConflictUseCase
 import io.legado.app.domain.usecase.SaveSearchBooksUseCase
+import io.legado.app.feature.explore.URL_SEPARATOR
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.ui.book.conflict.BookshelfConflictController
 import io.legado.app.utils.stackTraceStr
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -404,18 +408,19 @@ class ExploreShowViewModel(
     }
 
     private suspend fun fetchPage(sourceUrl: String, url: String?, generation: Long) {
+        val targets = splitAggregateUrl(url)
         kotlin.runCatching {
-            exploreBooksUseCase.execute(sourceUrl, url, args = null, page)
+            fetchTargets(sourceUrl, targets)
         }.onSuccess { result ->
             if (generation != loadGeneration) return@onSuccess
             val currentList = _rawBooks.value
             val existingUrls = currentList.map { it.bookUrl }.toSet()
-            val uniqueNewBooks = result.books
+            val uniqueNewBooks = result
                 .filter { it.bookUrl !in existingUrls }
                 .distinctBy { it.bookUrl }
 
-            if (result.books.isNotEmpty()) {
-                saveSearchBooksUseCase.save(result.books)
+            if (result.isNotEmpty()) {
+                saveSearchBooksUseCase.save(result)
             }
 
             if (uniqueNewBooks.isEmpty()) {
@@ -434,6 +439,32 @@ class ExploreShowViewModel(
             finishLoading()
         }
     }
+
+    /**
+     * 并发请求聚合分类下的每个站点，再按返回顺序拼接。
+     *
+     * 单个站点失败只丢弃它自己的结果：聚合页的价值是把能拿到的源都摆出来，
+     * 一个源挂了不该让整页空白。
+     */
+    private suspend fun fetchTargets(
+        sourceUrl: String,
+        targets: List<String?>,
+    ): List<SearchBook> = coroutineScope {
+        targets.map { target ->
+            async {
+                runCatching {
+                    exploreBooksUseCase.execute(sourceUrl, target, args = null, page).books
+                }.getOrDefault(emptyList())
+            }
+        }.awaitAll().flatten()
+    }
+
+    private fun splitAggregateUrl(url: String?): List<String?> =
+        url.orEmpty()
+            .split(URL_SEPARATOR)
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .ifEmpty { listOf(url) }
 
     private suspend fun fetchNextAutoPageOrFinish(
         sourceUrl: String,
