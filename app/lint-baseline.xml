@@ -845,17 +845,6 @@
 
     <issue
         id="GradleDependency"
-        message="A newer version of com.google.firebase:firebase-bom than 34.6.0 is available: 34.16.0"
-        errorLine1="firebaseBom = &quot;34.6.0&quot;"
-        errorLine2="              ~~~~~~~~">
-        <location
-            file="../gradle/libs.versions.toml"
-            line="28"
-            column="15"/>
-    </issue>
-
-    <issue
-        id="GradleDependency"
         message="A newer version of androidx.compose.material3:material3 than 1.5.0-alpha23 is available: 1.5.0-alpha24"
         errorLine1="material3 = &quot;1.5.0-alpha23&quot;"
         errorLine2="            ~~~~~~~~~~~~~~~">
@@ -885,17 +874,6 @@
             file="../gradle/libs.versions.toml"
             line="60"
             column="10"/>
-    </issue>
-
-    <issue
-        id="GradleDependency"
-        message="A newer version of com.google.gms.google-services than 4.4.4 is available: 4.5.0"
-        errorLine1="google-services = { id = &quot;com.google.gms.google-services&quot;, version = &quot;4.4.4&quot; }"
-        errorLine2="                                                                     ~~~~~~~">
-        <location
-            file="../gradle/libs.versions.toml"
-            line="270"
-            column="70"/>
     </issue>
 
     <issue

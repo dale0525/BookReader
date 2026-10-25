@@ -8,7 +8,7 @@ import org.junit.Test
 class OtherSettingsMappingTest {
 
     @Test
-    fun `其他设置 26 键写读映射逐字段对应`() {
+    fun `其他设置 25 键写读映射逐字段对应`() {
         otherMappingSamples().forEach { expected ->
             assertEquals(expected.expectedPrefMap(), expected.toPrefMap())
             assertEquals(expected, expected.expectedPrefMap().toTestPreferences().toOtherSettings())
@@ -44,7 +44,6 @@ private fun otherMappingSamples(): List<OtherSettings> {
         base.copy(defaultToRead = true),
         base.copy(notificationsPost = false),
         base.copy(ignoreBatteryPermission = false),
-        base.copy(firebaseEnable = false),
         base.copy(antiAlias = true),
         base.copy(replaceEnableDefault = false),
         base.copy(autoClearExpired = false),
@@ -70,7 +69,6 @@ private fun OtherSettings.expectedPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.defaultToRead to defaultToRead,
     PreferKey.notificationsPost to notificationsPost,
     PreferKey.ignoreBatteryPermission to ignoreBatteryPermission,
-    PreferKey.firebaseEnable to firebaseEnable,
     PreferKey.defaultBookTreeUri to defaultBookTreeUri,
     PreferKey.antiAlias to antiAlias,
     PreferKey.replaceEnableDefault to replaceEnableDefault,
