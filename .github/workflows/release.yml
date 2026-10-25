@@ -59,7 +59,8 @@ jobs:
           PATCH=$(grep '^VERSION_PATCH' "$PROPERTIES_FILE" | cut -d'=' -f2 | tr -d '[:space:]')
           SUFFIX=$(grep '^VERSION_SUFFIX' "$PROPERTIES_FILE" | cut -d'=' -f2 | tr -d '[:space:]')
 
-          # versionCode 由 COMMIT_NUMBER 换算成 10000 + N，用提交总数保证每次发布都递增。
+          # versionCode 由 COMMIT_NUMBER 换算成 40000 + N：偏移量要压过无 COMMIT_NUMBER 时的
+          # 兜底值 32640，否则 CI 产出的包无法覆盖安装本地构建的同版本包。
           COMMIT_COUNT=$(git rev-list --count HEAD)
 
           VERSION="$MAJOR.$MINOR.$PATCH"

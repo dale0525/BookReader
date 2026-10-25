@@ -55,7 +55,9 @@ android {
         applicationId = "com.logiconsole.bookreader"
         minSdk = 26
         targetSdk = 37
-        versionCode = System.getenv("COMMIT_NUMBER")?.toInt()?.let { 10000 + it } ?: 32640
+        // 偏移量必须让 CI 产出的 versionCode 始终高于无 COMMIT_NUMBER 时的兜底值 32640，
+        // 否则发布包无法覆盖安装本地构建出来的同版本包（Android 拒绝降级安装）。
+        versionCode = System.getenv("COMMIT_NUMBER")?.toInt()?.let { 40000 + it } ?: 32640
         versionName = System.getenv("APP_VERSION_NAME") ?: projectVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
