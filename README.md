@@ -50,8 +50,7 @@ Design 3 风格重构版本。
 
 * **Telegram 群组：** [Legado with MD3](https://t.me/materado)
 * **版本发布：**
-  最新版本会自动发布至群组，也可在 [GitHub Releases](https://github.com/HapeLee/legado-with-MD3/releases)
-  下载。
+  最新版本在 [GitHub Releases](https://github.com/dale0525/BookReader/releases) 下载。
 
 ---
 
