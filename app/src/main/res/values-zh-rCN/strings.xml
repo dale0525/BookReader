@@ -3851,4 +3851,17 @@
     <string name="battery_optimization_status_ignored">已开启无限制（点击可检查厂商后台策略）</string>
     <string name="battery_optimization_status_not_ignored">未开启无限制，后台可能被系统终止</string>
     <string name="reader_paragraph_image_action_unsupported">此图片使用段落规则动作，当前版本尚不支持。</string>
+    <string name="play_pause">播放或暂停</string>
+    <string name="video_play">播放</string>
+    <string name="video_fullscreen">全屏</string>
+    <string name="video_exit_fullscreen">退出全屏</string>
+    <string name="video_mute">静音</string>
+    <string name="video_unmute">取消静音</string>
+    <string name="video_episodes">选集</string>
+    <string name="video_fast_forwarding">%1$d× 快进中</string>
+    <string name="video_episode_total">共 %1$d 集</string>
+    <string name="video_speed_menu">播放速度</string>
+    <string name="video_speed">%1$.2fx</string>
+    <string name="video_episode">第 %1$d 集</string>
+    <string name="video">视频</string>
 </resources>
