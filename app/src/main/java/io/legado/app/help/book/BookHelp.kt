@@ -15,6 +15,7 @@ import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.BookSource
 import io.legado.app.domain.gateway.DownloadCacheSettingsGateway
 import io.legado.app.domain.gateway.ReadSettingsGateway
+import io.legado.app.help.coil.JmImageDescrambler
 import io.legado.app.help.book.BookHelp.saveText
 import io.legado.app.help.book.BookHelp.saveToLocalTxt
 import io.legado.app.help.glide.progress.ProgressManager
@@ -460,7 +461,16 @@ object BookHelp {
                 // 同文件获取互斥，跨图片并发只遵循书源自身的限流配置。
                 if (!onlineOnly) imageFiles.setOnline(image, false)
                 else if (!image.exists()) imageFiles.setOnline(image, true)
-                if (ImageUtils.skipDecode(bookSource, isCover = false)) {
+                // 禁漫天堂的图是服务端横向切条倒序下发的，落盘前必须重排；
+                // 这里同时绕开下面的流式直写分支，否则错位的原图会被缓存下来反复显示。
+                if (JmImageDescrambler.needsDescramble(src)) {
+                    val bytes = imageInputStream(analyzeUrl, src, onlineOnly).use(InputStream::readBytes)
+                    val fixed = JmImageDescrambler.descramble(src, bytes)
+                    fixed.inputStream().use { input ->
+                        imageFiles.write(image, input) { context.ensureActive() }
+                    }
+                    true
+                } else if (ImageUtils.skipDecode(bookSource, isCover = false)) {
                     imageInputStream(analyzeUrl, src, onlineOnly).use { input ->
                         imageFiles.write(image, input) { context.ensureActive() }
                     }
