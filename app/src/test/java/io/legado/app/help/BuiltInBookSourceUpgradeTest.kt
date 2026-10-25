@@ -100,7 +100,7 @@ class BuiltInBookSourceUpgradeTest {
         assertEquals("用户排序被覆盖", 42, after.customOrder)
         assertEquals("用户停用状态被覆盖", false, after.enabled)
         assertEquals("用户发现开关被覆盖", false, after.enabledExplore)
-        assertEquals("bookSourceVersion 未推进", 6, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 7, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /** AppConst 静态初始化要读签名，Robolectric 默认不给，补一个假的让它能初始化。 */

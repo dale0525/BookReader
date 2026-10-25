@@ -71,7 +71,8 @@ class ExploreMainViewModel(
         viewModelScope.launch {
             combine(
                 repository.getExploreSources("", ""),
-                settingsRepository.getBoolean(PreferKey.exploreMainContent),
+                // 发现页的默认形态是按分类跨源聚合。书源列表是辅助视图，用户主动切换才会进。
+                settingsRepository.getBoolean(PreferKey.exploreMainContent, defaultValue = true),
                 settingsRepository.getString(PreferKey.exploreMainSourceUrl),
                 settingsRepository.getString(PreferKey.exploreMainKind),
             ) { sources, showContent, savedSourceUrl, savedKinds ->

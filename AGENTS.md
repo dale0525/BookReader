@@ -40,7 +40,7 @@
 
 ## 内置书源
 
-`app/src/main/assets/defaultData/bookSources.json` 是随包发布的内置书源（6 个聚合源 + 1 个音频源 + 4 个短剧源）。
+`app/src/main/assets/defaultData/bookSources.json` 是随包发布的内置书源（6 个聚合源，单站源已全部并入这 6 个分类）。
 
 - 导入由 `DefaultData.importDefaultBookSources()` 完成，在 `upVersion()` 里按 `LocalConfig.needUpBookSources` 触发。
 - 书源导入**不能**挂在 `LocalConfig.versionCode < AppConst.appInfo.versionCode` 门禁内：本地构建的 versionCode 恒为 32640（无 `COMMIT_NUMBER` 时的兜底值），覆盖安装时两边相等，整段被跳过，只有删除重装才会执行。这是发现页长期报错的真正成因。
