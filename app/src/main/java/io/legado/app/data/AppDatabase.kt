@@ -133,7 +133,7 @@ val appDb by lazy {
 }
 
 @Database(
-    version = 133,
+    version = 134,
     exportSchema = true,
     entities = [Book::class, BookGroup::class, BookSource::class, BookChapter::class,
         ReplaceRule::class, SearchBook::class, SearchKeyword::class, Cookie::class,
@@ -276,6 +276,11 @@ val appDb by lazy {
         AutoMigration(from = 131, to = 132),
         // 移除「AI 对话」：ai_chat_conversations / ai_chat_messages 两张表整体删除
         AutoMigration(from = 132, to = 133, spec = DatabaseMigrations.Migration_132_133::class),
+        // highlight_rules 新增边框三列：颜色可空（null = 不描边），粗细默认 1、圆角默认 4，
+        // 老规则三列取默认值，读回来不描边、与旧行为逐字节等价。
+        // 上游原本把它放在 132→133，但 133 已随 0.1.0 发出去（那版删的是 AI 对话两张表），
+        // 同一个版本号不能换 schema，所以边框三列改落在 134。
+        AutoMigration(from = 133, to = 134),
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
