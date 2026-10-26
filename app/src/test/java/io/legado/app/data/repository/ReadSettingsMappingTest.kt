@@ -111,11 +111,11 @@ class ReadSettingsMappingTest {
         }
 
         assertEquals("0", settings.showBrightnessView)
-        assertEquals(1, settings.readBarStyle)
-        assertFalse(settings.readMenuIconShowText)
+        assertEquals("菜单配色默认走自定义那一档，背景/强调色由 readMenu*Color 给出", 2, settings.readBarStyle)
+        assertTrue(settings.readMenuIconShowText)
         assertTrue(settings.readMenuFloatingBottomBar)
         assertEquals(ReadMenuBlurStyle.Solid, settings.readMenuTopBarBlurStyle)
-        assertEquals(85, settings.readMenuBlurAlpha)
+        assertEquals(100, settings.readMenuBlurAlpha)
         assertEquals(1, settings.readMenuBorderWidth)
         assertEquals(3, settings.titleBarIconPosition)
         assertFalse(settings.showTitleBarIcons)

@@ -56,7 +56,7 @@ class DefaultAssetPathsTest {
     fun bundledStyleDefaultsCarrySixPresetsAndShareConfig() {
         assertEquals(6, DefaultData.readConfigs.size)
         assertEquals(
-            listOf("微信读书", "预设1", "预设2", "预设3", "预设4", "预设5"),
+            listOf("纸墨", "预设1", "预设2", "预设3", "预设4", "预设5"),
             DefaultData.readConfigs.map { it.name },
         )
         assertNotNull(DefaultData.shareReadConfig)

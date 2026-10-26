@@ -534,8 +534,8 @@ object ReadBookConfig {
     @Keep
     data class Config(
         val name: String = "",
-        val bgStr: String = "#EEEEEE",//白天背景
-        val bgStrNight: String = "#000000",//夜间背景
+        val bgStr: String = "#F9FAEF",//白天背景
+        val bgStrNight: String = "#12140E",//夜间背景
         @Transient
         val menuBgColor: String = "#EEEFE3",
         @Transient
@@ -552,8 +552,8 @@ object ReadBookConfig {
         private val darkStatusIcon: Boolean = true,//白天是否暗色状态栏
         private val darkStatusIconNight: Boolean = false,//晚上是否暗色状态栏
         private val darkStatusIconEInk: Boolean = true,
-        private val textColor: String = "#3E3D3B",//白天文字颜色
-        private val textColorNight: String = "#ADADAD",//夜间文字颜色
+        private val textColor: String = "#1A1C16",//白天文字颜色
+        private val textColorNight: String = "#C5C8BA",//夜间文字颜色
         private val textColorEInk: String = "#000000",
         private val textAccentColor: String = "#834E00",//白天强调文字颜色
         private val textAccentColorNight: String = "#FE4D55",//夜间强调文字颜色
@@ -570,8 +570,8 @@ object ReadBookConfig {
         val headerFontSize: Int = 12,//页眉字号
         val footerFontSize: Int = 12,//页脚字号
         val applyHeaderStyle: Boolean = true,//页脚是否应用页眉字体样式
-        val textBold: Int = 500,//是否粗体字 0:正常, 1:粗体, 2:细体
-        val textSize: Int = 20,//文字大小
+        val textBold: Int = 400,//是否粗体字 0:正常, 1:粗体, 2:细体
+        val textSize: Int = 17,//文字大小
         val textItalic: Boolean = false,// 是否启用斜体
         val textShadow: Boolean = false,// 是否启用阴影
         val shadowRadius: Float = 16f,// 阴影模糊半径
@@ -579,17 +579,17 @@ object ReadBookConfig {
         val shadowDy: Float = 1f,// 阴影y偏移
         private val shadowColor: String = "#3E3D3B",
         private val shadowColorN: String = "#3E3D3B",
-        val letterSpacing: Float = 0.1f,//字间距
-        val lineSpacingExtra: Int = 12,//行间距
-        val paragraphSpacing: Int = 2,//段距
+        val letterSpacing: Float = 0.03f,//字间距
+        val lineSpacingExtra: Int = 15,//行间距
+        val paragraphSpacing: Int = 7,//段距
         val titleMode: Int = 0,//标题位置 0:居左 1:居中 2:隐藏
-        val titleSize: Int = 4,//标题字号：相对模式为相对正文的偏移，绝对模式为绝对 sp
+        val titleSize: Int = 6,//标题字号：相对模式为相对正文的偏移，绝对模式为绝对 sp
         val titleSizeRelative: Boolean? = null,//是否相对正文：null 表示按旧值自动识别
         val titleTopSpacing: Int = 0,
-        val titleBottomSpacing: Int = 0,
+        val titleBottomSpacing: Int = 18,
         val titleColor: Int = 0,
         val titleColorNight: Int = 0,
-        val titleBold: Int = 500,//是否粗体字 0:正常, 1:粗体, 2:细体
+        val titleBold: Int = 600,//是否粗体字 0:正常, 1:粗体, 2:细体
         val titleLineSpacingExtra: Int = 12,
         val titleLineSpacingSub: Int = 12,
         val titleSegType: Int = 0,//分段模式
@@ -606,25 +606,25 @@ object ReadBookConfig {
         val dottedLine: Boolean = false, //虚线
         val dottedBase: Float = 6f, //长度
         val dottedRatio: Float = 6f,
-        val paddingBottom: Int = 6,
-        val paddingLeft: Int = 16,
-        val paddingRight: Int = 16,
-        val paddingTop: Int = 6,
+        val paddingBottom: Int = 8,
+        val paddingLeft: Int = 20,
+        val paddingRight: Int = 20,
+        val paddingTop: Int = 16,
         val headerPaddingBottom: Int = 0,
         val headerPaddingLeft: Int = 16,
         val headerPaddingRight: Int = 16,
-        val headerPaddingTop: Int = 0,
+        val headerPaddingTop: Int = 12,
         val footerPaddingBottom: Int = 6,
         val footerPaddingLeft: Int = 16,
         val footerPaddingRight: Int = 16,
         val footerPaddingTop: Int = 6,
         val showHeaderLine: Boolean = false,
-        val showFooterLine: Boolean = true,
+        val showFooterLine: Boolean = false,
         val tipHeaderLeft: Int = ReadTipType.tipTime,
         val tipHeaderMiddle: Int = ReadTipType.tipNone,
-        val tipHeaderRight: Int = ReadTipType.tipBattery,
-        val tipFooterLeft: Int = ReadTipType.tipChapterTitle,
-        val tipFooterMiddle: Int = ReadTipType.tipNone,
+        val tipHeaderRight: Int = ReadTipType.tipBatteryPercentage,
+        val tipFooterLeft: Int = ReadTipType.tipBookName,
+        val tipFooterMiddle: Int = ReadTipType.tipTotalProgress,
         val tipFooterRight: Int = ReadTipType.tipPageAndTotal,
         val customTipHeaderLeft: String = "",
         val customTipHeaderMiddle: String = "",

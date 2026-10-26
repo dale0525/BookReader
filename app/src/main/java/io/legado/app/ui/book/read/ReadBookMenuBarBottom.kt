@@ -4,7 +4,9 @@ import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -209,6 +211,17 @@ internal fun MenuBottomBar(
         }
 
         Spacer(Modifier.height(12.dp))
+
+        // 进度行与工具行之间的分隔线：与两侧按钮同宽（卡片内边距 16dp），不跨到卡片边缘
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(1.dp)
+                .background(LegadoTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
+        )
+
+        Spacer(Modifier.height(4.dp))
 
         // Tool buttons
         // isActive 是这里的快照，开关态必须进 key 列表，否则点击后高亮不刷新
