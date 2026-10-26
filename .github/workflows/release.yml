@@ -100,7 +100,7 @@ jobs:
           APKSIGNER=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -n 1)
           DIGEST=$("$APKSIGNER" verify --print-certs "$APK" | grep -i 'certificate SHA-256 digest' | head -n 1 | awk '{print $NF}')
           echo "签名证书 SHA-256: $DIGEST"
-          if [ "$DIGEST" != "fb72a50266643b20fb1a67b9324b032ca8e0470ea443d36c1175ad8bce73ed05" ]; then
+          if [ "$DIGEST" != "59a0cd1e8734376ff25b40531241ab87b00bf1fc3f22ba3a63f6ad196996a180" ]; then
             echo "APK 不是用正式密钥库签名的"
             exit 1
           fi
