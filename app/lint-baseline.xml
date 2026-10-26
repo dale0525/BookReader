@@ -2374,17 +2374,6 @@
 
     <issue
         id="PluralsCandidate"
-        message="Formatting %d followed by words (&quot;records&quot;): This should probably be a plural rather than a string"
-        errorLine1="    &lt;string name=&quot;lab_page_estimate_diagnostics_count&quot;>%1$d records&lt;/string>"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values/strings.xml"
-            line="2257"
-            column="5"/>
-    </issue>
-
-    <issue
-        id="PluralsCandidate"
         message="Formatting %d followed by words (&quot;lines&quot;): This should probably be a plural rather than a string"
         errorLine1="    &lt;string name=&quot;show_lines_synopsis&quot;>Show %1$d lines of synopsis&lt;/string>"
         errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
@@ -2568,22 +2557,6 @@
             file="src/main/res/values/strings.xml"
             line="2863"
             column="5"/>
-    </issue>
-
-    <issue
-        id="StringFormatCount"
-        message="Inconsistent number of arguments in formatting string `translation_in_progress`; found both 2 here and 1 in values/strings.xml"
-        errorLine1="    &lt;string name=&quot;translation_in_progress&quot;>翻译中: %1$d/%2$d&lt;/string>"
-        errorLine2="    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
-        <location
-            file="src/main/res/values-zh-rCN/strings.xml"
-            line="1976"
-            column="5"/>
-        <location
-            file="src/main/res/values/strings.xml"
-            line="1920"
-            column="5"
-            message="Conflicting number of arguments (1) here"/>
     </issue>
 
     <issue
