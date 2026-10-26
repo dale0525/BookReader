@@ -1,5 +1,17 @@
 package io.legado.app.domain.model
 
+import androidx.annotation.Keep
+
+/**
+ * A chunk of text, with its index and the paragraph indices it covers.
+ */
+@Keep
+data class TextChunk(
+    val index: Int,
+    val content: String,
+    val paragraphIndices: List<Int>
+)
+
 object ContentChunker {
 
     private val sentenceDelimiters = listOf('。', '！', '？', '.', '!', '?', '；', ';', '\n')

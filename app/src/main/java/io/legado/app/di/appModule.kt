@@ -8,7 +8,6 @@ import coil3.request.crossfade
 import coil3.svg.SvgDecoder
 import io.legado.app.data.AppDatabase
 import io.legado.app.data.repository.AiArtifactRepository
-import io.legado.app.data.repository.AiChatRepository
 import io.legado.app.data.repository.AiMemoryRepository
 import io.legado.app.data.repository.AiProfileRepository
 import io.legado.app.data.repository.AiPromptPresetRepository
@@ -48,7 +47,6 @@ import io.legado.app.data.repository.CoverAlbumRepository
 import io.legado.app.data.repository.CoverSettingsRepository
 import io.legado.app.data.repository.DatabaseMaintenanceRepository
 import io.legado.app.data.repository.DictRuleRepository
-import io.legado.app.data.repository.DictionaryRepositoryImpl
 import io.legado.app.data.repository.DirectLinkSettingsRepository
 import io.legado.app.data.repository.DirectLinkUploadRepository
 import io.legado.app.data.repository.DownloadCacheSettingsRepository
@@ -62,7 +60,6 @@ import io.legado.app.data.repository.HomepageSettingsRepository
 import io.legado.app.data.repository.HttpTtsEngineRepository
 import io.legado.app.data.repository.HttpTtsRepository
 import io.legado.app.data.repository.ImportBookSettingsRepository
-import io.legado.app.data.repository.LabSettingsRepository
 import io.legado.app.data.repository.LocalBookRepository
 import io.legado.app.data.repository.LocalPasswordRepository
 import io.legado.app.data.repository.MangaSettingsRepository
@@ -92,8 +89,6 @@ import io.legado.app.data.repository.SettingsRepository
 import io.legado.app.data.repository.TagGroupRuleApplier
 import io.legado.app.data.repository.ThemePackageSettingsRepository
 import io.legado.app.data.repository.ThemeSettingsRepository
-import io.legado.app.data.repository.TranslationCacheRepositoryImpl
-import io.legado.app.data.repository.TranslationSettingsRepository
 import io.legado.app.data.repository.TxtTocRuleRepository
 import io.legado.app.data.repository.UploadRepository
 import io.legado.app.data.repository.WebDavBackupRepository
@@ -103,7 +98,6 @@ import io.legado.app.data.repository.manga.MangaReaderActionRepository
 import io.legado.app.data.repository.manga.MangaReaderDataRepository
 import io.legado.app.data.security.CloudTtsCredentialCipher
 import io.legado.app.domain.gateway.AiArtifactGateway
-import io.legado.app.domain.gateway.AiChatGateway
 import io.legado.app.domain.gateway.AiMemoryGateway
 import io.legado.app.domain.gateway.AiProfileGateway
 import io.legado.app.domain.gateway.AiPromptPresetGateway
@@ -135,7 +129,6 @@ import io.legado.app.domain.gateway.CloudTtsEngineGateway
 import io.legado.app.domain.gateway.CoverAlbumGateway
 import io.legado.app.domain.gateway.CoverSettingsGateway
 import io.legado.app.domain.gateway.DatabaseMaintenanceGateway
-import io.legado.app.domain.gateway.DictionaryGateway
 import io.legado.app.domain.gateway.DirectLinkSettingsGateway
 import io.legado.app.domain.gateway.DownloadCacheSettingsGateway
 import io.legado.app.domain.gateway.ExploreBooksGateway
@@ -144,7 +137,6 @@ import io.legado.app.domain.gateway.HomepageModulesGateway
 import io.legado.app.domain.gateway.HomepageSettingsGateway
 import io.legado.app.domain.gateway.HttpTtsEngineGateway
 import io.legado.app.domain.gateway.ImportBookSettingsGateway
-import io.legado.app.domain.gateway.LabSettingsGateway
 import io.legado.app.domain.gateway.LocalBookGateway
 import io.legado.app.domain.gateway.LocalPasswordGateway
 import io.legado.app.domain.gateway.MangaReaderDataGateway
@@ -162,13 +154,10 @@ import io.legado.app.domain.gateway.ReadStyleGateway
 import io.legado.app.domain.gateway.ReadingProgressGateway
 import io.legado.app.domain.gateway.ThemePackageSettingsGateway
 import io.legado.app.domain.gateway.ThemeSettingsGateway
-import io.legado.app.domain.gateway.TranslationCacheGateway
-import io.legado.app.domain.gateway.TranslationSettingsGateway
 import io.legado.app.domain.gateway.WebDavBackupGateway
 import io.legado.app.domain.repository.BookDomainRepository
 import io.legado.app.domain.usecase.AddBookUseCase
 import io.legado.app.domain.usecase.AddToBookshelfUseCase
-import io.legado.app.domain.usecase.AiChatGenerationUseCase
 import io.legado.app.domain.usecase.AiTaskManager
 import io.legado.app.domain.usecase.AiTextFactoryUseCase
 import io.legado.app.domain.usecase.AiToolAwareGenerationUseCase
@@ -213,7 +202,6 @@ import io.legado.app.domain.usecase.ShrinkDatabaseUseCase
 import io.legado.app.domain.usecase.StartBookSourceCheckUseCase
 import io.legado.app.domain.usecase.SyncHttpTtsCatalogUseCase
 import io.legado.app.domain.usecase.SyncReadAloudVoicesUseCase
-import io.legado.app.domain.usecase.TranslateChapterUseCase
 import io.legado.app.domain.usecase.UpdateBooksGroupUseCase
 import io.legado.app.domain.usecase.UploadReadingProgressUseCase
 import io.legado.app.domain.usecase.VerifyBookmarkTargetUseCase
@@ -231,7 +219,6 @@ import io.legado.app.model.ReadAloudSessionStore
 import io.legado.app.model.ReaderSession
 import io.legado.app.service.playback.PlaybackCapsuleGatewayAdapter
 import io.legado.app.ui.about.AboutViewModel
-import io.legado.app.ui.ai.chat.AiChatViewModel
 import io.legado.app.ui.association.ImportDictRuleViewModel
 import io.legado.app.ui.association.ImportHttpTtsViewModel
 import io.legado.app.ui.association.ImportReplaceRuleViewModel
@@ -291,14 +278,12 @@ import io.legado.app.ui.config.coverConfig.CoverAlbumManageViewModel
 import io.legado.app.ui.config.coverConfig.CoverConfigViewModel
 import io.legado.app.ui.config.customTheme.CustomThemeViewModel
 import io.legado.app.ui.config.downloadCacheConfig.DownloadCacheConfigViewModel
-import io.legado.app.ui.config.labConfig.LabConfigViewModel
 import io.legado.app.ui.config.otherConfig.OtherConfigViewModel
 import io.legado.app.ui.config.privateConfig.PrivateConfigViewModel
 import io.legado.app.ui.config.readConfig.ApplyReadSettingUseCase
 import io.legado.app.ui.config.readConfig.ReadConfigViewModel
 import io.legado.app.ui.config.themeConfig.ThemeConfigViewModel
 import io.legado.app.ui.config.themeManage.ThemeManageViewModel
-import io.legado.app.ui.config.translation.TranslationConfigViewModel
 import io.legado.app.ui.dict.DictViewModel
 import io.legado.app.ui.dict.rule.DictRuleViewModel
 import io.legado.app.help.readaloud.cast.AiCastAssignUseCase
@@ -404,11 +389,9 @@ val appModule = module {
     single<DownloadCacheSettingsGateway> { DownloadCacheSettingsRepository() }
     single<CoverSettingsGateway> { CoverSettingsRepository() }
     single<BackupSettingsGateway> { BackupSettingsRepository() }
-    single<LabSettingsGateway> { LabSettingsRepository() }
     single<MangaSettingsGateway> { MangaSettingsRepository() }
     single<ChangeSourceSettingsGateway> { ChangeSourceSettingsRepository() }
     single<ImportBookSettingsGateway> { ImportBookSettingsRepository() }
-    single<TranslationSettingsGateway> { TranslationSettingsRepository() }
     single<BookshelfSettingsGateway> { BookshelfSettingsRepository() }
     single { ReadSettingsRepository(settingsRepository = get()) }
     single<ReadSettingsGateway> { get<ReadSettingsRepository>() }
@@ -480,10 +463,8 @@ val appModule = module {
     singleOf(::ThemePackageManager)
 
     single<UploadRepository> { DirectLinkUploadRepository() }
-    single<TranslationCacheGateway> { TranslationCacheRepositoryImpl() }
     single<AiProfileGateway> { AiProfileRepository(get()) }
     single<AiArtifactGateway> { AiArtifactRepository(get()) }
-    single<AiChatGateway> { AiChatRepository(get()) }
     single<AiMemoryGateway> { AiMemoryRepository(get()) }
     single<AiPromptPresetGateway> { AiPromptPresetRepository(get()) }
     single<AiTextGateway> { AiTextRepositoryImpl() }
@@ -551,9 +532,6 @@ val appModule = module {
     singleOf(::VerifyBookmarkTargetUseCase)
     singleOf(::RelocateMarkingTargetUseCase)
     singleOf(::ReplaceRuleRepository)
-    single<DictionaryGateway> { DictionaryRepositoryImpl() }
-    singleOf(::TranslateChapterUseCase)
-    singleOf(::AiChatGenerationUseCase)
 
     single<ImageLoader> {
         ImageLoader.Builder(get())
@@ -643,12 +621,9 @@ val appModule = module {
     viewModelOf(::ThemeManageViewModel)
     viewModelOf(::OnboardingViewModel)
     viewModelOf(::BackupConfigViewModel)
-    viewModelOf(::LabConfigViewModel)
-    viewModelOf(::TranslationConfigViewModel)
     viewModelOf(::AiConfigViewModel)
     viewModelOf(::AiSummaryConfigViewModel)
     viewModelOf(::AiPromptConfigViewModel)
-    viewModelOf(::AiChatViewModel)
     viewModel { (providerId: String?) ->
         AiProviderEditViewModel(
             initialProviderId = providerId,
@@ -782,7 +757,6 @@ val appModule = module {
             application = get(),
             getReadingProgressUseCase = get(),
             uploadReadingProgressUseCase = get(),
-            translateChapterUseCase = get(),
             readSettingsRepository = get(),
             readBookStyleConfigRepository = get(),
             readAloudSettingsRepository = get(),

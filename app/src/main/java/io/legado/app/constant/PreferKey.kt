@@ -460,26 +460,9 @@ object PreferKey {
     const val navIconRssSelected = "navIconRssSelected"
     const val navIconMySelected = "navIconMySelected"
 
-    // Translation
-    const val llmTranslateEnabled = "llmTranslateEnabled"
-    const val llmProvider = "llmProvider"
-    const val llmBaseUrl = "llmBaseUrl"
-    const val llmApiKey = "llmApiKey"
-    const val llmModel = "llmModel"
-    const val llmTargetLanguage = "llmTargetLanguage"
-    const val llmMaxCharsPerChunk = "llmMaxCharsPerChunk"
-    const val llmConcurrentChunks = "llmConcurrentChunks"
-    const val llmRetryCount = "llmRetryCount"
-    const val llmTemperature = "llmTemperature"
-    const val llmPrompt = "llmPrompt"
     const val aiRewritePresets = "aiRewritePresets"
 
     const val navIconHome = "navIconHome"
-
-    // Lab
-    const val labEnabled = "labEnabled"
-    const val labEInkDisplay = "labEInkDisplay"
-    const val labEyeProtection = "labEyeProtection"
 
     // Eye Protection
     const val eyeProtectionEnabled = "eyeProtectionEnabled"
