@@ -48,9 +48,9 @@
 
 共享作用域按 `md5(jsLib)` 缓存，远程 jsLib 更是把整段规则按 `md5(url)` 存在 ACache 里且永不过期；`importBookSources` 会调 `SharedJsScope.remove(existing.jsLib)` 清掉，否则改了 asset 也会继续跑旧规则。
 
-历史上的 6 个聚合源（`https://agg.example.com/*`）和「消消乐听书」（`https://www.kaixin7days.com`）都已下线，升级时按 url 从老用户库里删掉（`DefaultData.retiredBookSourceUrls`）。聚合源挂在 `example.com` 这个占位域名下，从来没有真实内容，书架上的书不可能靠它读到正文，留着只是让书源列表多 6 条死条目。
+`DefaultData.retiredBookSourceUrls` 列出已停止分发的书源（6 个 `https://agg.example.com/*` 聚合源与「消消乐听书」`https://www.kaixin7days.com`）：升级时按 url 从库里删掉，导入时按同一份清单过滤。聚合源挂在 `example.com` 这个占位域名下，没有真实内容，书架上的书不可能靠它读到正文。
 
-删除只在升级时做一次，导入侧还必须按同一份 url 清单过滤：远端清单可能还是旧版（`main` 上留着拆源前的聚合源），拉下来一写就把刚删掉的条目复活。`BuiltInBookSourceUpgradeTest` 的 `upgradeDeletesRetiredAggregateSources` 与 `importIgnoresRetiredAggregateSources` 守这两条。
+删除只在升级时做一次，导入侧必须同时过滤：远端清单的版本由发布节奏决定，随时可能比本地旧，拉下来一写就把刚删掉的条目写回库里。`BuiltInBookSourceUpgradeTest` 的 `upgradeDeletesRetiredAggregateSources` 与 `importIgnoresRetiredAggregateSources` 守这两条。
 
 构建：
 
@@ -117,7 +117,7 @@ var SITES = [ { id, n, base, kind, search, s:{…}, b:{…}, t:{…}, c:{…}, e
 
 ## 验证
 
-每个源都用本机 App 调试接口跑过搜索 → 详情 → 目录 → 正文四链路，并额外验证了发现页入口。最后一次全量结果（拆源前的聚合形态，单站结果按站点分别记录）：
+每个源都用本机 App 调试接口跑过搜索 → 详情 → 目录 → 正文四链路，并额外验证了发现页入口。抽样结果：
 
 ```
 365小说网     ok  search 90   toc 1308  chars 6059     key 剑来
