@@ -206,14 +206,11 @@ fun ThemeConfigScreen(
                         )
 
                         if (theme.useMiuixMonet) {
-                            val visibleThemes = themes.filter { (_, value) ->
-                                value != "4" || state.showEInkTheme
-                            }
                             DropdownListSettingItem(
                                 title = stringResource(R.string.theme),
                                 selectedValue = theme.appTheme,
-                                displayEntries = visibleThemes.map { it.first }.toTypedArray(),
-                                entryValues = visibleThemes.map { it.second }.toTypedArray(),
+                                displayEntries = themes.map { it.first }.toTypedArray(),
+                                entryValues = themes.map { it.second }.toTypedArray(),
                                 onValueChange = { value ->
                                     onIntent(ThemeConfigIntent.SelectTheme(value))
                                 }
@@ -230,13 +227,9 @@ fun ThemeConfigScreen(
 
                     if (!isMiuixEngine) {
                         Spacer(modifier = Modifier.height(16.dp))
-
-                        val visibleThemes = themes.filter { (_, value) ->
-                            value != "4" || state.showEInkTheme
-                        }
                         ThemeColorSelector(
                             context = context,
-                            themes = visibleThemes,
+                            themes = themes,
                             selectedTheme = theme.appTheme,
                             isDark = isDarkTheme,
                             isAmoled = theme.isPureBlack,

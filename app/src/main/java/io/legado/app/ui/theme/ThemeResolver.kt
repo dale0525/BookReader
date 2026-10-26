@@ -17,7 +17,6 @@ object ThemeResolver {
         "1" to AppThemeMode.GR,
         "2" to AppThemeMode.Lemon,
         "3" to AppThemeMode.WH,
-        "4" to AppThemeMode.Elink,
         "5" to AppThemeMode.Sora,
         "6" to AppThemeMode.August,
         "7" to AppThemeMode.Carlotta,

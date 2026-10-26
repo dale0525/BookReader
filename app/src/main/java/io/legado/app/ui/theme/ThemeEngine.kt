@@ -10,7 +10,6 @@ import io.legado.app.lib.theme.primaryColor
 import io.legado.app.ui.theme.ThemeResolver.resolvePaletteStyle
 import io.legado.app.ui.theme.colorScheme.AugustColorScheme
 import io.legado.app.ui.theme.colorScheme.CarlottaColorScheme
-import io.legado.app.ui.theme.colorScheme.ElinkColorScheme
 import io.legado.app.ui.theme.colorScheme.GRColorScheme
 import io.legado.app.ui.theme.colorScheme.KoharuColorScheme
 import io.legado.app.ui.theme.colorScheme.LemonColorScheme
@@ -27,7 +26,6 @@ object ThemeEngine {
         AppThemeMode.GR to GRColorScheme,
         AppThemeMode.Lemon to LemonColorScheme,
         AppThemeMode.WH to WHColorScheme,
-        AppThemeMode.Elink to ElinkColorScheme,
         AppThemeMode.Sora to SoraColorScheme,
         AppThemeMode.August to AugustColorScheme,
         AppThemeMode.Carlotta to CarlottaColorScheme,

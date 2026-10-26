@@ -127,7 +127,6 @@ class ThemeCardPreference(context: Context, attrs: AttributeSet) : Preference(co
         "1" to R.style.Theme_Base_GR,
         "2" to R.style.Theme_Base_Lemon,
         "3" to R.style.Theme_Base_WH,
-        "4" to R.style.Theme_Base_Elink,
         "5" to R.style.Theme_Base_Sora,
         "6" to R.style.Theme_Base_August,
         "7" to R.style.Theme_Base_Carlotta,

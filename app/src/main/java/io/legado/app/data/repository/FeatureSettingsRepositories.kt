@@ -7,19 +7,15 @@ import io.legado.app.domain.gateway.AppShellSettingsGateway
 import io.legado.app.domain.gateway.BackupSettingsGateway
 import io.legado.app.domain.gateway.CoverSettingsGateway
 import io.legado.app.domain.gateway.DownloadCacheSettingsGateway
-import io.legado.app.domain.gateway.LabSettingsGateway
 import io.legado.app.domain.gateway.OtherSettingsGateway
 import io.legado.app.domain.gateway.ThemeSettingsGateway
-import io.legado.app.domain.gateway.TranslationSettingsGateway
-import io.legado.app.domain.model.TranslationConstants
+import io.legado.app.domain.model.AiGenerationConstants
 import io.legado.app.domain.model.settings.AppShellSettings
 import io.legado.app.domain.model.settings.BackupSettings
 import io.legado.app.domain.model.settings.CoverSettings
 import io.legado.app.domain.model.settings.DownloadCacheSettings
-import io.legado.app.domain.model.settings.LabSettings
 import io.legado.app.domain.model.settings.OtherSettings
 import io.legado.app.domain.model.settings.ThemeSettings
-import io.legado.app.domain.model.settings.TranslationSettings
 import io.legado.app.help.config.AppConfigStore
 import io.legado.app.help.config.compatDsBoolean
 import io.legado.app.help.config.compatDsFloat
@@ -92,40 +88,6 @@ class CoverSettingsRepository : CoverSettingsGateway {
         AppConfigStore.atomicUpdate(
             read = Preferences::toCoverSettings,
             toPrefMap = CoverSettings::toPrefMap,
-            transform = transform,
-        )
-    }
-}
-
-class LabSettingsRepository : LabSettingsGateway {
-    override val currentSettings: LabSettings
-        get() = AppConfigStore.preferences.toLabSettings()
-
-    override val settings: Flow<LabSettings> = AppConfigStore.preferencesFlow
-        .map { it.toLabSettings() }
-        .distinctUntilChanged()
-
-    override suspend fun update(transform: (LabSettings) -> LabSettings) {
-        AppConfigStore.atomicUpdate(
-            read = Preferences::toLabSettings,
-            toPrefMap = LabSettings::toPrefMap,
-            transform = transform,
-        )
-    }
-}
-
-class TranslationSettingsRepository : TranslationSettingsGateway {
-    override val currentSettings: TranslationSettings
-        get() = AppConfigStore.preferences.toTranslationSettings()
-
-    override val settings: Flow<TranslationSettings> = AppConfigStore.preferencesFlow
-        .map { it.toTranslationSettings() }
-        .distinctUntilChanged()
-
-    override suspend fun update(transform: (TranslationSettings) -> TranslationSettings) {
-        AppConfigStore.atomicUpdate(
-            read = Preferences::toTranslationSettings,
-            toPrefMap = TranslationSettings::toPrefMap,
             transform = transform,
         )
     }
@@ -215,42 +177,6 @@ internal fun CoverSettings.toPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.defaultCoverDark to defaultCoverDark,
 )
 
-internal fun Preferences.toLabSettings(): LabSettings = LabSettings(
-    enabled = compatDsBoolean(PreferKey.labEnabled) ?: false,
-    eInkDisplay = compatDsBoolean(PreferKey.labEInkDisplay) ?: false,
-    eyeProtection = compatDsBoolean(PreferKey.labEyeProtection) ?: false,
-)
-
-internal fun LabSettings.toPrefMap(): Map<String, Any?> = mapOf(
-    PreferKey.labEnabled to enabled,
-    PreferKey.labEInkDisplay to eInkDisplay,
-    PreferKey.labEyeProtection to eyeProtection,
-)
-
-internal fun Preferences.toTranslationSettings(): TranslationSettings {
-    val storedProvider = compatDsString(PreferKey.llmProvider)
-        ?: TranslationConstants.PROVIDER_GOOGLE
-    return TranslationSettings(
-        provider = if (storedProvider == TranslationConstants.PROVIDER_OPENAI) {
-            TranslationConstants.PROVIDER_APP_AI
-        } else {
-            storedProvider
-        },
-        targetLanguage = compatDsString(PreferKey.llmTargetLanguage) ?: "zh",
-        maxCharsPerChunk = compatDsInt(PreferKey.llmMaxCharsPerChunk) ?: 10000,
-        concurrentChunks = compatDsInt(PreferKey.llmConcurrentChunks) ?: 1,
-        retryCount = compatDsInt(PreferKey.llmRetryCount) ?: 2,
-    )
-}
-
-internal fun TranslationSettings.toPrefMap(): Map<String, Any?> = mapOf(
-    PreferKey.llmProvider to provider,
-    PreferKey.llmTargetLanguage to targetLanguage,
-    PreferKey.llmMaxCharsPerChunk to maxCharsPerChunk,
-    PreferKey.llmConcurrentChunks to concurrentChunks,
-    PreferKey.llmRetryCount to retryCount,
-)
-
 internal fun Preferences.toBackupSettings(): BackupSettings = BackupSettings(
     webDavUrl = compatDsString(PreferKey.webDavUrl).orEmpty(),
     webDavAccount = compatDsString(PreferKey.webDavAccount).orEmpty(),
@@ -280,7 +206,7 @@ internal fun BackupSettings.toPrefMap(): Map<String, Any?> = mapOf(
 )
 
 internal fun Preferences.toAppShellSettings(): AppShellSettings = AppShellSettings(
-    themeMode = compatDsString(PreferKey.themeMode) ?: "0",
+    themeMode = compatDsString(PreferKey.themeMode) ?: "1",
     fontScale = compatDsInt(PreferKey.fontScale) ?: 10,
     composeEngine = compatDsString(PreferKey.composeEngine) ?: "material",
     showHome = compatDsBoolean(PreferKey.showHome) ?: true,
@@ -347,8 +273,18 @@ internal fun AppShellSettings.toPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.launcherIcon to launcherIcon,
 )
 
+/**
+ * 「4」是已下线的 E-Ink 主题。老用户的 DataStore 里还留着这个值，
+ * 主题引擎查不到映射会回退成默认主题，但阅读器里按 `appTheme == "4"`
+ * 判断的分支仍会命中，结果是界面用默认配色、正文却用 E-Ink 配色。
+ * 在唯一的读入口归一化掉，两边的判断就一致了。
+ */
+private val retiredAppThemeValues = setOf("4")
+
 internal fun Preferences.toThemeSettings(): ThemeSettings = ThemeSettings(
-    appTheme = compatDsString(PreferKey.appTheme) ?: "0",
+    appTheme = (compatDsString(PreferKey.appTheme) ?: "0")
+        .takeUnless { it in retiredAppThemeValues }
+        ?: "0",
     useMiuixMonet = compatDsBoolean(PreferKey.useMiuixMonet) ?: false,
     isPureBlack = compatDsBoolean(PreferKey.pureBlack) ?: false,
     paletteStyle = compatDsString(PreferKey.paletteStyle) ?: "tonalSpot",

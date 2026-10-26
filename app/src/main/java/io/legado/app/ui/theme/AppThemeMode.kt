@@ -5,7 +5,6 @@ enum class AppThemeMode {
     GR,
     Lemon,
     WH,
-    Elink,
     Sora,
     August,
     Carlotta,

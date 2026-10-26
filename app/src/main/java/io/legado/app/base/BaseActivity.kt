@@ -241,7 +241,6 @@ abstract class BaseActivity<VB : ViewBinding>(
             "1" -> setTheme(R.style.Theme_Base_GR)
             "2" -> setTheme(R.style.Theme_Base_Lemon)
             "3" -> setTheme(R.style.Theme_Base_WH)
-            "4" -> setTheme(R.style.Theme_Base_Elink)
             "5" -> setTheme(R.style.Theme_Base_Sora)
             "6" -> setTheme(R.style.Theme_Base_August)
             "7" -> setTheme(R.style.Theme_Base_Carlotta)
