@@ -1,12 +1,16 @@
 package io.legado.app.feature.explore
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -30,6 +34,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
@@ -83,6 +90,14 @@ fun ExploreMainRoute(
             val scrollBehavior = GlassTopAppBarDefaults.defaultScrollBehavior()
             val currentKind = kinds.getOrNull(pagerState.currentPage)
             val selectedSource = state.sources.firstOrNull { it.url == state.selectedSourceUrl }
+            // 榜单档位与普通分类是两套入口：档位单独成卡片行，分类仍走 pager 的 tab。
+            // 两者共用同一个 pager，点卡片只是把 pager 翻到对应页，不另建一套加载逻辑。
+            val rankEntries = remember(kinds) {
+                kinds.withIndex().filter { it.value.rank.isNotEmpty() }
+            }
+            val categoryEntries = remember(kinds) {
+                kinds.withIndex().filter { it.value.rank.isEmpty() }
+            }
             // 恢复该书上上次浏览的分类，并把之后的稳定翻页写回偏好。
             LaunchedEffect(kinds, state.selectedKindKey) {
                 val savedIndex = kinds.indexOfFirst { exploreKindKey(it) == state.selectedKindKey }
@@ -170,26 +185,58 @@ fun ExploreMainRoute(
                             },
                             bottomContent = {
                                 if (kinds.isNotEmpty()) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 12.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        AppTabRow(
-                                            tabTitles = kinds.map { it.title },
-                                            selectedTabIndex = pagerState.targetPage,
-                                            onTabSelected = { index ->
-                                                scope.launch { pagerState.animateScrollToPage(index) }
-                                            },
-                                            modifier = Modifier.weight(1f),
-                                            isScrollable = true,
-                                        )
-                                        SmallOutlinedButton(
-                                            onClick = { kindSheetVisible = true },
-                                            icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
-                                            contentDescription = stringResource(R.string.select_or_search_category),
-                                        )
+                                    Column(modifier = Modifier.fillMaxWidth()) {
+                                        // 档位卡片只在真有站点提供时出现；没有来源的档位直接不渲染。
+                                        if (rankEntries.isNotEmpty()) {
+                                            LazyRow(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 12.dp),
+                                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            ) {
+                                                items(rankEntries, key = { it.index }) { entry ->
+                                                    RankCard(
+                                                        title = entry.value.title,
+                                                        selected = pagerState.targetPage == entry.index,
+                                                        onClick = {
+                                                            scope.launch {
+                                                                pagerState.animateScrollToPage(entry.index)
+                                                            }
+                                                        },
+                                                    )
+                                                }
+                                            }
+                                        }
+                                        if (categoryEntries.isNotEmpty()) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 12.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                            ) {
+                                                AppTabRow(
+                                                    tabTitles = categoryEntries.map { it.value.title },
+                                                    selectedTabIndex = selectedCategoryTabIndex(
+                                                        categoryEntries.map { it.index },
+                                                        pagerState.targetPage,
+                                                    ),
+                                                    onTabSelected = { index ->
+                                                        scope.launch {
+                                                            pagerState.animateScrollToPage(
+                                                                categoryEntries[index].index
+                                                            )
+                                                        }
+                                                    },
+                                                    modifier = Modifier.weight(1f),
+                                                    isScrollable = true,
+                                                )
+                                                SmallOutlinedButton(
+                                                    onClick = { kindSheetVisible = true },
+                                                    icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
+                                                    contentDescription = stringResource(R.string.select_or_search_category),
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             },
@@ -316,5 +363,39 @@ fun ExploreMainRoute(
                 },
             )
         }
+    }
+}
+
+/** 榜单档位卡片：与分类 tab 并列，但按卡片呈现，突出它是另一种浏览方式。 */
+@Composable
+private fun RankCard(
+    title: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val container by animateColorAsState(
+        targetValue = if (selected) {
+            MaterialTheme.colorScheme.secondaryContainer
+        } else {
+            MaterialTheme.colorScheme.surfaceContainerHigh
+        },
+        label = "RankCardContainer",
+    )
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.medium,
+        color = container,
+        contentColor = if (selected) {
+            MaterialTheme.colorScheme.onSecondaryContainer
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 1,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+        )
     }
 }

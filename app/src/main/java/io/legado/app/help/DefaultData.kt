@@ -12,6 +12,7 @@ import io.legado.app.help.config.LocalConfig
 import io.legado.app.help.config.ThemeConfigStore
 import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.help.coroutine.Coroutine
+import io.legado.app.help.source.clearExploreKindsCache
 import io.legado.app.model.BookCover
 import io.legado.app.utils.GSON
 import io.legado.app.utils.fromJsonArray
@@ -145,12 +146,15 @@ object DefaultData {
      * 内置源的规则是随包发布的代码资产，用户不该改也不该被旧版本锁死；
      * 只按 has() 判重会在升级时留下旧规则，正是发现页报错的成因。
      */
-    fun importDefaultBookSources() {
+    suspend fun importDefaultBookSources() {
         bookSources.forEach { incoming ->
             val existing = appDb.bookSourceDao.getBookSource(incoming.bookSourceUrl)
             if (existing == null) {
                 appDb.bookSourceDao.insert(incoming)
             } else {
+                // 分类缓存按 exploreUrl 失效，而内置源的 exploreUrl 通常恒为同一段 JS，
+                // 改的是它背后的 jsLib。不清缓存的话，覆盖安装后发现页仍显示旧分类。
+                existing.clearExploreKindsCache()
                 appDb.bookSourceDao.insert(
                     incoming.copy(
                         enabled = existing.enabled,

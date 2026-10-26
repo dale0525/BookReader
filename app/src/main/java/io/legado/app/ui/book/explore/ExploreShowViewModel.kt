@@ -15,10 +15,14 @@ import io.legado.app.domain.usecase.ExploreBooksUseCase
 import io.legado.app.domain.usecase.ResolveBookShelfStateUseCase
 import io.legado.app.domain.usecase.ResolveBookshelfConflictUseCase
 import io.legado.app.domain.usecase.SaveSearchBooksUseCase
+import io.legado.app.feature.explore.URL_SEPARATOR
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.ui.book.conflict.BookshelfConflictController
 import io.legado.app.utils.stackTraceStr
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -288,6 +292,16 @@ class ExploreShowViewModel(
             }
         }
 
+        // 切走再切回会重建 ViewModel；有缓存就直接恢复，不重跑整页抓取。
+        val cached = ExplorePageCache.get(incomingSourceUrl, incomingExploreUrl)
+        if (cached != null) {
+            _rawBooks.value = cached.books
+            page = cached.nextPage
+            _pageState.update { it.copy(currentPage = (cached.nextPage - 1).coerceAtLeast(1)) }
+            _loadState.update { it.copy(isEnd = cached.isEnd) }
+            return
+        }
+
         loadMore(isRefresh = true)
     }
 
@@ -390,6 +404,8 @@ class ExploreShowViewModel(
 
         loadJob = viewModelScope.launch {
             if (isRefresh) {
+                // 下拉刷新是用户明确要求重拉，丢掉这一页的缓存。
+                ExplorePageCache.remove(source, url)
                 page = 1
                 autoPageCount = 0
                 _rawBooks.value = emptyList()
@@ -404,18 +420,19 @@ class ExploreShowViewModel(
     }
 
     private suspend fun fetchPage(sourceUrl: String, url: String?, generation: Long) {
+        val targets = splitAggregateUrl(url)
         kotlin.runCatching {
-            exploreBooksUseCase.execute(sourceUrl, url, args = null, page)
+            fetchTargets(sourceUrl, targets)
         }.onSuccess { result ->
             if (generation != loadGeneration) return@onSuccess
             val currentList = _rawBooks.value
             val existingUrls = currentList.map { it.bookUrl }.toSet()
-            val uniqueNewBooks = result.books
+            val uniqueNewBooks = result
                 .filter { it.bookUrl !in existingUrls }
                 .distinctBy { it.bookUrl }
 
-            if (result.books.isNotEmpty()) {
-                saveSearchBooksUseCase.save(result.books)
+            if (result.isNotEmpty()) {
+                saveSearchBooksUseCase.save(result)
             }
 
             if (uniqueNewBooks.isEmpty()) {
@@ -435,6 +452,32 @@ class ExploreShowViewModel(
         }
     }
 
+    /**
+     * 并发请求聚合分类下的每个站点，再按返回顺序拼接。
+     *
+     * 单个站点失败只丢弃它自己的结果：聚合页的价值是把能拿到的源都摆出来，
+     * 一个源挂了不该让整页空白。
+     */
+    private suspend fun fetchTargets(
+        sourceUrl: String,
+        targets: List<String?>,
+    ): List<SearchBook> = coroutineScope {
+        targets.map { target ->
+            async {
+                runCatching {
+                    exploreBooksUseCase.execute(sourceUrl, target, args = null, page).books
+                }.getOrDefault(emptyList())
+            }
+        }.awaitAll().flatten()
+    }
+
+    private fun splitAggregateUrl(url: String?): List<String?> =
+        url.orEmpty()
+            .split(URL_SEPARATOR)
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .ifEmpty { listOf(url) }
+
     private suspend fun fetchNextAutoPageOrFinish(
         sourceUrl: String,
         url: String?,
@@ -451,12 +494,29 @@ class ExploreShowViewModel(
         }
     }
 
+    /** 把当前已加载的书与分页位置写回缓存，供切回时恢复。 */
+    private fun rememberPage(sourceUrl: String, url: String?) {
+        ExplorePageCache.put(
+            sourceUrl,
+            url,
+            ExplorePageCache.Entry(
+                books = _rawBooks.value,
+                nextPage = page,
+                isEnd = _loadState.value.isEnd,
+            )
+        )
+    }
+
     private fun finishLoading() {
         _loadState.update {
             it.copy(
                 isLoading = false,
                 isRefreshing = false,
             )
+        }
+        val src = sourceUrl
+        if (src != null && _rawBooks.value.isNotEmpty()) {
+            rememberPage(src, exploreUrl)
         }
     }
 
