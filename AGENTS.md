@@ -56,6 +56,15 @@
 - 漫画正文图片**不经过** `CoverFetcher`：`CoverInterceptor` 会先把在线页下载成本地文件，再以 `data(File)` 交给解码器。任何需要改写图片字节的处理（如禁漫天堂的切条重排）必须接在 `BookHelp.saveImageFile` 的落盘处，并且要绕开 `skipDecode` 的流式直写分支，否则错位原图会被缓存下来反复显示。
 - 书源制作用 `.agents/skills/legado-book-source/` 技能；书源说明见 [docs/book-source/README.md](docs/book-source/README.md)。
 
+## 阅读排版与菜单
+
+改阅读界面的默认外观前先分清两个配置来源——它们互不覆盖，只改一处不会生效：
+
+- **排版**（字号、字距、行距、段距、页边距、标题、页眉页脚）走 `ReadBookConfig.config`，即 `if (shareLayout) shareConfig else durConfig`。`shareLayout` 默认 true，所以生效的是 `assets/defaultData/shareReadConfig.json`；`readConfig.json` 里各预设的同名排版字段此时不参与渲染。
+- **配色**（背景、正文色）不经过 `config`：`ReadBookViewModel.buildStyleConfig()` 与 `ReadBookRouteScreen` 直接取 `durConfig`，即 `readConfig.json` 中当前选中的那一份预设。
+
+菜单配色是第三套开关，由 `readBarStyle` 决定：0=黑白、1=跟随阅读背景、2=自定义。只有 2 会读 `readMenuBgColor/AccentColor/ContainerColor/TextColor`（见 `ReadBookColorTheme.kt` 的 `rememberCustomReadMenuTheme`）。菜单卡片默认 `readMenuBlurAlpha = 85` 是半透明，要做实心卡片必须设 100，否则正文会透上来。
+
 ## 上游同步
 
 `upstream` 指向 `HapeLee/legado-with-MD3`，fork 在 `main` 上累积自己的删除与改造。合并上游时有两处必查：
