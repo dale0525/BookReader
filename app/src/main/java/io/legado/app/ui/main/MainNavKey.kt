@@ -92,9 +92,6 @@ data object MainRouteSettingsBackup : MainRoute
 data object MainRouteSettingsAi : MainRoute
 
 @Serializable
-data object MainRouteAiChat : MainRoute
-
-@Serializable
 data class MainRouteSettingsAiProviderEdit(
     val providerId: String? = null
 ) : MainRoute
@@ -121,13 +118,8 @@ data object MainRouteSettingsThemeManage : MainRoute
 data object MainRouteSettingsPrivate : MainRoute
 
 @Serializable
-data object MainRouteSettingsLabConfig : MainRoute
-
-@Serializable
 data object MainRouteSettingsDownloadCache : MainRoute
 
-@Serializable
-data object MainRouteSettingsTranslation : MainRoute
 
 @Serializable
 data object MainRouteImportLocal : MainRoute
@@ -353,12 +345,9 @@ object MainRouteConst {
     const val ROUTE_SETTINGS_AI = "settings/ai"
     const val ROUTE_SETTINGS_AI_SUMMARY = "settings/ai/summary"
     const val ROUTE_SETTINGS_AI_PROMPT = "settings/ai/prompt"
-    const val ROUTE_AI_CHAT = "ai/chat"
     const val ROUTE_SETTINGS_CUSTOM_THEME = "settings/custom_theme"
     const val ROUTE_SETTINGS_PRIVATE = "settings/private"
-    const val ROUTE_SETTINGS_LAB_CONFIG = "settings/lab_config"
     const val ROUTE_SETTINGS_DOWNLOAD_CACHE = "settings/download_cache"
-    const val ROUTE_SETTINGS_TRANSLATION = "settings/translation"
     const val ROUTE_IMPORT_LOCAL = "import/local"
     const val ROUTE_IMPORT_REMOTE = "import/remote"
     const val ROUTE_CACHE = "cache"

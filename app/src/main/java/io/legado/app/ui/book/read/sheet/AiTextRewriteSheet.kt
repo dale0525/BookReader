@@ -32,8 +32,8 @@ import io.legado.app.R
 import io.legado.app.domain.model.AiMessagePart
 import io.legado.app.domain.model.AiMessageRole
 import io.legado.app.ui.ai.AiReasoningModeButton
-import io.legado.app.ui.ai.chat.AiChatMessageUi
-import io.legado.app.ui.ai.chat.AiGeneratedMessageContent
+import io.legado.app.ui.ai.AiGeneratedMessageUi
+import io.legado.app.ui.ai.AiGeneratedMessageContent
 import io.legado.app.ui.book.read.AiRewriteHistoryUi
 import io.legado.app.ui.book.read.AiRewritePresetUi
 import io.legado.app.ui.book.read.AiTextRewriteUiState
@@ -228,7 +228,7 @@ fun AiTextRewriteSheet(
                                         isUser = false,
                                         isAssistant = true,
                                         isStreaming = state.isLoading,
-                                        message = state.toAiChatMessage(),
+                                        message = state.toGeneratedMessage(),
                                         showHeader = false,
                                         reasoningAutoExpandWhileStreaming = false,
                                         modifier = Modifier.padding(16.dp),
@@ -354,7 +354,7 @@ private fun RewriteHistoryItem(
     }
 }
 
-private fun AiTextRewriteUiState.toAiChatMessage(): AiChatMessageUi {
+private fun AiTextRewriteUiState.toGeneratedMessage(): AiGeneratedMessageUi {
     val parts = buildList {
         reasoningText.takeIf { it.isNotBlank() }?.let {
             add(AiMessagePart.Reasoning(it))
@@ -363,7 +363,7 @@ private fun AiTextRewriteUiState.toAiChatMessage(): AiChatMessageUi {
             add(AiMessagePart.Text(it))
         }
     }
-    return AiChatMessageUi(
+    return AiGeneratedMessageUi(
         id = "read_ai_rewrite",
         role = AiMessageRole.ASSISTANT,
         parts = parts.toImmutableList(),

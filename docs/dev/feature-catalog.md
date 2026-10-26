@@ -30,7 +30,6 @@
 | `ui/replace`                             | `feature/replace-rules`     | Feature                       | `edit` 是同 Feature 子流程                                                        |
 | `ui/dict`                                | `feature/dictionary`        | Feature                       | rule editor 留同域，执行引擎经 domain/platform contract                               |
 | `ui/highlightTagRule`、`ui/tagGroupRule`  | `feature/tag-rules`         | Feature domain                | 可作为小型迁移样板候选，先核对实际共享模型                                                        |
-| `ui/ai/chat`                             | `feature/ai-chat`           | Feature                       | AI provider/config 归 settings 或 data/platform，不放 Screen                      |
 | `ui/login`                               | `feature/source-login`      | Feature + host effect         | WebView/cookie/platform auth 通过 adapter                                      |
 | `ui/about`                               | `feature/about`             | Feature                       | 边界小，适合首个 package relocation 样板候选                                             |
 | `ui/welcome`                             | `feature/onboarding`        | Feature                       | 首次启动状态经 settings/domain contract                                             |

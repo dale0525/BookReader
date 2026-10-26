@@ -55,7 +55,6 @@ import io.legado.app.service.AudioPlayService
 import io.legado.app.ui.about.AboutEffect
 import io.legado.app.ui.about.AboutScreen
 import io.legado.app.ui.about.AboutViewModel
-import io.legado.app.ui.ai.chat.AiChatRouteScreen
 import io.legado.app.ui.book.audio.AudioPlayEffect
 import io.legado.app.ui.book.audio.AudioPlayIntent
 import io.legado.app.ui.book.audio.AudioPlayScreenContent
@@ -150,13 +149,11 @@ import io.legado.app.ui.config.coverConfig.CoverAlbumManageRouteScreen
 import io.legado.app.ui.config.coverConfig.CoverConfigRouteScreen
 import io.legado.app.ui.config.customTheme.CustomThemeRouteScreen
 import io.legado.app.ui.config.downloadCacheConfig.DownloadCacheConfigRouteScreen
-import io.legado.app.ui.config.labConfig.LabConfigRouteScreen
 import io.legado.app.ui.config.otherConfig.OtherConfigRouteScreen
 import io.legado.app.ui.config.privateConfig.PrivateConfigRouteScreen
 import io.legado.app.ui.config.readConfig.ReadConfigRouteScreen
 import io.legado.app.ui.config.themeConfig.ThemeConfigRouteScreen
 import io.legado.app.ui.config.themeManage.ThemeManageRouteScreen
-import io.legado.app.ui.config.translation.TranslationConfigRouteScreen
 import io.legado.app.ui.dict.rule.DictRuleRouteScreen
 import io.legado.app.ui.highlightTagRule.HighlightTagRuleRouteScreen
 import io.legado.app.ui.login.SourceLoginIntent
@@ -518,9 +515,6 @@ fun MainActivity.mainEntryProvider(
             onOpenSettings = {
                 onNavigateToRoute(MainRouteSettings)
             },
-            onNavigateToChat = {
-                onNavigateToRoute(MainRouteAiChat)
-            },
             onNavigateToSearch = { key ->
                 onNavigateToRoute(
                     MainRouteSearch(
@@ -678,8 +672,6 @@ fun MainActivity.mainEntryProvider(
             onNavigateToBackup = { pushRoute(MainRouteSettingsBackup) },
             onNavigateToAi = { pushRoute(MainRouteSettingsAi) },
             onNavigateToDownloadCache = { pushRoute(MainRouteSettingsDownloadCache) },
-            onNavigateToTranslation = { pushRoute(MainRouteSettingsTranslation) },
-            onNavigateToLab = { pushRoute(MainRouteSettingsLabConfig) },
             onNavigateToPrivate = { pushRoute(MainRouteSettingsPrivate) }
         )
     }
@@ -731,7 +723,6 @@ fun MainActivity.mainEntryProvider(
                     )
                 )
             },
-            onNavigateToTranslation = { pushRoute(MainRouteSettingsTranslation) },
             onNavigateToAiSummary = { pushRoute(MainRouteSettingsAiSummary) },
             onNavigateToAiPrompt = { pushRoute(MainRouteSettingsAiPrompt) }
         )
@@ -752,23 +743,6 @@ fun MainActivity.mainEntryProvider(
         )
     }
 
-    entry<MainRouteAiChat> {
-        AiChatRouteScreen(
-            onBackClick = { onNavigateBack() },
-            onOpenBookInfo = { book ->
-                onNavigateToRoute(
-                    MainRouteBookInfo(
-                        name = book.name,
-                        author = book.author,
-                        bookUrl = book.bookUrl,
-                        origin = book.origin,
-                        coverPath = book.coverPath
-                    )
-                )
-            }
-        )
-    }
-
     entry<MainRouteSettingsAiModelEdit> { route ->
         AiModelEditRouteScreen(
             providerId = route.providerId,
@@ -779,17 +753,6 @@ fun MainActivity.mainEntryProvider(
 
     entry<MainRouteSettingsDownloadCache> {
         DownloadCacheConfigRouteScreen(onBackClick = { onNavigateBack() })
-    }
-
-    entry<MainRouteSettingsTranslation> {
-        TranslationConfigRouteScreen(
-            onBackClick = { onNavigateBack() },
-            onNavigateToAi = { pushRoute(MainRouteSettingsAi) }
-        )
-    }
-
-    entry<MainRouteSettingsLabConfig> {
-        LabConfigRouteScreen(onBackClick = { onNavigateBack() })
     }
 
     entry<MainRouteSettingsPrivate> {

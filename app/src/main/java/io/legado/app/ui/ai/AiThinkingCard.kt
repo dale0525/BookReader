@@ -1,4 +1,4 @@
-package io.legado.app.ui.ai.chat
+package io.legado.app.ui.ai
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically

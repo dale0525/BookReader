@@ -19,8 +19,8 @@ import io.legado.app.R
 import io.legado.app.domain.model.AiMessagePart
 import io.legado.app.domain.model.AiMessageRole
 import io.legado.app.ui.ai.AiReasoningModeButton
-import io.legado.app.ui.ai.chat.AiChatMessageUi
-import io.legado.app.ui.ai.chat.AiGeneratedMessageContent
+import io.legado.app.ui.ai.AiGeneratedMessageUi
+import io.legado.app.ui.ai.AiGeneratedMessageContent
 import io.legado.app.ui.book.read.AiTextCleanUiState
 import io.legado.app.ui.book.read.ReadBookIntent
 import io.legado.app.ui.theme.LegadoTheme
@@ -124,7 +124,7 @@ fun AiTextCleanSheet(
                                 isUser = false,
                                 isAssistant = true,
                                 isStreaming = state.isLoading,
-                                message = state.toAiChatMessage(),
+                                message = state.toGeneratedMessage(),
                                 showHeader = false,
                                 reasoningAutoExpandWhileStreaming = false,
                                 modifier = Modifier.padding(16.dp),
@@ -156,7 +156,7 @@ fun AiTextCleanSheet(
     }
 }
 
-private fun AiTextCleanUiState.toAiChatMessage(): AiChatMessageUi {
+private fun AiTextCleanUiState.toGeneratedMessage(): AiGeneratedMessageUi {
     val displayText = replacementText.ifBlank { streamingText }
     val parts = buildList {
         if (reasoningText.isNotBlank()) {
@@ -166,7 +166,7 @@ private fun AiTextCleanUiState.toAiChatMessage(): AiChatMessageUi {
             add(AiMessagePart.Text(displayText))
         }
     }.toImmutableList()
-    return AiChatMessageUi(
+    return AiGeneratedMessageUi(
         id = "read_ai_clean",
         role = AiMessageRole.ASSISTANT,
         parts = parts,

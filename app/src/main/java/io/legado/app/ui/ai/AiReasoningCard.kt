@@ -1,4 +1,4 @@
-package io.legado.app.ui.ai.chat
+package io.legado.app.ui.ai
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateContentSize

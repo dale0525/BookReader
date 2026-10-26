@@ -1,6 +1,7 @@
 package io.legado.app.data
 
 import androidx.room.DeleteColumn
+import androidx.room.DeleteTable
 import androidx.room.migration.AutoMigrationSpec
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
@@ -898,4 +899,12 @@ object DatabaseMigrations {
             db.execSQL("ALTER TABLE highlightRules_r56 RENAME TO highlightRules")
         }
     }
+
+    // 移除「AI 对话」：会话与消息两张表整体删除，用户数据一并清掉。
+    @Suppress("ClassName")
+    @DeleteTable.Entries(
+        DeleteTable(tableName = "ai_chat_conversations"),
+        DeleteTable(tableName = "ai_chat_messages"),
+    )
+    class Migration_132_133 : AutoMigrationSpec
 }

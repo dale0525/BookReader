@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import io.legado.app.R
 import io.legado.app.domain.gateway.AiProfileGateway
 import io.legado.app.domain.model.AiTaskType
-import io.legado.app.domain.model.TranslationConstants
+import io.legado.app.domain.model.AiGenerationConstants
 import io.legado.app.utils.toastOnUi
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -34,18 +34,6 @@ class AiPromptConfigViewModel(
     )
 
     private val taskPromptMetas = listOf(
-        TaskPromptMeta(
-            taskType = AiTaskType.CHAT,
-            nameResId = R.string.ai_prompt_task_chat,
-            descResId = R.string.ai_prompt_task_chat_desc,
-            defaultPromptResId = R.string.ai_prompt_default_chat
-        ),
-        TaskPromptMeta(
-            taskType = AiTaskType.TRANSLATE_CHAPTER,
-            nameResId = R.string.ai_prompt_task_translate,
-            descResId = R.string.ai_prompt_task_translate_desc,
-            defaultPromptResId = R.string.ai_prompt_default_translate
-        ),
         TaskPromptMeta(
             taskType = AiTaskType.SUMMARIZE_CHAPTER,
             nameResId = R.string.ai_prompt_task_summary,
@@ -151,7 +139,7 @@ class AiPromptConfigViewModel(
                     taskType = taskType,
                     promptTemplate = prompt,
                     temperature = existingConfig?.params?.temperature
-                        ?: TranslationConstants.DEFAULT_TEMPERATURE,
+                        ?: AiGenerationConstants.DEFAULT_TEMPERATURE,
                     maxOutputTokens = existingConfig?.params?.maxOutputTokens ?: 0
                 )
                 _uiState.update { current ->
@@ -184,7 +172,7 @@ class AiPromptConfigViewModel(
                     taskType = taskType,
                     promptTemplate = defaultPrompt,
                     temperature = existingConfig?.params?.temperature
-                        ?: TranslationConstants.DEFAULT_TEMPERATURE,
+                        ?: AiGenerationConstants.DEFAULT_TEMPERATURE,
                     maxOutputTokens = existingConfig?.params?.maxOutputTokens ?: 0
                 )
                 _uiState.update { current ->
@@ -217,7 +205,7 @@ class AiPromptConfigViewModel(
                         taskType = meta.taskType,
                         promptTemplate = defaultPrompt,
                         temperature = existingConfig?.params?.temperature
-                            ?: TranslationConstants.DEFAULT_TEMPERATURE,
+                            ?: AiGenerationConstants.DEFAULT_TEMPERATURE,
                         maxOutputTokens = existingConfig?.params?.maxOutputTokens ?: 0
                     )
                 }.onFailure {

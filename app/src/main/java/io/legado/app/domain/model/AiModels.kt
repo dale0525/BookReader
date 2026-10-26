@@ -13,12 +13,10 @@ object AiProtocol {
     const val OPENAI_CHAT_COMPLETIONS = "openai_chat_completions"
     const val OPENAI_RESPONSES = "openai_responses"
     const val ANTHROPIC_MESSAGES = "anthropic_messages"
-    const val GOOGLE_TRANSLATE = "google_translate"
 }
 
 object AiTaskType {
     const val CHAT = "chat"
-    const val TRANSLATE_CHAPTER = "translate_chapter"
     const val SUMMARIZE_CHAPTER = "summarize_chapter"
     const val SUMMARIZE_BOOK = "summarize_book"
     const val EXPLAIN_SELECTION = "explain_selection"
@@ -188,8 +186,7 @@ data class AiProfileDraft(
     val modelId: String,
     val contextWindow: Int = 0,
     val maxOutputTokens: Int = 0,
-    val temperature: Float = TranslationConstants.DEFAULT_TEMPERATURE,
-    val translationTargetLanguage: String = AiTaskRuntimeOptions.DEFAULT_TARGET_LANGUAGE,
+    val temperature: Float = AiGenerationConstants.DEFAULT_TEMPERATURE,
     val maxInputChars: Int = AiTaskRuntimeOptions.DEFAULT_MAX_INPUT_CHARS,
     val concurrentRequests: Int = AiTaskRuntimeOptions.DEFAULT_CONCURRENT_REQUESTS,
     val retryCount: Int = AiTaskRuntimeOptions.DEFAULT_RETRY_COUNT
@@ -218,7 +215,7 @@ data class AiModelDraft(
     val modelId: String,
     val contextWindow: Int = 0,
     val maxOutputTokens: Int = 0,
-    val temperature: Float = TranslationConstants.DEFAULT_TEMPERATURE,
+    val temperature: Float = AiGenerationConstants.DEFAULT_TEMPERATURE,
     val reasoningLevel: AiReasoningLevel = AiReasoningLevel.MEDIUM
 )
 
@@ -304,7 +301,7 @@ data class AiGenerationParams(
     ): AiGenerationParams {
         val mergedTemperature = this.temperature
             ?: modelParams.temperature
-            ?: TranslationConstants.DEFAULT_TEMPERATURE
+            ?: AiGenerationConstants.DEFAULT_TEMPERATURE
 
         val effectiveModelMaxTokens = when {
             modelMaxOutputTokens > 0 -> modelMaxOutputTokens
@@ -346,13 +343,11 @@ data class AiGenerationParams(
 
 @Keep
 data class AiTaskRuntimeOptions(
-    val targetLanguage: String = DEFAULT_TARGET_LANGUAGE,
     val maxInputChars: Int = DEFAULT_MAX_INPUT_CHARS,
     val concurrentRequests: Int = DEFAULT_CONCURRENT_REQUESTS,
     val retryCount: Int = DEFAULT_RETRY_COUNT
 ) {
     companion object {
-        const val DEFAULT_TARGET_LANGUAGE = "zh"
         const val DEFAULT_MAX_INPUT_CHARS = 10000
         const val DEFAULT_CONCURRENT_REQUESTS = 1
         const val DEFAULT_RETRY_COUNT = 2

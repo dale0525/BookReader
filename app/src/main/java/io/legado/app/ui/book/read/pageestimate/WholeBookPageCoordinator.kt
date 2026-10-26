@@ -7,7 +7,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.abs
 import kotlin.math.ceil
 
 class WholeBookPageCoordinator(
@@ -16,7 +15,6 @@ class WholeBookPageCoordinator(
     private val estimator: ChapterPageEstimator? = null,
     private val calibrationStore: PageEstimateCalibrationStore = PageEstimateCalibrationStore.None,
     private val exactPageCountStore: ExactChapterPageCountStore = ExactChapterPageCountStore.None,
-    private val metrics: PageEstimateMetrics = PageEstimateMetrics.None,
     private val onStateChanged: () -> Unit = {},
 ) {
     private val lock = Any()
@@ -38,7 +36,6 @@ class WholeBookPageCoordinator(
         chapterLoader: suspend () -> List<ChapterLengthInfo>,
     ): Long {
         val taskGeneration: Long
-        val requestStartedAt = System.nanoTime()
         val layoutSignature = config.layoutSignature
         val layoutBucket = config.calibrationBucket
         val bookBucket = bookCalibrationBucket(bookId, layoutBucket)
@@ -160,17 +157,6 @@ class WholeBookPageCoordinator(
                 true
             }
             if (changed) {
-                metrics.record(
-                    PageEstimateMetric.EstimateCompleted(
-                        generation = taskGeneration,
-                        layoutSignature = layoutSignature,
-                        calibration = calibration,
-                        chapterCount = chapters.size,
-                        knownLengthCount = knownLengths.size,
-                        totalPages = pageCounts.sum(),
-                        durationMillis = (System.nanoTime() - requestStartedAt) / 1_000_000L,
-                    )
-                )
                 onStateChanged()
             }
         }
@@ -356,7 +342,6 @@ class WholeBookPageCoordinator(
 
         val chapter = estimate.chapters.getOrNull(chapterIndex) ?: return changed
         val rawEstimate = estimate.rawEstimates.getOrNull(chapterIndex) ?: return changed
-        val calibrationBefore = calibrationStore.get(estimate.bookBucket)
         // 逐书桶用来估这本书自己的段落密度，排版级桶用来给下一本新书做冷启动先验。
         val updatedCalibration = calibrationStore.record(
             bucket = estimate.bookBucket,
@@ -367,23 +352,6 @@ class WholeBookPageCoordinator(
             bucket = estimate.layoutBucket,
             estimatedPages = rawEstimate,
             realPages = correctedPages,
-        )
-        val absoluteError = abs(correctedPages - estimatedPages)
-        metrics.record(
-            PageEstimateMetric.ChapterCorrected(
-                generation = estimate.generation,
-                layoutSignature = estimate.layoutSignature,
-                chapterId = chapter.chapterId,
-                chapterIndex = chapterIndex,
-                contentLength = chapter.contentLength ?: -1,
-                rawEstimate = rawEstimate,
-                estimatedPages = estimatedPages,
-                realPages = correctedPages,
-                absoluteError = absoluteError,
-                relativeError = absoluteError.toFloat() / correctedPages,
-                calibrationBefore = calibrationBefore,
-                calibrationAfter = updatedCalibration,
-            )
         )
         chapter.contentHash?.let { contentHash ->
             scope.launch(Dispatchers.IO) {

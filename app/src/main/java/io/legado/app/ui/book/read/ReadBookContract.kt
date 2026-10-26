@@ -21,7 +21,6 @@ import io.legado.app.domain.model.settings.ReadAloudContentSplitMode
 import io.legado.app.domain.model.settings.ReadAloudTimerMode
 import io.legado.app.domain.model.settings.ReadStyleItem
 import io.legado.app.domain.usecase.BookmarkTargetVerdict
-import io.legado.app.model.translation.TranslationChapterStatus
 import io.legado.app.ui.book.read.sheet.ReaderBookSheetTab
 import io.legado.app.ui.book.searchContent.SearchResult
 import kotlinx.collections.immutable.ImmutableList
@@ -264,9 +263,6 @@ data class ReadBookUiState(
     val effectiveReplaceRules: ImmutableList<ReplaceRule> = persistentListOf(),
     val allReplaceRules: ImmutableList<ReplaceRuleItemUi> = persistentListOf(),
     val chineseConverterActive: Boolean = false,
-    // Translation
-    val translationMode: Boolean = false,
-    val translationStatus: TranslationChapterStatus = TranslationChapterStatus.Idle,
     val menuState: ReadBookMenuState = ReadBookMenuState(),
     // Ordered modal layers; opening a child retains its parent.
     val sheetStack: ImmutableList<ReadBookSheet> = persistentListOf(),
@@ -492,7 +488,6 @@ internal val ReadBookButtonIds = listOf(
     "next_chapter",
     "replace",
     "replace_badge",
-    "translate",
     "refresh_current",
     "multi_role_read",
     "multi_role_cast",
@@ -588,7 +583,6 @@ sealed interface ReadBookIntent {
     data class SetReplaceRuleEnabled(val id: Long, val enabled: Boolean) : ReadBookIntent
     data class MoveReplaceRule(val draggedId: Long, val anchorId: Long, val afterAnchor: Boolean) :
         ReadBookIntent
-    data object ToggleTranslation : ReadBookIntent
     data object OpenChapterSummary : ReadBookIntent
     data object OpenAiCurrentChapterRewrite : ReadBookIntent
     data object RetryChapterSummary : ReadBookIntent
@@ -682,7 +676,6 @@ sealed interface ReadBookIntent {
     data class SaveImage(val src: String) : ReadBookIntent
     data object ReverseContent : ReadBookIntent
     data object ReverseRemoveSameTitle : ReadBookIntent
-    data object RetranslateCurrentChapter : ReadBookIntent
 
     // Menu actions (moved from Activity)
     data object MenuUpdateToc : ReadBookIntent

@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.legado.app.R
 import io.legado.app.domain.model.AiReasoningLevel
-import io.legado.app.domain.model.TranslationConstants
+import io.legado.app.domain.model.AiGenerationConstants
 import io.legado.app.ui.theme.adaptiveContentPadding
 import io.legado.app.ui.widget.components.AppFloatingActionButton
 import io.legado.app.ui.widget.components.AppScaffold
@@ -214,8 +214,8 @@ fun AiModelEditScreen(
                     SliderSettingItem(
                         title = stringResource(R.string.ai_temperature),
                         value = state.temperature,
-                        defaultValue = TranslationConstants.DEFAULT_TEMPERATURE,
-                        valueRange = TranslationConstants.MIN_TEMPERATURE..TranslationConstants.MAX_TEMPERATURE,
+                        defaultValue = AiGenerationConstants.DEFAULT_TEMPERATURE,
+                        valueRange = AiGenerationConstants.MIN_TEMPERATURE..AiGenerationConstants.MAX_TEMPERATURE,
                         steps = 19,
                         description = state.temperature.toString(),
                         decimal = true,

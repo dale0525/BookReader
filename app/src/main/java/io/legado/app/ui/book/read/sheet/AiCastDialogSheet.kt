@@ -48,8 +48,8 @@ import io.legado.app.help.readaloud.cast.AiCastPresetUi
 import io.legado.app.help.readaloud.cast.AiCastProgress
 import io.legado.app.help.readaloud.cast.CastMemoryMirror
 import io.legado.app.model.ReadBook
-import io.legado.app.ui.ai.chat.AiThinkingCard
-import io.legado.app.ui.ai.chat.AiThinkingStep
+import io.legado.app.ui.ai.AiThinkingCard
+import io.legado.app.ui.ai.AiThinkingStep
 import io.legado.app.ui.book.read.ReadBookIntent
 import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.widget.components.CastFieldSpec

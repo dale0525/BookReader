@@ -173,26 +173,18 @@ class WholeBookPageCoordinatorTest {
     }
 
     @Test
-    fun `exact result records metrics and both calibration buckets`() = runBlocking {
+    fun `exact result records both calibration buckets`() = runBlocking {
         val calibrationStore = FakeCalibrationStore()
-        val recordedMetrics = mutableListOf<PageEstimateMetric>()
         val coordinator = WholeBookPageCoordinator(
             scope = this,
             estimator = ChapterPageEstimator { 10f },
             calibrationStore = calibrationStore,
-            metrics = PageEstimateMetrics { recordedMetrics += it },
         )
         val generation = coordinator.requestEstimate(config, BOOK_ID) { chapters(1) }
         awaitState(coordinator)
 
         coordinator.correctChapter(0, realPageCount = 20, layoutGeneration = generation)
 
-        val correction = recordedMetrics.filterIsInstance<PageEstimateMetric.ChapterCorrected>()
-            .single()
-        assertEquals(10f, correction.rawEstimate, 0.0001f)
-        assertEquals(10, correction.estimatedPages)
-        assertEquals(20, correction.realPages)
-        assertEquals(0.5f, correction.relativeError, 0.0001f)
         // 逐书桶用于本书自己的拟合，排版桶用于下一本新书的冷启动先验，两边都要落。
         assertEquals(2, calibrationStore.recorded.size)
         assertEquals(setOf(10f to 20), calibrationStore.recorded.values.toSet())

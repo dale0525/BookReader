@@ -45,7 +45,7 @@ import io.legado.app.R
 import io.legado.app.data.entities.BookCharacterProfile
 import io.legado.app.ui.ai.AiReasoningModeButton
 import io.legado.app.ui.ai.AiTaskResultSheet
-import io.legado.app.ui.ai.chat.ReasoningCard
+import io.legado.app.ui.ai.ReasoningCard
 import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.theme.adaptiveContentPadding
 import io.legado.app.ui.widget.components.AppFloatingActionButton

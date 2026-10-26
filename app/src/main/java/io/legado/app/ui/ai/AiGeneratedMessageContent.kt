@@ -1,4 +1,4 @@
-package io.legado.app.ui.ai.chat
+package io.legado.app.ui.ai
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -53,15 +53,13 @@ fun AiGeneratedMessageContent(
     isUser: Boolean,
     isAssistant: Boolean,
     isStreaming: Boolean,
-    message: AiChatMessageUi,
+    message: AiGeneratedMessageUi,
     modifier: Modifier = Modifier,
     assistantLabel: String = "",
     showHeader: Boolean = true,
     reasoningAutoExpandWhileStreaming: Boolean = true,
-    onOpenBookInfo: (AiChatBookResultUi) -> Unit = {},
     onCopy: (() -> Unit)? = null,
     onRegenerate: (() -> Unit)? = null,
-    onSwitchBranch: ((direction: Int) -> Unit)? = null,
 ) {
     val groupedParts = remember(message.parts, message.thinkingDuration) {
         message.parts.groupMessageParts(message.thinkingDuration)
@@ -118,24 +116,6 @@ fun AiGeneratedMessageContent(
                     )
                 }
 
-                is AiMessagePart.BookResult -> {
-                    BookResultsList(
-                        books = listOf(
-                            AiChatBookResultUi(
-                                bookUrl = part.bookUrl,
-                                name = part.name,
-                                author = part.author,
-                                origin = part.origin,
-                                coverPath = part.coverPath,
-                                latestChapterTitle = part.latestChapterTitle,
-                                currentChapterTitle = part.currentChapterTitle,
-                                intro = part.intro
-                            )
-                        ),
-                        onOpenBookInfo = onOpenBookInfo
-                    )
-                }
-
                 else -> Unit
             }
         }
@@ -182,9 +162,6 @@ fun AiGeneratedMessageContent(
             } else if (isStreaming) {
                 MessageTextContent(text = "", isUser = isUser, isStreaming = true)
             }
-            if (message.bookResults.isNotEmpty()) {
-                BookResultsList(books = message.bookResults, onOpenBookInfo = onOpenBookInfo)
-            }
         }
 
         if (isAssistant && !isStreaming && (onCopy != null || onRegenerate != null)) {
@@ -193,25 +170,6 @@ fun AiGeneratedMessageContent(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (onSwitchBranch != null && message.totalBranches > 1) {
-                    SmallPlainButton(
-                        onClick = { onSwitchBranch(-1) },
-                        icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                        contentDescription = stringResource(R.string.previous),
-                        modifier = Modifier.size(28.dp)
-                    )
-                    AppText(
-                        text = "${message.branchIndex + 1}/${message.totalBranches}",
-                        style = LegadoTheme.typography.labelSmall,
-                        color = LegadoTheme.colorScheme.outline
-                    )
-                    SmallPlainButton(
-                        onClick = { onSwitchBranch(1) },
-                        icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                        contentDescription = stringResource(R.string.next),
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
                 Spacer(modifier = Modifier.weight(1f))
                 if (onRegenerate != null) {
                     SmallPlainButton(
@@ -253,94 +211,6 @@ private fun MessageTextContent(
             )
         } else if (isStreaming) {
             StreamingDots()
-        }
-    }
-}
-
-@Composable
-private fun BookResultsList(
-    books: List<AiChatBookResultUi>,
-    onOpenBookInfo: (AiChatBookResultUi) -> Unit
-) {
-    if (books.isEmpty()) return
-    Spacer(modifier = Modifier.height(10.dp))
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        AppText(
-            text = stringResource(R.string.ai_book_results),
-            style = LegadoTheme.typography.labelMedium,
-            color = LegadoTheme.colorScheme.outline
-        )
-        books.take(8).forEach { book ->
-            ChatBookResultItem(
-                book = book,
-                onClick = { onOpenBookInfo(book) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun ChatBookResultItem(
-    book: AiChatBookResultUi,
-    onClick: () -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(6.dp))
-            .background(LegadoTheme.colorScheme.surfaceContainerLow)
-            .clickable(onClick = onClick)
-            .padding(8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        CoilBookCover(
-            name = book.name,
-            author = book.author,
-            path = book.coverPath,
-            sourceOrigin = book.origin,
-            modifier = Modifier
-                .width(48.dp)
-                .height(68.dp)
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            AppText(
-                text = book.name.ifBlank { book.bookUrl },
-                style = LegadoTheme.typography.titleSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            if (book.author.isNotBlank()) {
-                AppText(
-                    text = book.author,
-                    style = LegadoTheme.typography.bodySmall,
-                    color = LegadoTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            val chapter = book.currentChapterTitle ?: book.latestChapterTitle
-            if (!chapter.isNullOrBlank()) {
-                AppText(
-                    text = chapter,
-                    style = LegadoTheme.typography.labelSmall,
-                    color = LegadoTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
-            if (!book.intro.isNullOrBlank()) {
-                AppText(
-                    text = book.intro,
-                    style = LegadoTheme.typography.labelSmall,
-                    color = LegadoTheme.colorScheme.outline,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
         }
     }
 }

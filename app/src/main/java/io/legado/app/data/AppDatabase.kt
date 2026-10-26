@@ -8,7 +8,6 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import io.legado.app.data.dao.AiArtifactDao
-import io.legado.app.data.dao.AiChatDao
 import io.legado.app.data.dao.AiMemoryDao
 import io.legado.app.data.dao.AiProfileDao
 import io.legado.app.data.dao.AiPromptPresetDao
@@ -56,8 +55,6 @@ import io.legado.app.data.dao.ServerDao
 import io.legado.app.data.dao.TagGroupRuleDao
 import io.legado.app.data.dao.TxtTocRuleDao
 import io.legado.app.data.entities.AiArtifact
-import io.legado.app.data.entities.AiChatConversation
-import io.legado.app.data.entities.AiChatMessage
 import io.legado.app.data.entities.AiMemory
 import io.legado.app.data.entities.AiModelProfile
 import io.legado.app.data.entities.AiPromptPreset
@@ -136,7 +133,7 @@ val appDb by lazy {
 }
 
 @Database(
-    version = 132,
+    version = 133,
     exportSchema = true,
     entities = [Book::class, BookGroup::class, BookSource::class, BookChapter::class,
         ReplaceRule::class, SearchBook::class, SearchKeyword::class, Cookie::class,
@@ -146,8 +143,7 @@ val appDb by lazy {
         RuleSub::class, DictRule::class, KeyboardAssist::class, Server::class,
         SearchContentHistory::class, HomepageModule::class, HomepageCustomSet::class,
         HighlightRule::class, AiProviderProfile::class, AiModelProfile::class,
-        AiTaskPreset::class, AiArtifact::class, AiChatConversation::class,
-        AiChatMessage::class, AiMemory::class, HighlightTagRule::class, TagGroupRule::class,
+        AiTaskPreset::class, AiArtifact::class, AiMemory::class, HighlightTagRule::class, TagGroupRule::class,
         BookContentProcess::class, AiPromptPreset::class, BookCharacterProfile::class,
         BookCharacterEvent::class, BookCharacterRelation::class, BookKnowledgeEntry::class,
         BookOutlineNode::class, ReadAloudVoiceEntity::class, BookVoiceBindingEntity::class,
@@ -278,6 +274,8 @@ val appDb by lazy {
         AutoMigration(from = 130, to = 131),
         // books 新增 disableReadRecord 列：单独为本书关闭阅读记录，默认 0 = 照常记录
         AutoMigration(from = 131, to = 132),
+        // 移除「AI 对话」：ai_chat_conversations / ai_chat_messages 两张表整体删除
+        AutoMigration(from = 132, to = 133, spec = DatabaseMigrations.Migration_132_133::class),
     ]
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -327,7 +325,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract val tagGroupRuleDao: TagGroupRuleDao
     abstract val aiProfileDao: AiProfileDao
     abstract val aiArtifactDao: AiArtifactDao
-    abstract val aiChatDao: AiChatDao
     abstract val aiMemoryDao: AiMemoryDao
     abstract val aiPromptPresetDao: AiPromptPresetDao
 

@@ -3,7 +3,6 @@ package io.legado.app.di
 import io.legado.app.data.AppDatabase
 import io.legado.app.data.appDb
 import io.legado.app.data.dao.AiArtifactDao
-import io.legado.app.data.dao.AiChatDao
 import io.legado.app.data.dao.AiMemoryDao
 import io.legado.app.data.dao.AiProfileDao
 import io.legado.app.data.dao.AiPromptPresetDao
@@ -55,7 +54,6 @@ val appDatabaseModule = module {
     factory<BookDao> { get<AppDatabase>().bookDao }
     factory<AiProfileDao> { get<AppDatabase>().aiProfileDao }
     factory<AiArtifactDao> { get<AppDatabase>().aiArtifactDao }
-    factory<AiChatDao> { get<AppDatabase>().aiChatDao }
     factory<AiMemoryDao> { get<AppDatabase>().aiMemoryDao }
     factory<AiPromptPresetDao> { get<AppDatabase>().aiPromptPresetDao }
     factory<BookGroupDao> { get<AppDatabase>().bookGroupDao }

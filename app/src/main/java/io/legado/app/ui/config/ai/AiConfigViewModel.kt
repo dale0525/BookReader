@@ -33,10 +33,10 @@ class AiConfigViewModel(
                 Triple(providers, models, presets)
             }.collect { (providers, models, presets) ->
                 val providerMap = providers.associateBy { it.id }
-                val defaultTranslatePreset = presets.firstOrNull {
-                    it.taskType == AiTaskType.TRANSLATE_CHAPTER && it.isDefault
+                val defaultChatPreset = presets.firstOrNull {
+                    it.taskType == AiTaskType.CHAT && it.isDefault
                 }
-                val currentModelProfileId = defaultTranslatePreset?.modelProfileId
+                val currentModelProfileId = defaultChatPreset?.modelProfileId
                     ?: models.firstOrNull()?.id
                 val modelItems = models.mapNotNull { model ->
                     val provider = providerMap[model.providerId] ?: return@mapNotNull null

@@ -221,7 +221,6 @@ internal fun MenuBottomBar(
             state.bookSource,
             state.isReadAloudRunning,
             state.isAutoPage,
-            state.translationMode,
             state.useReplaceRule,
             state.useMultiSpeaker,
             state.multiRoleCast,

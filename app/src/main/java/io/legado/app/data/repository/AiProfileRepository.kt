@@ -19,7 +19,7 @@ import io.legado.app.domain.model.AiReasoningLevel
 import io.legado.app.domain.model.AiTaskRuntimeOptions
 import io.legado.app.domain.model.AiTaskPresetConfig
 import io.legado.app.domain.model.AiTaskType
-import io.legado.app.domain.model.TranslationConstants
+import io.legado.app.domain.model.AiGenerationConstants
 import io.legado.app.utils.GSON
 import io.legado.app.utils.nameUuidFromBytes
 import kotlinx.coroutines.Dispatchers
@@ -51,16 +51,16 @@ class AiProfileRepository(
     }
 
     /**
-     * 「我选的 AI」是一个全局选择：只有翻译 / 摘要 / 对话这三行有界面会写模型，
+     * 「我选的 AI」是一个全局选择：只有摘要 / 对话这两行有界面会写模型，
      * 其余任务类型（分配角色、场景分配、人物识别、语音精炼、选中清洗、书架自动分组、文本工厂…）
      * 的行是第一次落库时快照的模型，之后没人再改 —— 用户换了默认 AI 却还在调旧的。
      * 读的时候顺手跟当前默认对齐并写回去，老数据不用重新设一次默认才生效。
      */
     private suspend fun AiTaskPreset.followCurrentDefaultModel(): AiTaskPreset {
-        if (id == DEFAULT_TRANSLATE_PRESET_ID || id == DEFAULT_SUMMARY_PRESET_ID || id == DEFAULT_CHAT_PRESET_ID) {
+        if (id == DEFAULT_SUMMARY_PRESET_ID || id == DEFAULT_CHAT_PRESET_ID) {
             return this
         }
-        val current = aiProfileDao.getPreset(DEFAULT_TRANSLATE_PRESET_ID)?.modelProfileId.orEmpty()
+        val current = aiProfileDao.getPreset(DEFAULT_CHAT_PRESET_ID)?.modelProfileId.orEmpty()
         if (current.isEmpty() || modelProfileId == current) return this
         val updated = copy(modelProfileId = current, updatedAt = System.currentTimeMillis())
         aiProfileDao.insertPreset(updated)
@@ -170,7 +170,7 @@ class AiProfileRepository(
         val model = aiProfileDao.getModel(modelProfileId) ?: error("Model is required")
         val params = parseParams(model.defaultParamsJson)
         saveDefaultPresets(modelProfileId, params)
-        aiProfileDao.getPreset(DEFAULT_TRANSLATE_PRESET_ID)?.toConfig()
+        aiProfileDao.getPreset(DEFAULT_CHAT_PRESET_ID)?.toConfig()
             ?: error("Failed to save default model")
     }
 
@@ -192,7 +192,6 @@ class AiProfileRepository(
         runCatching {
             val existingPreset = aiProfileDao.getDefaultPreset(taskType)
             val presetId = existingPreset?.id ?: when (taskType) {
-                AiTaskType.TRANSLATE_CHAPTER -> DEFAULT_TRANSLATE_PRESET_ID
                 AiTaskType.SUMMARIZE_CHAPTER -> DEFAULT_SUMMARY_PRESET_ID
                 AiTaskType.CHAT -> DEFAULT_CHAT_PRESET_ID
                 else -> newId("preset")
@@ -211,7 +210,6 @@ class AiProfileRepository(
                 id = presetId,
                 taskType = taskType,
                 name = existingPreset?.name ?: when (taskType) {
-                    AiTaskType.TRANSLATE_CHAPTER -> "Default Translation"
                     AiTaskType.SUMMARIZE_CHAPTER -> "Default Chapter Summary"
                     AiTaskType.CHAT -> "Default Chat"
                     else -> "Default Preset"
@@ -219,7 +217,6 @@ class AiProfileRepository(
                 modelProfileId = modelProfileId,
                 promptTemplate = promptTemplate.ifBlank {
                     when (taskType) {
-                        AiTaskType.TRANSLATE_CHAPTER -> TranslationConstants.DEFAULT_PROMPT
                         AiTaskType.SUMMARIZE_CHAPTER -> AiPromptTemplate.DEFAULT_CHAPTER_SUMMARY
                         else -> "You are a helpful AI assistant."
                     }
@@ -251,12 +248,11 @@ class AiProfileRepository(
         require(apiKey.isNotBlank()) { "API key is required" }
         val now = System.currentTimeMillis()
         val params = AiGenerationParams(temperature = draft.temperature)
-        val existingTranslatePreset = aiProfileDao.getPreset(DEFAULT_TRANSLATE_PRESET_ID)
-        val translationRuntimeOptions = existingTranslatePreset
+        val existingChatPreset = aiProfileDao.getPreset(DEFAULT_CHAT_PRESET_ID)
+        val runtimeOptions = existingChatPreset
             ?.chunkPolicyJson
             ?.let { parseRuntimeOptions(it) }
             ?: AiTaskRuntimeOptions(
-                targetLanguage = draft.translationTargetLanguage,
                 maxInputChars = draft.maxInputChars,
                 concurrentRequests = draft.concurrentRequests,
                 retryCount = draft.retryCount
@@ -295,37 +291,17 @@ class AiProfileRepository(
                 updatedAt = now
             )
         )
-        saveDefaultPresets(modelProfileId, params, translationRuntimeOptions)
-        aiProfileDao.getPreset(DEFAULT_TRANSLATE_PRESET_ID)?.toConfig()
+        saveDefaultPresets(modelProfileId, params, runtimeOptions)
+        aiProfileDao.getPreset(DEFAULT_CHAT_PRESET_ID)?.toConfig()
             ?: error("Failed to save AI profile")
     }
 
     private suspend fun saveDefaultPresets(
         modelProfileId: String,
         params: AiGenerationParams,
-        translationRuntimeOptions: AiTaskRuntimeOptions? = null
+        runtimeOptions: AiTaskRuntimeOptions? = null
     ) {
         val now = System.currentTimeMillis()
-        val existingTranslatePreset = aiProfileDao.getPreset(DEFAULT_TRANSLATE_PRESET_ID)
-        val runtimeOptions = translationRuntimeOptions
-            ?: existingTranslatePreset
-                ?.chunkPolicyJson
-                ?.let { parseRuntimeOptions(it) }
-            ?: AiTaskRuntimeOptions()
-        aiProfileDao.insertPreset(
-            AiTaskPreset(
-                id = DEFAULT_TRANSLATE_PRESET_ID,
-                taskType = AiTaskType.TRANSLATE_CHAPTER,
-                name = "Default Translation",
-                modelProfileId = modelProfileId,
-                promptTemplate = TranslationConstants.DEFAULT_PROMPT,
-                paramsJson = GSON.toJson(params),
-                chunkPolicyJson = GSON.toJson(runtimeOptions),
-                isDefault = true,
-                createdAt = existingTranslatePreset?.createdAt ?: now,
-                updatedAt = now
-            )
-        )
         val existingSummaryPreset = aiProfileDao.getPreset(DEFAULT_SUMMARY_PRESET_ID)
         aiProfileDao.insertPreset(
             AiTaskPreset(
@@ -349,6 +325,11 @@ class AiProfileRepository(
                 modelProfileId = modelProfileId,
                 promptTemplate = "You are a helpful AI assistant.",
                 paramsJson = GSON.toJson(params),
+                chunkPolicyJson = GSON.toJson(
+                    runtimeOptions
+                        ?: existingChatPreset?.chunkPolicyJson?.let { parseRuntimeOptions(it) }
+                        ?: AiTaskRuntimeOptions()
+                ),
                 isDefault = true,
                 createdAt = existingChatPreset?.createdAt ?: now,
                 updatedAt = now
@@ -358,7 +339,6 @@ class AiProfileRepository(
         // 只写这三行的话，分配角色 / 场景分配 / 人物识别 / 语音精炼 / 选中清洗 /
         // 书架自动分组 / 文本工厂 会永远停在第一次落库时快照的那个旧模型上。
         val canonicalIds = setOf(
-            DEFAULT_TRANSLATE_PRESET_ID,
             DEFAULT_SUMMARY_PRESET_ID,
             DEFAULT_CHAT_PRESET_ID,
         )
@@ -455,7 +435,6 @@ class AiProfileRepository(
     }
 
     private companion object {
-        const val DEFAULT_TRANSLATE_PRESET_ID = "default_translate_chapter"
         const val DEFAULT_SUMMARY_PRESET_ID = "default_summarize_chapter"
         const val DEFAULT_CHAT_PRESET_ID = "default_chat"
 

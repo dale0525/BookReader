@@ -18,8 +18,8 @@ import io.legado.app.R
 import io.legado.app.domain.model.AiMessagePart
 import io.legado.app.domain.model.AiMessageRole
 import io.legado.app.ui.ai.AiReasoningModeButton
-import io.legado.app.ui.ai.chat.AiChatMessageUi
-import io.legado.app.ui.ai.chat.AiGeneratedMessageContent
+import io.legado.app.ui.ai.AiGeneratedMessageUi
+import io.legado.app.ui.ai.AiGeneratedMessageContent
 import io.legado.app.ui.book.read.ChapterSummaryUiState
 import io.legado.app.ui.book.read.ReadBookIntent
 import io.legado.app.ui.theme.LegadoTheme
@@ -84,7 +84,7 @@ fun ChapterSummarySheet(
                         isUser = false,
                         isAssistant = true,
                         isStreaming = state.isLoading,
-                        message = state.toAiChatMessage(),
+                        message = state.toGeneratedMessage(),
                         showHeader = false,
                         reasoningAutoExpandWhileStreaming = false,
                         modifier = Modifier
@@ -115,7 +115,7 @@ fun ChapterSummarySheet(
     }
 }
 
-private fun ChapterSummaryUiState.toAiChatMessage(): AiChatMessageUi {
+private fun ChapterSummaryUiState.toGeneratedMessage(): AiGeneratedMessageUi {
     val parts = buildList {
         if (reasoningText.isNotBlank()) {
             add(AiMessagePart.Reasoning(reasoningText))
@@ -124,7 +124,7 @@ private fun ChapterSummaryUiState.toAiChatMessage(): AiChatMessageUi {
             add(AiMessagePart.Text(summary))
         }
     }.toImmutableList()
-    return AiChatMessageUi(
+    return AiGeneratedMessageUi(
         id = "read_chapter_summary",
         role = AiMessageRole.ASSISTANT,
         parts = parts,
