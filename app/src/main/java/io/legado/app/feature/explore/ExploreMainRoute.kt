@@ -77,7 +77,9 @@ import io.legado.app.ui.widget.components.topbar.TopBarNavigationButton
 import io.legado.app.ui.book.explore.ExploreShowIntent
 import io.legado.app.ui.book.explore.ExploreShowRouteScreen
 import io.legado.app.ui.book.explore.ExploreShowViewModel
+import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.data.entities.SearchBook
+import io.legado.app.ui.book.search.SearchScope
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
@@ -119,7 +121,18 @@ fun ExploreMainRoute(
                 onBookClick = onBookClick,
                 onOpenLogin = onOpenLogin,
                 onOpenEdit = onOpenEdit,
-                onOpenSearch = onOpenSearch,
+                // 搜索页要的是 SearchScope 的编码串，不是裸 url：裸 url 会被
+                // BookSearchScope 当成一个分组名，搜出来一条都没有。
+                onOpenSearch = { url ->
+                    onOpenSearch(
+                        SearchScope(
+                            BookSourcePart(
+                                bookSourceUrl = url,
+                                bookSourceName = state.openedSourceName.orEmpty(),
+                            )
+                        ).toString()
+                    )
+                },
             )
         }
     }
