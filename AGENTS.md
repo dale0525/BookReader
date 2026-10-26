@@ -56,6 +56,13 @@
 - 漫画正文图片**不经过** `CoverFetcher`：`CoverInterceptor` 会先把在线页下载成本地文件，再以 `data(File)` 交给解码器。任何需要改写图片字节的处理（如禁漫天堂的切条重排）必须接在 `BookHelp.saveImageFile` 的落盘处，并且要绕开 `skipDecode` 的流式直写分支，否则错位原图会被缓存下来反复显示。
 - 书源制作用 `.agents/skills/legado-book-source/` 技能；书源说明见 [docs/book-source/README.md](docs/book-source/README.md)。
 
+## 上游同步
+
+`upstream` 指向 `HapeLee/legado-with-MD3`，fork 在 `main` 上累积自己的删除与改造。合并上游时有两处必查：
+
+- **数据库版本号不能沿用上游的。** fork 已把版本号发过版，同一版本号换了 schema，覆盖安装的用户会撞 Room 的 schema 校验。上游的 `AutoMigration` 要顺延到「已发布的最高版本 + 1」，`version` 同步改，然后跑 `:app:kspAppDebugKotlin` 重新生成 `app/schemas/…/<新版本>.json` 并提交。核对方式是拿新旧 schema 的 `entities` 对比，确认只多出预期的那几列。
+- **fork 主动删掉的功能会被上游改回来，而且不一定报冲突。** 上游对同一功能的后续提交会以 modify/delete 冲突出现，这部分好处理；真正的坑是同一批改动里与功能无关的钩子（按钮池条目、Intent、Effect、菜单项）会被**自动合并**静默留下，编译期才暴露，或者更糟——编译通过但留下一个点了没反应的入口。合并后按功能名全仓 `grep` 一遍（如 `ai_chat`、`ToggleTranslation`），确认入口、意图、副作用、路由四处都清干净。
+
 ## 验收
 
 - 质量门禁组合：`testAppDebugUnitTest`、`lintAppDebug`、`verifyConfigArchitecture`、`assembleAppDebug`。仓库没有 CI 跑这些，本地按需取用。
