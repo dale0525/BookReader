@@ -48,7 +48,9 @@
 
 共享作用域按 `md5(jsLib)` 缓存，远程 jsLib 更是把整段规则按 `md5(url)` 存在 ACache 里且永不过期；`importBookSources` 会调 `SharedJsScope.remove(existing.jsLib)` 清掉，否则改了 asset 也会继续跑旧规则。
 
-历史上的 6 个聚合源（`https://agg.example.com/*`）仍在老用户的库里：书架上的书 `origin` 指着它们，删条目会让老书报「书源不存在」。`DefaultData.retireAggregateBookSources()` 只把 `enabled` / `enabledExplore` 关掉，规则原样保留——读取走 `getBookSource(url)` 不看 enabled，老书照常能读，新搜索不再被聚合结果刷屏。「消消乐听书」（`https://www.kaixin7days.com`）已下线，按 url 从老用户库里删掉。
+历史上的 6 个聚合源（`https://agg.example.com/*`）和「消消乐听书」（`https://www.kaixin7days.com`）都已下线，升级时按 url 从老用户库里删掉（`DefaultData.retiredBookSourceUrls`）。聚合源挂在 `example.com` 这个占位域名下，从来没有真实内容，书架上的书不可能靠它读到正文，留着只是让书源列表多 6 条死条目。
+
+删除只在升级时做一次，导入侧还必须按同一份 url 清单过滤：远端清单可能还是旧版（`main` 上留着拆源前的聚合源），拉下来一写就把刚删掉的条目复活。`BuiltInBookSourceUpgradeTest` 的 `upgradeDeletesRetiredAggregateSources` 与 `importIgnoresRetiredAggregateSources` 守这两条。
 
 构建：
 

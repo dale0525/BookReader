@@ -108,7 +108,7 @@ by appCtx.getSharedPreferences("local", Context.MODE_PRIVATE) {
         get() = !isLastVersion(3, "needUpDictRule")
 
     val needUpBookSources: Boolean
-        get() = !isLastVersion(12, "bookSourceVersion")
+        get() = !isLastVersion(13, "bookSourceVersion")
 
     /** 上次成功取到远端内置书的地址；换了地址就不能再带它的 ETag 去问。 */
     var bookSourceRemoteUrl: String?

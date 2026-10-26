@@ -165,15 +165,8 @@ object DefaultData {
      */
     private val retiredBookSourceUrls = listOf(
         "https://www.kaixin7days.com", // 消消乐听书
-    )
-
-    /**
-     * 已拆成单站源、但仍需留在库里的聚合源。书架上的书 `origin` 就是这些 url，
-     * 删掉条目会让它们读取时报「书源不存在」，所以只关掉搜索和发现页入口：
-     * `flowSearch` / `flowExplore` 都按 enabled 过滤，而读取走 `getBookSource(url)`
-     * 不看 enabled，于是老书照常能读、新搜索不再被聚合结果刷屏。
-     */
-    private val retiredAggregateUrls = listOf(
+        // 拆源前的 6 个聚合源。`agg.example.com` 是 example.com 下的占位域名，
+        // 从来没有真实内容，书架上的书不可能靠它读到正文。
         "https://agg.example.com/novel-normal",
         "https://agg.example.com/manga-normal",
         "https://agg.example.com/video-normal",
@@ -197,7 +190,9 @@ object DefaultData {
      * asset 版和远端版都走这里，两边语义必须一致，否则远端更新会悄悄改掉用户的设置。
      */
     suspend fun importBookSources(sources: List<BookSource>) {
-        sources.forEach { incoming ->
+        // 远端清单可能是旧版（`main` 上还留着拆源前的聚合源），一写就把刚删掉的
+        // 条目复活。删除只在升级时做一次，导入侧必须按 url 滤掉，否则删不干净。
+        sources.filterNot { it.bookSourceUrl in retiredBookSourceUrls }.forEach { incoming ->
             val existing = appDb.bookSourceDao.getBookSource(incoming.bookSourceUrl)
             if (existing == null) {
                 appDb.bookSourceDao.insert(incoming)
@@ -218,21 +213,6 @@ object DefaultData {
                     )
                 )
             }
-        }
-        retireAggregateBookSources()
-    }
-
-    /**
-     * 聚合源已拆成单站源，但书架里的书还引用着它们。这里只关掉搜索与发现页入口，
-     * 规则原样留在库里，老书照常能读；用户想找回聚合视图可以自己重新打开。
-     */
-    private suspend fun retireAggregateBookSources() {
-        retiredAggregateUrls.forEach { url ->
-            val existing = appDb.bookSourceDao.getBookSource(url) ?: return@forEach
-            if (!existing.enabled && !existing.enabledExplore) return@forEach
-            appDb.bookSourceDao.insert(
-                existing.copy(enabled = false, enabledExplore = false)
-            )
         }
     }
 

@@ -11,6 +11,7 @@ import io.legado.app.help.config.LocalConfig
 import io.legado.app.support.InMemoryAppDatabaseFixture
 import io.legado.app.utils.GSON
 import io.legado.app.utils.fromJsonArray
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -98,13 +99,13 @@ class BuiltInBookSourceUpgradeTest {
         assertEquals("用户排序被覆盖", 42, after.customOrder)
         assertEquals("用户停用状态被覆盖", false, after.enabled)
         assertEquals("用户发现开关被覆盖", false, after.enabledExplore)
-        assertEquals("bookSourceVersion 未推进", 12, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 13, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /** 拆源后新站必须一起补进来，老用户升级才能拿到全部单站源。 */
     @Test
     fun upgradeInstallsEverySplitSource() {
-        LocalConfig.edit { putInt("bookSourceVersion", 11) }
+        LocalConfig.edit { putInt("bookSourceVersion", 12) }
         DefaultData.upVersion()
         awaitSource("https://bcshuku.com") { true }
 
@@ -129,7 +130,7 @@ class BuiltInBookSourceUpgradeTest {
      */
     @Test
     fun upgradeRemovesRetiredBuiltInSource() {
-        LocalConfig.edit { putInt("bookSourceVersion", 10) }
+        LocalConfig.edit { putInt("bookSourceVersion", 11) }
         val retiredUrl = "https://www.kaixin7days.com"
         appDb.bookSourceDao.insert(
             BookSource(
@@ -146,38 +147,81 @@ class BuiltInBookSourceUpgradeTest {
             "已下线的内置书源在覆盖安装后仍然存在",
             appDb.bookSourceDao.getBookSource(retiredUrl),
         )
-        assertEquals("bookSourceVersion 未推进", 12, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 13, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /**
-     * 聚合源已拆成单站源，但书架上的书 `origin` 还指着它们。
-     * 直接删条目会让老书读取时报「书源不存在」，所以只关掉搜索和发现页入口。
+     * 聚合源已拆成单站源，库里不该再留着它们。
+     *
+     * `agg.example.com` 是 `example.com` 下的占位域名，从来没有真实内容，
+     * 书架上的书不可能靠它读到正文，留着只会让书源列表里多出 6 条死条目。
      */
     @Test
-    fun upgradeKeepsAggregateSourceForExistingShelfButDisablesIt() {
-        val aggUrl = "https://agg.example.com/novel-normal"
-        appDb.bookSourceDao.insert(
-            BookSource(
-                bookSourceUrl = aggUrl,
-                bookSourceName = "小说·常规",
-                bookSourceType = 0,
-                enabled = true,
-                enabledExplore = true,
-                exploreUrl = "<js>exploreAll(java)</js>",
-                jsLib = "var SITES=[];function exploreAll(){return '[]'}",
+    fun upgradeDeletesRetiredAggregateSources() {
+        val aggUrls = listOf(
+            "https://agg.example.com/novel-normal",
+            "https://agg.example.com/manga-normal",
+            "https://agg.example.com/video-normal",
+            "https://agg.example.com/novel-adult",
+            "https://agg.example.com/manga-adult",
+            "https://agg.example.com/video-adult",
+        )
+        aggUrls.forEach { aggUrl ->
+            appDb.bookSourceDao.insert(
+                BookSource(
+                    bookSourceUrl = aggUrl,
+                    bookSourceName = "聚合源",
+                    bookSourceType = 0,
+                    enabled = true,
+                    enabledExplore = true,
+                    exploreUrl = "<js>exploreAll(java)</js>",
+                    jsLib = "var SITES=[];function exploreAll(){return '[]'}",
+                )
+            )
+        }
+
+        DefaultData.upVersion()
+        awaitSource(aggUrls.last()) { false }
+
+        aggUrls.forEach { aggUrl ->
+            assertNull(
+                "已下线的聚合源在覆盖安装后仍然存在: $aggUrl",
+                appDb.bookSourceDao.getBookSource(aggUrl),
+            )
+        }
+    }
+
+    /**
+     * 远端清单里还带着聚合源时，不能把它们重新写回库里。
+     *
+     * 真实成因：`main` 分支上的 `bookSources.json` 还是拆源前的 6 聚合源版本，
+     * 覆盖安装先删掉聚合源，随后 `RemoteBookSources.refresh()` 拉到那份旧清单，
+     * 一写就复活。删除只做一次，导入侧必须按 url 滤掉。
+     */
+    @Test
+    fun importIgnoresRetiredAggregateSources() = runBlocking {
+        DefaultData.importBookSources(
+            listOf(
+                BookSource(
+                    bookSourceUrl = "https://agg.example.com/novel-normal",
+                    bookSourceName = "小说·常规",
+                    bookSourceType = 0,
+                ),
+                BookSource(
+                    bookSourceUrl = "https://bcshuku.com",
+                    bookSourceName = "八叉书库",
+                    bookSourceType = 0,
+                ),
             )
         )
 
-        DefaultData.upVersion()
-        awaitSource(aggUrl) { it.enabled.not() }
-
-        val after = appDb.bookSourceDao.getBookSource(aggUrl)
-        assertNotNull("聚合源被删了，书架上的老书会读取失败", after)
-        assertEquals("聚合源仍在搜索结果里出现", false, after!!.enabled)
-        assertEquals("聚合源仍在发现页占一个 tab", false, after.enabledExplore)
-        assertTrue(
-            "聚合源的规则被清空，老书连正文都取不到",
-            after.jsLib?.contains("var SITES=[]") == true
+        assertNull(
+            "聚合源被远端清单写回库里了",
+            appDb.bookSourceDao.getBookSource("https://agg.example.com/novel-normal"),
+        )
+        assertNotNull(
+            "正常源也被一起滤掉了",
+            appDb.bookSourceDao.getBookSource("https://bcshuku.com"),
         )
     }
 
