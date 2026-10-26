@@ -10,6 +10,7 @@ import androidx.room.Update
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.BookSourcePart
+import io.legado.app.data.entities.ExploreSourceSummary
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.splitNotBlank
 import kotlinx.coroutines.Dispatchers.IO
@@ -108,6 +109,19 @@ interface BookSourceDao {
         where enabledExplore = 1 and hasExploreUrl = 1 order by customOrder asc"""
     )
     fun flowExplore(): Flow<List<BookSourcePart>>
+
+    /**
+     * 发现页的源卡片。只取卡片要显示的五列——`book_sources` 每行还挂着 200KB+ 的 jsLib，
+     * 31 个源一起拉会把整段规则搬进内存。
+     */
+    @Query(
+        """select bookSourceUrl, bookSourceName, bookSourceGroup, bookSourceComment, customOrder,
+        (loginUrl is not null and trim(loginUrl) <> '') as hasLoginUrl
+        from book_sources
+        where enabled = 1 and enabledExplore = 1
+        order by customOrder asc"""
+    )
+    fun flowExploreSummaries(): Flow<List<ExploreSourceSummary>>
 
     @Query("select * from book_sources_part where hasLoginUrl = 1 order by customOrder asc")
     fun flowLogin(): Flow<List<BookSourcePart>>

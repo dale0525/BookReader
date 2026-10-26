@@ -4,8 +4,7 @@ import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
 import io.legado.app.constant.PreferKey
-import io.legado.app.data.entities.BookSource
-import io.legado.app.data.entities.BookSourcePart
+import io.legado.app.data.entities.ExploreSourceSummary
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.data.entities.rule.ExploreKind
 import io.legado.app.data.repository.ExploreRepository
@@ -26,6 +25,7 @@ import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -46,8 +46,6 @@ class ExploreMainViewModelTest {
     fun setUp() {
         Dispatchers.setMain(dispatcher)
         AppConfigStore.init(RuntimeEnvironment.getApplication())
-        AppConfigStore.putBoolean(PreferKey.exploreMainContent, false)
-        AppConfigStore.putString(PreferKey.exploreMainSourceUrl, "a")
         // AppConfigStore 是进程级单例，逐个测试重置分类记忆避免互相污染。
         AppConfigStore.putString(PreferKey.exploreMainKind, "")
     }
@@ -59,89 +57,112 @@ class ExploreMainViewModelTest {
     }
 
     @Test
-    fun `source list does not request categories until content mode opens`() = runTest(dispatcher) {
+    fun `source grid groups keep the order the sources arrive in`() = runTest(dispatcher) {
         val model = createModel()
         runCurrent()
+
         assertTrue(model.uiState.value.ready)
+        assertEquals(listOf("小说", "漫画"), model.uiState.value.groups.map { it.name })
+        assertEquals(listOf("A"), model.uiState.value.groups.first().sources.map { it.name })
+        assertEquals(listOf("B"), model.uiState.value.groups[1].sources.map { it.name })
+        assertEquals(
+            "10 个分类 · 2 个榜单",
+            model.uiState.value.groups.first().sources.first().subtitle,
+        )
+    }
+
+    @Test
+    fun `search filters cards but keeps every group name selectable`() = runTest(dispatcher) {
+        val model = createModel()
+        runCurrent()
+
+        model.onIntent(ExploreMainIntent.Search("b"))
+        runCurrent()
+
+        assertEquals(listOf("漫画"), model.uiState.value.groups.map { it.name })
+        assertEquals(listOf("小说", "漫画"), model.uiState.value.groupNames)
+    }
+
+    @Test
+    fun `group filter narrows the grid to one group`() = runTest(dispatcher) {
+        val model = createModel()
+        runCurrent()
+
+        model.onIntent(ExploreMainIntent.SelectGroup("漫画"))
+        runCurrent()
+
+        assertEquals(listOf("漫画"), model.uiState.value.groups.map { it.name })
+    }
+
+    @Test
+    fun `opening a source loads only that source's categories`() = runTest(dispatcher) {
+        val model = createModel()
+        runCurrent()
         assertTrue(repository.requests.isEmpty())
 
-        model.onIntent(ExploreMainIntent.ShowContent(true))
+        model.onIntent(ExploreMainIntent.OpenSource("a"))
         runCurrent()
         assertEquals(listOf("a"), repository.requests)
+        assertTrue(model.uiState.value.kindsLoading)
+
         repository.responses.getValue("a").complete(listOf(kind("a")))
         runCurrent()
+
         assertEquals(listOf(kind("a")), model.uiState.value.kinds)
-
-        model.onIntent(ExploreMainIntent.ShowContent(false))
-        model.onIntent(ExploreMainIntent.ShowContent(true))
-        runCurrent()
-        assertEquals(listOf("a"), repository.requests)
+        assertEquals("A", model.uiState.value.openedSourceName)
+        assertFalse(model.uiState.value.kindsLoading)
     }
 
     @Test
-    fun `switching source clears category owners and rejects late categories`() =
-        runTest(dispatcher) {
-            val model = createModel()
-            runCurrent()
-            model.onIntent(ExploreMainIntent.ShowContent(true))
-            runCurrent()
-            var categoryCleared = false
-            model.viewModelStore.put("old-category", object : ViewModel() {
-                override fun onCleared() {
-                    categoryCleared = true
-                }
-            })
-
-            model.onIntent(ExploreMainIntent.SelectSource("b"))
-            runCurrent()
-            assertTrue(categoryCleared)
-            assertTrue(model.uiState.value.kindsLoading)
-            repository.responses.getValue("b").complete(listOf(kind("b")))
-            runCurrent()
-            repository.responses.getValue("a").complete(listOf(kind("a")))
-            runCurrent()
-
-            assertEquals("b", model.uiState.value.selectedSourceUrl)
-            assertEquals(listOf(kind("b")), model.uiState.value.kinds)
-            assertFalse(model.uiState.value.kindsLoading)
-        }
-
-    @Test
-    fun `consecutive source switches keep the latest selection`() = runTest(dispatcher) {
+    fun `closing a source releases its category pages and clears kinds`() = runTest(dispatcher) {
         val model = createModel()
         runCurrent()
-        model.onIntent(ExploreMainIntent.SelectSource("b"))
+        model.onIntent(ExploreMainIntent.OpenSource("a"))
         runCurrent()
-        model.onIntent(ExploreMainIntent.SelectSource("a"))
-        runCurrent()
-        assertEquals("a", model.uiState.value.selectedSourceUrl)
-    }
-
-    @Test
-    fun `repeated identical source emissions keep category owners`() = runTest(dispatcher) {
-        val model = createModel()
-        runCurrent()
-        model.onIntent(ExploreMainIntent.ShowContent(true))
+        repository.responses.getValue("a").complete(listOf(kind("a")))
         runCurrent()
         var categoryCleared = false
-        model.viewModelStore.put("category", object : ViewModel() {
+        model.viewModelStore.put("a-category", object : ViewModel() {
             override fun onCleared() {
                 categoryCleared = true
             }
         })
 
-        repository.sources.value = repository.sources.value.toList()
+        model.onIntent(ExploreMainIntent.CloseSource)
         runCurrent()
 
-        assertFalse(categoryCleared)
-        assertEquals("a", model.uiState.value.selectedSourceUrl)
+        assertTrue(categoryCleared)
+        assertNull(model.uiState.value.openedSourceUrl)
+        assertEquals(emptyList<ExploreKind>(), model.uiState.value.kinds)
     }
 
     @Test
-    fun `selecting a category persists it for the current source`() = runTest(dispatcher) {
+    fun `switching source rejects categories that arrive late for the previous one`() =
+        runTest(dispatcher) {
+            val model = createModel()
+            runCurrent()
+            model.onIntent(ExploreMainIntent.OpenSource("a"))
+            runCurrent()
+
+            model.onIntent(ExploreMainIntent.CloseSource)
+            model.onIntent(ExploreMainIntent.OpenSource("b"))
+            runCurrent()
+            repository.responses.getValue("b").complete(listOf(kind("b")))
+            runCurrent()
+            repository.responses.getValue("a").complete(listOf(kind("a")))
+            runCurrent()
+
+            assertEquals("b", model.uiState.value.openedSourceUrl)
+            assertEquals(listOf(kind("b")), model.uiState.value.kinds)
+        }
+
+    @Test
+    fun `selecting a category persists it for the opened source`() = runTest(dispatcher) {
         val model = createModel()
         runCurrent()
-        model.onIntent(ExploreMainIntent.ShowContent(true))
+        model.onIntent(ExploreMainIntent.OpenSource("a"))
+        runCurrent()
+        repository.responses.getValue("a").complete(listOf(kind("a")))
         runCurrent()
 
         val categoryKey = exploreKindKey(kind("a"))
@@ -158,23 +179,34 @@ class ExploreMainViewModelTest {
     }
 
     @Test
-    fun `saved category is restored per source`() = runTest(dispatcher) {
+    fun `saved category is restored when reopening that source`() = runTest(dispatcher) {
+        val categoryKey = exploreKindKey(kind("a"))
         AppConfigStore.putString(
             PreferKey.exploreMainKind,
-            encodeExploreKindSelections(
-                mapOf(
-                    "a" to exploreKindKey(kind("a")),
-                    "b" to exploreKindKey(kind("b")),
-                )
-            ),
+            encodeExploreKindSelections(mapOf("a" to categoryKey)),
         )
         val model = createModel()
         runCurrent()
-        assertEquals(exploreKindKey(kind("a")), model.uiState.value.selectedKindKey)
 
-        model.onIntent(ExploreMainIntent.SelectSource("b"))
+        model.onIntent(ExploreMainIntent.OpenSource("a"))
         runCurrent()
-        assertEquals(exploreKindKey(kind("b")), model.uiState.value.selectedKindKey)
+
+        assertEquals(categoryKey, model.uiState.value.selectedKindKey)
+    }
+
+    @Test
+    fun `retry re-runs category loading for the same source`() = runTest(dispatcher) {
+        val model = createModel()
+        runCurrent()
+        model.onIntent(ExploreMainIntent.OpenSource("a"))
+        runCurrent()
+        repository.responses.getValue("a").complete(listOf(kind("a")))
+        runCurrent()
+
+        model.onIntent(ExploreMainIntent.RetryKinds)
+        runCurrent()
+
+        assertEquals(listOf("a", "a"), repository.requests)
     }
 
     private fun createModel() = ExploreMainViewModel(repository, SettingsRepository())
@@ -190,14 +222,27 @@ class ExploreMainViewModelTest {
         )
         val sources = MutableStateFlow(
             listOf(
-                BookSourcePart(bookSourceUrl = "a", bookSourceName = "A"),
-                BookSourcePart(bookSourceUrl = "b", bookSourceName = "B"),
+                ExploreSourceSummary(
+                    bookSourceUrl = "a",
+                    bookSourceName = "A",
+                    bookSourceGroup = "小说",
+                    bookSourceComment = "10 个分类 · 2 个榜单",
+                    customOrder = 0,
+                ),
+                ExploreSourceSummary(
+                    bookSourceUrl = "b",
+                    bookSourceName = "B",
+                    bookSourceGroup = "漫画",
+                    bookSourceComment = "4 个分类",
+                    customOrder = 1,
+                ),
             )
         )
 
-        override fun getExploreSources(query: String, selectedGroup: String) = sources
+        override fun getExploreSourceSummaries() = sources
         override suspend fun refreshSourceExploreKinds(sourceUrl: String) =
             getSourceExploreKinds(sourceUrl)
+
         override suspend fun getSourceExploreKinds(sourceUrl: String): List<ExploreKind> {
             requests += sourceUrl
             // Simulate a rule engine operation which cannot stop immediately on cancellation.
@@ -205,9 +250,7 @@ class ExploreMainViewModelTest {
         }
 
         override fun getBookshelfItems() = flowOf(emptyList<SearchBook>())
-        override fun getExploreGroups() = flowOf(emptyList<String>())
-        override suspend fun getBookSource(sourceUrl: String): BookSource? = null
-        override suspend fun topSource(bookSource: BookSourcePart) = Unit
+        override suspend fun getBookSource(sourceUrl: String) = null
         override suspend fun deleteSource(sourceUrl: String) = Unit
     }
 }

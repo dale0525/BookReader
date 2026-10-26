@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>发现 - 书源选择</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            surface: "#F9FAEF",
+            onSurface: "#1A1C16",
+            surfaceContainerLowest: "#FFFFFF",
+            surfaceContainerLow: "#F3F4E9",
+            surfaceContainer: "#EEEFE3",
+            surfaceContainerHigh: "#E8E9DE",
+            surfaceContainerHighest: "#E2E3D8",
+            surfaceVariant: "#E1E4D5",
+            onSurfaceVariant: "#44483D",
+            primary: "#4C662B",
+            onPrimary: "#FFFFFF",
+            primaryContainer: "#CDEDA3",
+            onPrimaryContainer: "#354E16",
+            secondary: "#586249",
+            secondaryContainer: "#DCE7C8",
+            tertiary: "#386663",
+            tertiaryContainer: "#BCECE7",
+            outline: "#75796C",
+            outlineVariant: "#C5C8BA",
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "2xl": "1rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            headline: ["Inter", "sans-serif"],
+            display: ["Inter", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      -webkit-tap-highlight-color: transparent;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-onSurface font-body antialiased min-h-screen pb-12 selection:bg-primaryContainer selection:text-onPrimaryContainer">
+<!-- 顶部栏 (TopAppBar) -->
+<header class="sticky top-0 z-30 flex items-center justify-between w-full h-16 min-h-[48px] px-4 bg-surface select-none">
+<h1 class="font-headline text-[22px] font-semibold leading-8 text-onSurface tracking-tight">
+      发现
+    </h1>
+<div class="flex items-center gap-1">
+<!-- 搜索按钮 -->
+<button aria-label="搜索" class="w-12 h-12 flex items-center justify-center rounded-full text-onSurfaceVariant hover:bg-surfaceContainerHigh active:bg-surfaceContainerHighest active:scale-95 transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[24px]">search</span>
+</button>
+<!-- 全部筛选下拉按钮 -->
+<button aria-label="筛选分组" class="h-10 px-3 flex items-center gap-1 rounded-full text-onSurfaceVariant hover:bg-surfaceContainerHigh active:bg-surfaceContainerHighest active:scale-95 transition-all duration-150" type="button">
+<span class="text-sm font-medium text-onSurface">全部</span>
+<span class="material-symbols-outlined text-[20px] text-onSurfaceVariant">expand_more</span>
+</button>
+</div>
+</header>
+<!-- 主内容区：严格六个分组与对应书源网格 -->
+<main class="px-4 space-y-6 pt-1">
+<!-- 分组 1: 小说 · 8 个源 -->
+<section>
+<div class="flex items-center justify-between pb-2.5">
+<h2 class="text-[14px] font-semibold text-onSurface leading-5">小说</h2>
+<span class="text-[12px] font-normal text-outline">8 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">365小说网</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">12 个分类 · 2 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">玩文学小说网</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">7 个分类 · 4 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">天天看小说🪜</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">10 个分类 · 2 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">💰 飞卢小说</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">7 个分类 · 4 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">顶点小说</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">8 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">🏵饭饭小说8</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">7 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">言情小说阁</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">8 个分类 · 4 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">八叉书库</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">9 个分类 · 4 个榜单</span>
+</div>
+</div>
+</section>
+<!-- 分组 2: 漫画 · 4 个源 -->
+<section>
+<div class="flex items-center justify-between pb-2.5">
+<h2 class="text-[14px] font-semibold text-onSurface leading-5">漫画</h2>
+<span class="text-[12px] font-normal text-outline">4 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">🎨包子漫画</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">10 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">🌠 漫画吧网</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">0 个分类 · 3 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">🌟卡拉漫画</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">5 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">学外漫画</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">8 个分类 · 2 个榜单</span>
+</div>
+</div>
+</section>
+<!-- 分组 3: 视频 · 9 个源 -->
+<section>
+<div class="flex items-center justify-between pb-2.5">
+<h2 class="text-[14px] font-semibold text-onSurface leading-5">视频</h2>
+<span class="text-[12px] font-normal text-outline">9 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">最大资源</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">16 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">无尽资源</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">13 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">非凡资源</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">14 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">魔都资源</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">14 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">量子资源</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">14 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">如意资源</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">14 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">黄果短剧</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">6 个分类</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">饭果短剧</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">4 个分类</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">河果短剧</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">6 个分类</span>
+</div>
+</div>
+</section>
+<!-- 分组 4: 小说 · 18+ · 4 个源 -->
+<section>
+<div class="flex items-center justify-between pb-2.5">
+<h2 class="text-[14px] font-semibold text-onSurface leading-5">小说 · 18+</h2>
+<span class="text-[12px] font-normal text-outline">4 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">成人小说网</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">16 个分类 · 2 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">腐文小说</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">8 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">BB成人小说</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">18 个分类 · 2 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">爱丽丝书屋</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">32 个分类 · 4 个榜单</span>
+</div>
+</div>
+</section>
+<!-- 分组 5: 漫画 · 18+ · 4 个源 -->
+<section>
+<div class="flex items-center justify-between pb-2.5">
+<h2 class="text-[14px] font-semibold text-onSurface leading-5">漫画 · 18+</h2>
+<span class="text-[12px] font-normal text-outline">4 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">开心看漫画</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">5 个分类 · 1 个榜单</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">51漫画</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">26 个分类</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">favcomic</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">仅搜索</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">禁漫天堂</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">9 个分类 · 6 个榜单</span>
+</div>
+</div>
+</section>
+<!-- 分组 6: 视频 · 18+ · 2 个源 -->
+<section>
+<div class="flex items-center justify-between pb-2.5">
+<h2 class="text-[14px] font-semibold text-onSurface leading-5">视频 · 18+</h2>
+<span class="text-[12px] font-normal text-outline">2 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">最大资源·18+</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">7 个分类</span>
+</div>
+<div class="flex flex-col justify-center min-h-[72px] p-4 rounded-2xl bg-surfaceContainerLow border border-outlineVariant active:bg-surfaceContainerHigh active:scale-[0.98] transition-all duration-150 cursor-pointer shadow-none" role="button" tabindex="0">
+<span class="text-[14px] font-medium text-onSurface truncate leading-tight">无尽资源·18+</span>
+<span class="text-[12px] text-onSurfaceVariant mt-1.5 truncate leading-none">1 个分类</span>
+</div>
+</div>
+</section>
+</main>
+<script>
+    // 轻量触控水波反馈效果
+    document.querySelectorAll('[role="button"]').forEach(card => {
+      card.addEventListener('click', function(e) {
+        // 卡片点击事件反馈（根据需要可扩展路由或拉起源浏览详情）
+      });
+    });
+  </script>
+</body></html>

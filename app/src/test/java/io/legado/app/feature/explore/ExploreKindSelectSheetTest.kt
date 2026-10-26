@@ -9,7 +9,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import io.legado.app.data.dao.BookSourceDao
 import io.legado.app.data.entities.BookSource
-import io.legado.app.data.entities.BookSourcePart
+import io.legado.app.data.entities.ExploreSourceSummary
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.data.entities.rule.ExploreKind
 import io.legado.app.data.repository.CoverAlbumRepository
@@ -119,9 +119,7 @@ class ExploreKindSelectSheetTest {
     private fun showSheet(multiple: Boolean = false) {
         val repository = object : ExploreRepository {
             override fun getBookshelfItems() = flowOf(emptyList<SearchBook>())
-            override fun getExploreGroups() = flowOf(emptyList<String>())
-            override fun getExploreSources(query: String, selectedGroup: String) =
-                flowOf(emptyList<BookSourcePart>())
+            override fun getExploreSourceSummaries() = flowOf(emptyList<ExploreSourceSummary>())
 
             override suspend fun getBookSource(sourceUrl: String): BookSource? = null
             override suspend fun getSourceExploreKinds(sourceUrl: String) =
@@ -130,7 +128,6 @@ class ExploreKindSelectSheetTest {
             override suspend fun refreshSourceExploreKinds(sourceUrl: String) =
                 listOf(dropdown, books, refresh)
 
-            override suspend fun topSource(bookSource: BookSourcePart) = Unit
             override suspend fun deleteSource(sourceUrl: String) = Unit
         }
         val dao = Proxy.newProxyInstance(

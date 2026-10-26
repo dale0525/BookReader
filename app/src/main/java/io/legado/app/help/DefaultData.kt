@@ -14,7 +14,9 @@ import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.source.clearExploreKindsCache
 import io.legado.app.model.BookCover
+import io.legado.app.model.SharedJsScope
 import io.legado.app.utils.GSON
+import io.legado.app.utils.MD5Utils
 import io.legado.app.utils.fromJsonArray
 import io.legado.app.utils.fromJsonObject
 import io.legado.app.utils.printOnDebug
@@ -107,13 +109,16 @@ object DefaultData {
         GSON.fromJsonArray<RssSource>(json).getOrDefault(emptyList())
     }
 
-    val bookSources: List<BookSource> by lazy {
-        val json = String(
-            appCtx.assets.open("defaultData/bookSources.json")
-                .readBytes()
-        )
-        GSON.fromJsonArray<BookSource>(json).getOrDefault(emptyList())
+    private val bookSourcesJson: String by lazy {
+        String(appCtx.assets.open("defaultData/bookSources.json").readBytes())
     }
+
+    val bookSources: List<BookSource> by lazy {
+        GSON.fromJsonArray<BookSource>(bookSourcesJson).getOrDefault(emptyList())
+    }
+
+    /** 随包那份的摘要：远端取到的内容与它相同就不必再写一遍库。 */
+    val bookSourcesHash: String by lazy { MD5Utils.md5Encode(bookSourcesJson) }
 
     val coverRule: BookCover.CoverRule by lazy {
         val json = String(
@@ -163,13 +168,36 @@ object DefaultData {
     )
 
     /**
+     * 已拆成单站源、但仍需留在库里的聚合源。书架上的书 `origin` 就是这些 url，
+     * 删掉条目会让它们读取时报「书源不存在」，所以只关掉搜索和发现页入口：
+     * `flowSearch` / `flowExplore` 都按 enabled 过滤，而读取走 `getBookSource(url)`
+     * 不看 enabled，于是老书照常能读、新搜索不再被聚合结果刷屏。
+     */
+    private val retiredAggregateUrls = listOf(
+        "https://agg.example.com/novel-normal",
+        "https://agg.example.com/manga-normal",
+        "https://agg.example.com/video-normal",
+        "https://agg.example.com/novel-adult",
+        "https://agg.example.com/manga-adult",
+        "https://agg.example.com/video-adult",
+    )
+
+    /**
      * 内置源随版本更新规则：规则字段用 asset 里的新值覆盖，用户自己的开关/分组/排序保留。
      * 内置源的规则是随包发布的代码资产，用户不该改也不该被旧版本锁死；
      * 只按 has() 判重会在升级时留下旧规则，正是发现页报错的成因。
      */
     suspend fun importDefaultBookSources() {
         retiredBookSourceUrls.forEach { url -> appDb.bookSourceDao.delete(url) }
-        bookSources.forEach { incoming ->
+        importBookSources(bookSources)
+    }
+
+    /**
+     * 把一批内置源写进库：规则字段用新值覆盖，用户自己的开关/分组/排序保留。
+     * asset 版和远端版都走这里，两边语义必须一致，否则远端更新会悄悄改掉用户的设置。
+     */
+    suspend fun importBookSources(sources: List<BookSource>) {
+        sources.forEach { incoming ->
             val existing = appDb.bookSourceDao.getBookSource(incoming.bookSourceUrl)
             if (existing == null) {
                 appDb.bookSourceDao.insert(incoming)
@@ -177,6 +205,10 @@ object DefaultData {
                 // 分类缓存按 exploreUrl 失效，而内置源的 exploreUrl 通常恒为同一段 JS，
                 // 改的是它背后的 jsLib。不清缓存的话，覆盖安装后发现页仍显示旧分类。
                 existing.clearExploreKindsCache()
+                // jsLib 换掉后，旧作用域里的函数还挂在 MD5(旧 jsLib) 这个 key 上；
+                // 远程 jsLib 更是把整段规则按 MD5(url) 缓存在 ACache 里且永不过期，
+                // 不清掉就会继续跑旧规则，表现为「改了 asset 却没生效」。
+                SharedJsScope.remove(existing.jsLib)
                 appDb.bookSourceDao.insert(
                     incoming.copy(
                         enabled = existing.enabled,
@@ -186,6 +218,21 @@ object DefaultData {
                     )
                 )
             }
+        }
+        retireAggregateBookSources()
+    }
+
+    /**
+     * 聚合源已拆成单站源，但书架里的书还引用着它们。这里只关掉搜索与发现页入口，
+     * 规则原样留在库里，老书照常能读；用户想找回聚合视图可以自己重新打开。
+     */
+    private suspend fun retireAggregateBookSources() {
+        retiredAggregateUrls.forEach { url ->
+            val existing = appDb.bookSourceDao.getBookSource(url) ?: return@forEach
+            if (!existing.enabled && !existing.enabledExplore) return@forEach
+            appDb.bookSourceDao.insert(
+                existing.copy(enabled = false, enabledExplore = false)
+            )
         }
     }
 

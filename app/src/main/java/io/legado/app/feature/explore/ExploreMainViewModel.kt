@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
 import io.legado.app.constant.PreferKey
+import io.legado.app.data.entities.ExploreSourceSummary
 import io.legado.app.data.entities.rule.ExploreKind
 import io.legado.app.data.repository.ExploreRepository
 import io.legado.app.data.repository.SettingsRepository
@@ -21,36 +22,49 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** 发现页的一张源卡片。`subtitle` 来自书源的 `bookSourceComment`（「N 个分类 · M 个榜单」）。 */
 @Stable
-data class ExploreMainSourceItem(
+data class ExploreSourceItem(
     val url: String,
     val name: String,
+    val subtitle: String?,
+    val hasLoginUrl: Boolean = false,
+)
+
+/** 一个分组下的源卡片。`name` 取 [EXPLORE_GROUP_NONE] 表示未分组，由界面换成对应文案。 */
+@Stable
+data class ExploreSourceGroup(
+    val name: String,
+    val sources: ImmutableList<ExploreSourceItem>,
 )
 
 @Stable
 data class ExploreMainUiState(
     val ready: Boolean = false,
-    val showContent: Boolean = false,
-    val sources: ImmutableList<ExploreMainSourceItem> = persistentListOf(),
-    val selectedSourceUrl: String? = null,
+    val groups: ImmutableList<ExploreSourceGroup> = persistentListOf(),
+    /** 分组筛选下拉里可选的项，顺序按源自身的排列，不受搜索词影响。 */
+    val groupNames: ImmutableList<String> = persistentListOf(),
+    val searchVisible: Boolean = false,
+    val searchKey: String = "",
+    val selectedGroup: String = EXPLORE_GROUP_ALL,
+    val openedSourceUrl: String? = null,
+    val openedSourceName: String? = null,
+    val openedSourceHasLogin: Boolean = false,
     val selectedKindKey: String? = null,
     val kinds: ImmutableList<ExploreKind> = persistentListOf(),
     val kindsLoading: Boolean = false,
     val kindsError: String? = null,
 )
 
-private data class ExploreMainInputs(
-    val sources: ImmutableList<ExploreMainSourceItem>,
-    val showContent: Boolean,
-    val savedSourceUrl: String,
-    val savedKinds: String,
-)
-
 sealed interface ExploreMainIntent {
-    data class SelectSource(val sourceUrl: String) : ExploreMainIntent
+    data class ToggleSearch(val enabled: Boolean) : ExploreMainIntent
+    data class Search(val key: String) : ExploreMainIntent
+    data class SelectGroup(val group: String) : ExploreMainIntent
+    data class OpenSource(val sourceUrl: String) : ExploreMainIntent
+    data object CloseSource : ExploreMainIntent
     data class SelectKind(val kindKey: String) : ExploreMainIntent
-    data class ShowContent(val enabled: Boolean) : ExploreMainIntent
     data object RetryKinds : ExploreMainIntent
+    data object DeleteOpenedSource : ExploreMainIntent
 }
 
 class ExploreMainViewModel(
@@ -58,76 +72,95 @@ class ExploreMainViewModel(
     private val settingsRepository: SettingsRepository,
 ) : ViewModel(), ViewModelStoreOwner {
     override val viewModelStore = ViewModelStore()
+
     private val _uiState = MutableStateFlow(ExploreMainUiState())
     val uiState: StateFlow<ExploreMainUiState> = _uiState.asStateFlow()
+
+    private val local = MutableStateFlow(ExploreLocalState())
+    private var rawSources: List<ExploreSourceSummary> = emptyList()
     private var kindsJob: Job? = null
     private var loadedSourceUrl: String? = null
-    private var categorySourceUrl: String? = null
-    private var selectedSourceUrlOverride: String? = null
-    private var kindSelections: Map<String, String> = emptyMap()
     private var kindsGeneration = 0L
+    private var kindSelections: Map<String, String> = emptyMap()
+    /** 用户已打开的源优先于源列表刷新：书源被停用后不该把正在看的详情页顶掉。 */
+    private var openedOverride: String? = null
 
     init {
         viewModelScope.launch {
             combine(
-                repository.getExploreSources("", ""),
-                // 发现页的默认形态是按分类跨源聚合。书源列表是辅助视图，用户主动切换才会进。
-                settingsRepository.getBoolean(PreferKey.exploreMainContent, defaultValue = true),
-                settingsRepository.getString(PreferKey.exploreMainSourceUrl),
+                repository.getExploreSourceSummaries(),
                 settingsRepository.getString(PreferKey.exploreMainKind),
-            ) { sources, showContent, savedSourceUrl, savedKinds ->
-                ExploreMainInputs(
-                    sources = sources.map {
-                        ExploreMainSourceItem(it.bookSourceUrl, it.bookSourceName)
-                    }.toImmutableList(),
-                    showContent = showContent,
-                    savedSourceUrl = savedSourceUrl,
-                    savedKinds = savedKinds,
-                )
-            }.collect { inputs ->
-                // 用户选择优先于偏好回读：写入偏好是异步的，回读在写完成前仍会给出旧值，
-                // 若跟随回读值就会把已选书源退回旧源并重复清空分类 ViewModelStore。
-                val selectedSourceUrl = resolveExploreMainSource(
-                    inputs.sources,
-                    inputs.savedSourceUrl,
-                    selectedSourceUrlOverride,
-                )
-                // 与书源选择同理：写偏好是异步的，回读可能仍是不含刚选分类的旧快照，
-                // 因此本地已记录的选择优先，避免刚选的分类被旧回读抹掉。
-                kindSelections = parseExploreKindSelections(inputs.savedKinds) + kindSelections
-                updateCategorySource(selectedSourceUrl)
-                _uiState.update { current ->
-                    current.copy(
-                        ready = true,
-                        showContent = inputs.showContent,
-                        sources = inputs.sources,
-                        selectedSourceUrl = selectedSourceUrl,
-                        selectedKindKey = selectedSourceUrl?.let { kindSelections[it] },
-                    )
+            ) { sources, savedKinds ->
+                sources to savedKinds
+            }.collect { (sources, savedKinds) ->
+                rawSources = sources
+                // 写偏好是异步的，回读可能仍是不含刚选分类的旧快照，本地记录优先。
+                kindSelections = parseExploreKindSelections(savedKinds) + kindSelections
+                if (openedOverride != null && sources.none { it.bookSourceUrl == openedOverride }) {
+                    openedOverride = null
                 }
-                if (inputs.showContent) loadKinds(selectedSourceUrl)
+                publish()
             }
         }
     }
 
     fun onIntent(intent: ExploreMainIntent) {
         when (intent) {
-            is ExploreMainIntent.SelectSource -> {
-                if (_uiState.value.sources.none { it.url == intent.sourceUrl }) return
-                selectedSourceUrlOverride = intent.sourceUrl
-                updateCategorySource(intent.sourceUrl)
-                _uiState.update { it.copy(selectedSourceUrl = intent.sourceUrl) }
-                loadKinds(intent.sourceUrl)
-                viewModelScope.launch {
-                    settingsRepository.putString(PreferKey.exploreMainSourceUrl, intent.sourceUrl)
+            is ExploreMainIntent.ToggleSearch -> {
+                local.update {
+                    it.copy(
+                        searchVisible = intent.enabled,
+                        searchKey = if (intent.enabled) it.searchKey else "",
+                    )
                 }
+                publish()
+            }
+
+            is ExploreMainIntent.Search -> {
+                local.update { it.copy(searchKey = intent.key) }
+                publish()
+            }
+
+            is ExploreMainIntent.SelectGroup -> {
+                local.update { it.copy(selectedGroup = intent.group) }
+                publish()
+            }
+
+            is ExploreMainIntent.OpenSource -> {
+                if (rawSources.none { it.bookSourceUrl == intent.sourceUrl }) return
+                openedOverride = intent.sourceUrl
+                clearKindOwners()
+                local.update {
+                    it.copy(
+                        openedSourceUrl = intent.sourceUrl,
+                        selectedKindKey = kindSelections[intent.sourceUrl],
+                    )
+                }
+                publish()
+                loadKinds(intent.sourceUrl)
+            }
+
+            ExploreMainIntent.CloseSource -> {
+                openedOverride = null
+                clearKindOwners()
+                local.update {
+                    it.copy(
+                        openedSourceUrl = null,
+                        selectedKindKey = null,
+                        kinds = persistentListOf(),
+                        kindsLoading = false,
+                        kindsError = null,
+                    )
+                }
+                publish()
             }
 
             is ExploreMainIntent.SelectKind -> {
-                val sourceUrl = _uiState.value.selectedSourceUrl ?: return
+                val sourceUrl = local.value.openedSourceUrl ?: return
                 if (kindSelections[sourceUrl] == intent.kindKey) return
                 kindSelections = kindSelections + (sourceUrl to intent.kindKey)
-                _uiState.update { it.copy(selectedKindKey = intent.kindKey) }
+                local.update { it.copy(selectedKindKey = intent.kindKey) }
+                publish()
                 viewModelScope.launch {
                     settingsRepository.putString(
                         PreferKey.exploreMainKind,
@@ -136,25 +169,15 @@ class ExploreMainViewModel(
                 }
             }
 
-            is ExploreMainIntent.ShowContent -> {
-                _uiState.update { it.copy(showContent = intent.enabled) }
-                if (intent.enabled) loadKinds(_uiState.value.selectedSourceUrl)
-                viewModelScope.launch {
-                    settingsRepository.putBoolean(PreferKey.exploreMainContent, intent.enabled)
-                }
+            ExploreMainIntent.RetryKinds -> loadKinds(local.value.openedSourceUrl, force = true)
+
+            ExploreMainIntent.DeleteOpenedSource -> {
+                val sourceUrl = local.value.openedSourceUrl ?: return
+                // 删除后源列表的 Flow 会自己少一项，这里只负责关掉详情页并释放分类页。
+                onIntent(ExploreMainIntent.CloseSource)
+                viewModelScope.launch { repository.deleteSource(sourceUrl) }
             }
-
-            ExploreMainIntent.RetryKinds -> loadKinds(
-                _uiState.value.selectedSourceUrl,
-                force = true
-            )
         }
-    }
-
-    private fun updateCategorySource(sourceUrl: String?) {
-        if (categorySourceUrl == sourceUrl) return
-        categorySourceUrl = sourceUrl
-        viewModelStore.clear()
     }
 
     override fun onCleared() {
@@ -162,49 +185,125 @@ class ExploreMainViewModel(
         super.onCleared()
     }
 
+    /** 分类页各自持有 ExploreShowViewModel，换源时必须整体释放，否则旧源的列表会留在内存里。 */
+    private fun clearKindOwners() {
+        viewModelStore.clear()
+    }
+
+    private fun publish() {
+        _uiState.update { current ->
+            val state = local.value
+            val openedSource = rawSources.firstOrNull { it.bookSourceUrl == state.openedSourceUrl }
+            val groups = buildExploreSourceGroups(
+                sources = rawSources,
+                searchKey = state.searchKey,
+                selectedGroup = state.selectedGroup,
+            )
+            current.copy(
+                ready = true,
+                groups = groups.toImmutableList(),
+                groupNames = groupNamesOf(rawSources).toImmutableList(),
+                searchVisible = state.searchVisible,
+                searchKey = state.searchKey,
+                selectedGroup = state.selectedGroup,
+                openedSourceUrl = state.openedSourceUrl,
+                openedSourceName = openedSource?.bookSourceName,
+                openedSourceHasLogin = openedSource?.hasLoginUrl == true,
+                selectedKindKey = state.selectedKindKey,
+                kinds = state.kinds,
+                kindsLoading = state.kindsLoading,
+                kindsError = state.kindsError,
+            )
+        }
+    }
+
     private fun loadKinds(sourceUrl: String?, force: Boolean = false) {
         if (!force && loadedSourceUrl == sourceUrl) return
         loadedSourceUrl = sourceUrl
         val generation = ++kindsGeneration
         kindsJob?.cancel()
-        _uiState.update {
+        local.update {
             it.copy(kinds = persistentListOf(), kindsLoading = sourceUrl != null, kindsError = null)
         }
+        publish()
         if (sourceUrl == null) return
         kindsJob = viewModelScope.launch {
             try {
                 val kinds = repository.getSourceExploreKinds(sourceUrl)
                 if (generation == kindsGeneration) {
-                    _uiState.update {
-                        it.copy(
-                            kinds = kinds.toImmutableList(),
-                            kindsLoading = false
-                        )
-                    }
+                    local.update { it.copy(kinds = kinds.toImmutableList(), kindsLoading = false) }
+                    publish()
                 }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
                 if (generation == kindsGeneration) {
-                    _uiState.update {
+                    local.update {
                         it.copy(
                             kindsLoading = false,
-                            kindsError = error.localizedMessage ?: error.toString()
+                            kindsError = error.localizedMessage ?: error.toString(),
                         )
                     }
+                    publish()
                 }
             }
         }
     }
 }
 
-internal fun resolveExploreMainSource(
-    sources: List<ExploreMainSourceItem>,
-    savedSourceUrl: String,
-    overrideSourceUrl: String? = null,
-): String? = overrideSourceUrl?.takeIf { url -> sources.any { it.url == url } }
-    ?: sources.firstOrNull { it.url == savedSourceUrl }
-        ?.url ?: sources.firstOrNull()?.url
+private data class ExploreLocalState(
+    val searchVisible: Boolean = false,
+    val searchKey: String = "",
+    val selectedGroup: String = EXPLORE_GROUP_ALL,
+    val openedSourceUrl: String? = null,
+    val selectedKindKey: String? = null,
+    val kinds: ImmutableList<ExploreKind> = persistentListOf(),
+    val kindsLoading: Boolean = false,
+    val kindsError: String? = null,
+)
+
+/** 分组筛选下拉里的「全部」。 */
+const val EXPLORE_GROUP_ALL = ""
+
+/** 没有分组的源归到这一档；界面换成「未分组」文案，不与「全部」混淆。 */
+const val EXPLORE_GROUP_NONE = "\u0000"
+
+/**
+ * 按源自身的排列切分成分组，组顺序取首次出现的顺序。
+ *
+ * 内置源的 `customOrder` 就是按「小说 / 漫画 / 视频 / 小说 · 18+ …」排的，
+ * 所以首次出现顺序天然等于分组顺序，不需要另存一份分组顺序表。
+ */
+internal fun buildExploreSourceGroups(
+    sources: List<ExploreSourceSummary>,
+    searchKey: String,
+    selectedGroup: String,
+): List<ExploreSourceGroup> {
+    val key = searchKey.trim()
+    return sources
+        .filter { key.isEmpty() || it.bookSourceName.contains(key, ignoreCase = true) }
+        .filter { selectedGroup == EXPLORE_GROUP_ALL || groupOf(it) == selectedGroup }
+        .groupBy(::groupOf)
+        .map { (name, list) ->
+            ExploreSourceGroup(
+                name = name,
+                sources = list.map {
+                    ExploreSourceItem(
+                        url = it.bookSourceUrl,
+                        name = it.bookSourceName,
+                        subtitle = it.bookSourceComment,
+                        hasLoginUrl = it.hasLoginUrl,
+                    )
+                }.toImmutableList(),
+            )
+        }
+}
+
+private fun groupNamesOf(sources: List<ExploreSourceSummary>): List<String> =
+    sources.map(::groupOf).distinct()
+
+private fun groupOf(source: ExploreSourceSummary): String =
+    source.firstGroup.ifEmpty { EXPLORE_GROUP_NONE }
 
 internal fun loadableExploreMainKinds(kinds: List<ExploreKind>): List<ExploreKind> =
     aggregateExploreKinds(
@@ -218,23 +317,18 @@ internal fun exploreKindKey(kind: ExploreKind): String =
 private const val KIND_ENTRY_SEPARATOR = '\u0001'
 private const val KIND_VALUE_SEPARATOR = '\u0000'
 
-/**
- * 书源与「上次浏览的分类」的映射。使用控制字符分隔，书源地址与规则标题都不会包含它们，
- * 因此不需要引入 JSON 依赖即可稳定往返。
- */
 internal fun encodeExploreKindSelections(selections: Map<String, String>): String =
-    selections.entries.joinToString(KIND_ENTRY_SEPARATOR.toString()) { (sourceUrl, kindKey) ->
-        "$sourceUrl$KIND_VALUE_SEPARATOR$kindKey"
+    selections.entries.joinToString(KIND_ENTRY_SEPARATOR.toString()) { (source, kind) ->
+        "$source$KIND_VALUE_SEPARATOR$kind"
     }
 
-internal fun parseExploreKindSelections(raw: String): Map<String, String> =
-    raw.split(KIND_ENTRY_SEPARATOR)
+internal fun parseExploreKindSelections(raw: String): Map<String, String> {
+    if (raw.isEmpty()) return emptyMap()
+    return raw.split(KIND_ENTRY_SEPARATOR)
         .mapNotNull { entry ->
             val index = entry.indexOf(KIND_VALUE_SEPARATOR)
-            if (index <= 0 || index == entry.lastIndex) {
-                null
-            } else {
-                entry.substring(0, index) to entry.substring(index + 1)
-            }
+            if (index <= 0 || index == entry.lastIndex) return@mapNotNull null
+            entry.substring(0, index) to entry.substring(index + 1)
         }
         .toMap()
+}

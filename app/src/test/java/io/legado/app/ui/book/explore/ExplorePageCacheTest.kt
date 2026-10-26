@@ -12,21 +12,21 @@ class ExplorePageCacheTest {
         bookUrl = url,
         name = "书名",
         author = "作者",
-        origin = "https://agg.example.com/novel-adult",
-        originName = "小说·成人",
+        origin = "https://www.alicesw.com",
+        originName = "爱丽丝书屋",
     )
 
     @Test
     fun `entry survives across view model instances`() {
         // 切走再切回会重建 ViewModel，缓存必须留在进程里，否则每次都要重跑整页抓取。
         ExplorePageCache.put(
-            "https://agg.example.com/novel-adult",
+            "https://www.alicesw.com",
             "https://a.example.com/list/1#a5",
             ExplorePageCache.Entry(listOf(book("u1"), book("u2")), nextPage = 2, isEnd = false),
         )
 
         val cached = ExplorePageCache.get(
-            "https://agg.example.com/novel-adult",
+            "https://www.alicesw.com",
             "https://a.example.com/list/1#a5",
         )
 
@@ -38,7 +38,7 @@ class ExplorePageCacheTest {
 
     @Test
     fun `different category or source does not share an entry`() {
-        val source = "https://agg.example.com/novel-adult"
+        val source = "https://www.alicesw.com"
         ExplorePageCache.put(
             source,
             "https://a.example.com/list/1#a5",
@@ -50,7 +50,7 @@ class ExplorePageCacheTest {
         // 同一分类 URL 挂在另一个书源下也不该命中。
         assertNull(
             ExplorePageCache.get(
-                "https://agg.example.com/novel-normal",
+                "https://crxs.me",
                 "https://a.example.com/list/1#a5",
             )
         )
@@ -58,7 +58,7 @@ class ExplorePageCacheTest {
 
     @Test
     fun `refresh drops the entry so the next load refetches`() {
-        val source = "https://agg.example.com/novel-adult"
+        val source = "https://www.alicesw.com"
         val url = "https://a.example.com/list/1#a5"
         ExplorePageCache.put(
             source,

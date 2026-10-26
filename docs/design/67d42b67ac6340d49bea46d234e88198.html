@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>发现</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            surface: "#12140E",
+            surfaceContainerLowest: "#0C0F09",
+            surfaceContainerLow: "#1A1C16",
+            surfaceContainer: "#1E201A",
+            surfaceContainerHigh: "#282B24",
+            surfaceContainerHighest: "#33362E",
+            surfaceVariant: "#44483D",
+            onSurfaceVariant: "#C5C8BA",
+            onSurface: "#E2E3D8",
+            primary: "#B1D18A",
+            onPrimary: "#1F3701",
+            primaryContainer: "#354E16",
+            onPrimaryContainer: "#CDEDA3",
+            secondary: "#BFCBAD",
+            secondaryContainer: "#404A33",
+            tertiary: "#A0D0CB",
+            tertiaryContainer: "#1F4E4B",
+            outline: "#8F9285",
+            outlineVariant: "#44483D"
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            headline: ["Inter", "sans-serif"],
+            display: ["Inter", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#12140E] text-[#E2E3D8] font-body min-h-screen antialiased selection:bg-[#354E16] selection:text-[#CDEDA3]">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-4 h-16 bg-[#12140E] border-b border-[#44483D]">
+<h1 class="font-headline text-[22px] leading-7 font-semibold text-[#E2E3D8] select-none">发现</h1>
+<div class="flex items-center gap-1">
+<!-- 搜索按钮 -->
+<button aria-label="搜索" class="min-h-[48px] min-w-[48px] flex items-center justify-center rounded-full text-[#E2E3D8] hover:bg-[#1E201A] active:opacity-80 transition-all duration-150" type="button">
+<span class="material-symbols-outlined text-[24px]" data-icon="search">search</span>
+</button>
+<!-- 全部筛选 Chip -->
+<button aria-label="分组筛选" class="min-h-[48px] px-3 flex items-center gap-1 rounded-full text-[#E2E3D8] bg-[#1E201A] border border-[#44483D] hover:bg-[#282B24] active:opacity-80 transition-all duration-150" type="button">
+<span class="text-[13px] font-medium leading-none text-[#E2E3D8]">全部</span>
+<span class="material-symbols-outlined text-[18px] text-[#C5C8BA]" data-icon="expand_more">expand_more</span>
+</button>
+</div>
+</header>
+<!-- 主内容区域：垂直滚动平铺列表 -->
+<main class="pt-20 pb-12 px-4 max-w-md mx-auto flex flex-col gap-6">
+<!-- 分组一：小说 -->
+<section>
+<div class="flex items-baseline justify-between mb-3 px-1">
+<h2 class="text-[14px] leading-5 font-semibold text-[#E2E3D8] tracking-wide">小说</h2>
+<span class="text-[12px] leading-4 text-[#C5C8BA]">8 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">365小说网</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">12 个分类 · 2 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">玩文学小说网</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">7 个分类 · 4 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">天天看小说🪜</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">10 个分类 · 2 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">💰 飞卢小说</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">7 个分类 · 4 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">顶点小说</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">8 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">🏵饭饭小说8</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">7 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">言情小说阁</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">8 个分类 · 4 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">八叉书库</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">9 个分类 · 4 个榜单</div>
+</div>
+</div>
+</section>
+<!-- 分组二：漫画 -->
+<section>
+<div class="flex items-baseline justify-between mb-3 px-1">
+<h2 class="text-[14px] leading-5 font-semibold text-[#E2E3D8] tracking-wide">漫画</h2>
+<span class="text-[12px] leading-4 text-[#C5C8BA]">4 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">🎨包子漫画</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">10 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">🌠 漫画吧网</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">0 个分类 · 3 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">🌟卡拉漫画</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">5 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">学外漫画</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">8 个分类 · 2 个榜单</div>
+</div>
+</div>
+</section>
+<!-- 分组三：视频 -->
+<section>
+<div class="flex items-baseline justify-between mb-3 px-1">
+<h2 class="text-[14px] leading-5 font-semibold text-[#E2E3D8] tracking-wide">视频</h2>
+<span class="text-[12px] leading-4 text-[#C5C8BA]">9 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">最大资源</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">16 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">无尽资源</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">13 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">非凡资源</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">14 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">魔都资源</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">14 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">量子资源</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">14 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">如意资源</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">14 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">黄果短剧</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">6 个分类</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">饭果短剧</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">4 个分类</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">河果短剧</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">6 个分类</div>
+</div>
+</div>
+</section>
+<!-- 分组四：小说 · 18+ -->
+<section>
+<div class="flex items-baseline justify-between mb-3 px-1">
+<h2 class="text-[14px] leading-5 font-semibold text-[#E2E3D8] tracking-wide">小说 · 18+</h2>
+<span class="text-[12px] leading-4 text-[#C5C8BA]">4 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">成人小说网</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">16 个分类 · 2 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">腐文小说</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">8 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">BB成人小说</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">18 个分类 · 2 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">爱丽丝书屋</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">32 个分类 · 4 个榜单</div>
+</div>
+</div>
+</section>
+<!-- 分组五：漫画 · 18+ -->
+<section>
+<div class="flex items-baseline justify-between mb-3 px-1">
+<h2 class="text-[14px] leading-5 font-semibold text-[#E2E3D8] tracking-wide">漫画 · 18+</h2>
+<span class="text-[12px] leading-4 text-[#C5C8BA]">4 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">开心看漫画</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">5 个分类 · 1 个榜单</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">51漫画</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">26 个分类</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">favcomic</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">仅搜索</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">禁漫天堂</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">9 个分类 · 6 个榜单</div>
+</div>
+</div>
+</section>
+<!-- 分组六：视频 · 18+ -->
+<section>
+<div class="flex items-baseline justify-between mb-3 px-1">
+<h2 class="text-[14px] leading-5 font-semibold text-[#E2E3D8] tracking-wide">视频 · 18+</h2>
+<span class="text-[12px] leading-4 text-[#C5C8BA]">2 个源</span>
+</div>
+<div class="grid grid-cols-2 gap-2.5">
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">最大资源·18+</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">7 个分类</div>
+</div>
+<div class="bg-[#1A1C16] border border-[#44483D] rounded-2xl p-4 min-h-[76px] flex flex-col justify-center cursor-pointer hover:bg-[#1E201A] active:bg-[#282B24] active:scale-[0.98] transition-all duration-150 select-none">
+<div class="text-[14px] leading-5 font-medium text-[#E2E3D8] truncate">无尽资源·18+</div>
+<div class="text-[12px] leading-4 text-[#C5C8BA] mt-1 truncate">1 个分类</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

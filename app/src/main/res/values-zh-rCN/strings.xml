@@ -3795,9 +3795,8 @@
     <string name="home_capsule_restore_navigation">恢复导航栏</string>
     <string name="home_capsule_expand_controls">展开播放控制</string>
     <string name="home_capsule_chapter">第 %d 章</string>
-    <string name="explore_main_content">直接浏览发现内容</string>
-    <string name="explore_source_list">显示发现书源列表</string>
-    <string name="explore_select_source">选择发现书源</string>
+    <string name="explore_group_filter">筛选发现分组</string>
+    <string name="explore_group_source_count">%1$d 个源</string>
     <string name="background_battery_optimization_title">后台保活与电池优化</string>
     <string name="background_battery_optimization_summary">配置无限制后台运行与自启动，避免切后台或锁屏时朗读/服务被系统终止</string>
     <string name="battery_optimization_dialog_title">后台保活与省电策略设置指引</string>

@@ -2,7 +2,7 @@ package io.legado.app.data.repository
 
 import io.legado.app.data.AppDatabase
 import io.legado.app.data.entities.BookSource
-import io.legado.app.data.entities.BookSourcePart
+import io.legado.app.data.entities.ExploreSourceSummary
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.data.entities.rule.ExploreKind
 import io.legado.app.domain.gateway.ExploreBooksGateway
@@ -17,12 +17,11 @@ import kotlinx.coroutines.withContext
 
 interface ExploreRepository {
     fun getBookshelfItems(): Flow<List<SearchBook>>
-    fun getExploreGroups(): Flow<List<String>>
-    fun getExploreSources(query: String, selectedGroup: String): Flow<List<BookSourcePart>>
+    /** 发现页源卡片：只含卡片要显示的字段，不含 jsLib。 */
+    fun getExploreSourceSummaries(): Flow<List<ExploreSourceSummary>>
     suspend fun getBookSource(sourceUrl: String): BookSource?
     suspend fun getSourceExploreKinds(sourceUrl: String): List<ExploreKind>
     suspend fun refreshSourceExploreKinds(sourceUrl: String): List<ExploreKind>
-    suspend fun topSource(bookSource: BookSourcePart)
     suspend fun deleteSource(sourceUrl: String)
 }
 
@@ -47,31 +46,8 @@ class ExploreRepositoryImpl(
         }
     }
 
-    override fun getExploreGroups(): Flow<List<String>> {
-        return appDb.bookSourceDao.flowExploreGroups()
-    }
-
-    override fun getExploreSources(
-        query: String,
-        selectedGroup: String
-    ): Flow<List<BookSourcePart>> {
-        return when {
-            query.isNotBlank() -> {
-                if (query.startsWith("group:")) {
-                    appDb.bookSourceDao.flowGroupExplore(query.substringAfter("group:"))
-                } else {
-                    appDb.bookSourceDao.flowExplore(query)
-                }
-            }
-
-            selectedGroup.isNotBlank() -> {
-                appDb.bookSourceDao.flowGroupExplore(selectedGroup)
-            }
-
-            else -> {
-                appDb.bookSourceDao.flowExplore()
-            }
-        }
+    override fun getExploreSourceSummaries(): Flow<List<ExploreSourceSummary>> {
+        return appDb.bookSourceDao.flowExploreSummaries()
     }
 
     override suspend fun getBookSource(sourceUrl: String): BookSource? {
@@ -105,11 +81,6 @@ class ExploreRepositoryImpl(
             source.clearExploreKindsCache()
             source.exploreKinds()
         }
-
-    override suspend fun topSource(bookSource: BookSourcePart) {
-        val minOrder = appDb.bookSourceDao.minOrder
-        appDb.bookSourceDao.upOrder(bookSource.copy(customOrder = minOrder - 1))
-    }
 
     override suspend fun deleteSource(sourceUrl: String) {
         SourceHelp.deleteBookSource(sourceUrl)

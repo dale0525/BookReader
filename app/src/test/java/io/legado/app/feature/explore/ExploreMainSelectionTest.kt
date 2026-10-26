@@ -1,39 +1,39 @@
 package io.legado.app.feature.explore
 
+import io.legado.app.data.entities.ExploreSourceSummary
 import io.legado.app.data.entities.rule.ExploreKind
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ExploreMainSelectionTest {
     @Test
-    fun `saved source falls back when it is removed`() {
-        val sources = listOf(
-            ExploreMainSourceItem("source-a", "A"),
-            ExploreMainSourceItem("source-b", "B"),
+    fun `sources without a group fall into one trailing bucket`() {
+        // 未分组的源不能散落成多档，也不能被当成「全部」。
+        val groups = buildExploreSourceGroups(
+            sources = listOf(
+                summary("a", "A", "小说"),
+                summary("b", "B", null),
+                summary("c", "C", "小说"),
+            ),
+            searchKey = "",
+            selectedGroup = EXPLORE_GROUP_ALL,
         )
-        assertEquals("source-b", resolveExploreMainSource(sources, "source-b"))
-        assertEquals("source-a", resolveExploreMainSource(sources, "removed"))
-        assertNull(resolveExploreMainSource(emptyList(), "removed"))
+
+        assertEquals(listOf("小说", EXPLORE_GROUP_NONE), groups.map { it.name })
+        assertEquals(listOf("B"), groups[1].sources.map { it.name })
     }
 
     @Test
-    fun `explicit selection wins over saved source and stale preference`() {
-        val sources = listOf(
-            ExploreMainSourceItem("source-a", "A"),
-            ExploreMainSourceItem("source-b", "B"),
+    fun `multi-value group keeps the card in its first group only`() {
+        val groups = buildExploreSourceGroups(
+            sources = listOf(summary("a", "A", "小说, 玄幻")),
+            searchKey = "",
+            selectedGroup = EXPLORE_GROUP_ALL,
         )
-        // 偏好写入是异步的，回读旧值时不能把已选书源退回旧源。
-        assertEquals("source-b", resolveExploreMainSource(sources, "source-a", "source-b"))
-        // 已选书源被删除后，才回退到已保存的书源，再回退到列表首个。
-        assertEquals("source-a", resolveExploreMainSource(sources, "source-a", "removed"))
-        assertEquals(
-            "source-b",
-            resolveExploreMainSource(listOf(sources[1]), "removed", "source-a")
-        )
-        assertNull(resolveExploreMainSource(emptyList(), "removed", "source-a"))
+
+        assertEquals(listOf("小说"), groups.map { it.name })
     }
 
     @Test
@@ -61,6 +61,29 @@ class ExploreMainSelectionTest {
             parseExploreKindSelections("\u0001https://source-a\u00001:a:x\u0001malformed"),
         )
     }
+
+    @Test
+    fun `card subtitle survives grouping`() {
+        val groups = buildExploreSourceGroups(
+            sources = listOf(summary("a", "A", "小说", "8 个分类 · 2 个榜单")),
+            searchKey = "",
+            selectedGroup = EXPLORE_GROUP_ALL,
+        )
+
+        assertEquals("8 个分类 · 2 个榜单", groups.single().sources.single().subtitle)
+    }
+
+    private fun summary(
+        url: String,
+        name: String,
+        group: String?,
+        comment: String? = null,
+    ) = ExploreSourceSummary(
+        bookSourceUrl = url,
+        bookSourceName = name,
+        bookSourceGroup = group,
+        bookSourceComment = comment,
+    )
 
     @Test
     fun `pager contains only loadable unique categories`() {
