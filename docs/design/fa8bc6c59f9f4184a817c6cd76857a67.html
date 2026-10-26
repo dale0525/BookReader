@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>星眠 - 阅读菜单</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            surface: "#12140E",
+            background: "#12140E",
+            onSurface: "#E2E3D8",
+            surfaceContainerLowest: "#0C0F09",
+            surfaceContainerLow: "#1A1C16",
+            surfaceContainer: "#1E201A",
+            surfaceContainerHigh: "#282B24",
+            surfaceContainerHighest: "#33362E",
+            surfaceVariant: "#44483D",
+            onSurfaceVariant: "#C5C8BA",
+            primary: "#B1D18A",
+            onPrimary: "#1F3701",
+            primaryContainer: "#354E16",
+            onPrimaryContainer: "#CDEDA3",
+            secondary: "#BFCBAD",
+            secondaryContainer: "#404A33",
+            tertiary: "#A0D0CB",
+            tertiaryContainer: "#1F4E4B",
+            outline: "#8F9285",
+            outlineVariant: "#44483D",
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            headline: ["Inter", "sans-serif"],
+            display: ["Inter", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #12140E;
+      color: #E2E3D8;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      display: inline-block;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+      -webkit-font-smoothing: antialiased;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .indent-2em {
+      text-indent: 2em;
+    }
+    /* Hide scrollbar completely */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+    * {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-onSurface min-h-screen flex justify-center items-center overflow-x-hidden antialiased selection:bg-primary selection:text-onPrimary">
+<!-- Mobile Screen Shell: 390px x 844px -->
+<main class="relative w-[390px] h-[844px] bg-[#12140E] overflow-hidden flex flex-col justify-between shadow-2xl">
+<!-- 1. 顶部标题栏 (整条贴边，左右全宽，贴顶，无系统栏) -->
+<header class="w-full bg-[#1E201A] border-b border-[#44483D] z-30 pt-3 pb-3 px-4 flex flex-col gap-2.5 transition-all">
+<!-- 第一行：返回 + 书名「星眠」 | 右侧操作图标组 -->
+<div class="flex items-center justify-between h-10">
+<div class="flex items-center gap-2">
+<button aria-label="返回" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-[#C5C8BA] hover:bg-[#282B24] active:scale-95 transition-transform">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<span class="text-[20px] font-semibold tracking-wide text-[#E2E3D8] font-headline">星眠</span>
+</div>
+<div class="flex items-center gap-0.5">
+<button aria-label="目录" class="w-10 h-10 rounded-full flex items-center justify-center text-[#C5C8BA] hover:bg-[#282B24] active:scale-95 transition-transform">
+<span class="material-symbols-outlined">menu_book</span>
+</button>
+<button aria-label="搜索" class="w-10 h-10 rounded-full flex items-center justify-center text-[#C5C8BA] hover:bg-[#282B24] active:scale-95 transition-transform">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button aria-label="更多选项" class="w-10 h-10 rounded-full flex items-center justify-center text-[#C5C8BA] hover:bg-[#282B24] active:scale-95 transition-transform">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- 第二行：章节名（左对齐） | 书源名（右对齐） -->
+<div class="flex items-center justify-between text-[12px] text-[#C5C8BA] font-body tracking-tight px-0.5">
+<span class="truncate max-w-[220px]">第七章 雨停之后</span>
+<span class="text-[#8F9285] shrink-0 font-medium">聚合书源</span>
+</div>
+</header>
+<!-- 2. 正文阅读区域 (优雅排版，深底浅字，行高舒适松弛) -->
+<article class="flex-1 px-6 pt-7 pb-4 flex flex-col justify-start overflow-hidden">
+<!-- 章节大标题 -->
+<h1 class="text-[22px] font-semibold text-[#E2E3D8] font-headline tracking-normal mb-6">
+        第七章 雨停之后
+      </h1>
+<!-- 两段原创雨夜叙事实体正文 -->
+<div class="space-y-6 text-[#C5C8BA] font-body text-[15.5px] leading-[2.1] tracking-wide text-justify">
+<p class="indent-2em">
+          檐下的水珠在漫长的夜色里终于断了节奏。暴雨褪去后的长巷只余下暗哑的潮气，地面凹陷的浅洼倒映着薄雾后微弱的星光，像是一面面被夜风吹皱的旧铜镜。他抬手推开临街的旧式窗格，冷冽而微润的气流扑面而来，院角那株被风雨浸透的老槐树沉寂无声，唯有一两片带水的残叶，悄无声息地贴在冰凉的青石板上。
+        </p>
+<p class="indent-2em">
+          远处的钟楼在整点的沉寂中发出了一声遥远的余颤，水雾顺着瓦楞静静淌入暗渠。桌案上青瓷油灯的芯火微微晃动了一下，将室内简素的木纹拉出冗长而安稳的影子。夜已经行至尽头，他收拢起袖口沾染的薄凉水汽，重新握紧了那枚沉睡在掌心许久的青玉牌，窗外沉睡的夜幕正渐渐泛起一层清寒的微青。
+        </p>
+</div>
+</article>
+<!-- 3. 底部工具栏 (悬浮卡片形态：四周留出 16px 外边距，圆角 16px，底色 #1E201A，描边 #44483D) -->
+<footer class="p-4 pt-0 z-30">
+<div class="w-full bg-[#1E201A] border border-[#44483D] rounded-2xl px-4 pt-3.5 pb-3 flex flex-col gap-2.5">
+<!-- 卡片第一行：左箭头 + 纯净进度滑块 (约 60% 处带手柄，无任何文字/标签) + 右箭头 -->
+<div class="flex items-center justify-between gap-3 h-8">
+<button aria-label="上一进度" class="w-8 h-8 rounded-full flex items-center justify-center text-[#C5C8BA] hover:bg-[#282B24] active:scale-90 transition-transform shrink-0">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<!-- 滑轨与手柄容器 (严禁文字标签与数值) -->
+<div class="relative flex-1 flex items-center h-6 cursor-pointer group">
+<!-- 底轨 (#44483D) -->
+<div class="w-full h-[3px] bg-[#44483D] rounded-full overflow-hidden relative">
+<!-- 已划过轨道 60% (#B1D18A) -->
+<div class="h-full bg-[#B1D18A] rounded-full w-[60%]"></div>
+</div>
+<!-- 60% 处圆形实心手柄 (#B1D18A) -->
+<div class="absolute left-[60%] -translate-x-1/2 w-4 h-4 bg-[#B1D18A] rounded-full shadow-md active:scale-125 transition-transform border border-[#1E201A]"></div>
+</div>
+<button aria-label="下一进度" class="w-8 h-8 rounded-full flex items-center justify-center text-[#C5C8BA] hover:bg-[#282B24] active:scale-90 transition-transform shrink-0">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+<!-- 卡片第二行：五个均分排列的图标按钮，统一无高亮态，图标下方带文字标签 -->
+<nav class="grid grid-cols-5 items-center pt-1 border-t border-[#44483D]/40">
+<!-- 1. 目录 -->
+<button class="flex flex-col items-center justify-center py-1 text-[#C5C8BA] hover:text-[#E2E3D8] hover:bg-[#282B24]/40 rounded-xl transition-all active:scale-95">
+<span class="material-symbols-outlined text-[22px]">menu_book</span>
+<span class="text-[11px] font-medium font-label tracking-tight mt-1">目录</span>
+</button>
+<!-- 2. 自动翻页 -->
+<button class="flex flex-col items-center justify-center py-1 text-[#C5C8BA] hover:text-[#E2E3D8] hover:bg-[#282B24]/40 rounded-xl transition-all active:scale-95">
+<span class="material-symbols-outlined text-[22px]">auto_stories</span>
+<span class="text-[11px] font-medium font-label tracking-tight mt-1">自动翻页</span>
+</button>
+<!-- 3. 听书 -->
+<button class="flex flex-col items-center justify-center py-1 text-[#C5C8BA] hover:text-[#E2E3D8] hover:bg-[#282B24]/40 rounded-xl transition-all active:scale-95">
+<span class="material-symbols-outlined text-[22px]">headphones</span>
+<span class="text-[11px] font-medium font-label tracking-tight mt-1">听书</span>
+</button>
+<!-- 4. 护眼 -->
+<button class="flex flex-col items-center justify-center py-1 text-[#C5C8BA] hover:text-[#E2E3D8] hover:bg-[#282B24]/40 rounded-xl transition-all active:scale-95">
+<span class="material-symbols-outlined text-[22px]">visibility</span>
+<span class="text-[11px] font-medium font-label tracking-tight mt-1">护眼</span>
+</button>
+<!-- 5. 设置 -->
+<button class="flex flex-col items-center justify-center py-1 text-[#C5C8BA] hover:text-[#E2E3D8] hover:bg-[#282B24]/40 rounded-xl transition-all active:scale-95">
+<span class="material-symbols-outlined text-[22px]">settings</span>
+<span class="text-[11px] font-medium font-label tracking-tight mt-1">设置</span>
+</button>
+</nav>
+</div>
+</footer>
+</main>
+</body></html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>星眠 - 阅读器</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            background: "#F9FAEF",
+            surface: "#F9FAEF",
+            "on-surface": "#1A1C16",
+            "on-background": "#1A1C16",
+            "surface-container-lowest": "#FFFFFF",
+            "surface-container-low": "#F3F4E9",
+            "surface-container": "#EEEFE3",
+            "surface-container-high": "#E8E9DE",
+            "surface-container-highest": "#E2E3D8",
+            "surface-variant": "#E1E4D5",
+            "on-surface-variant": "#44483D",
+            primary: "#4C662B",
+            "on-primary": "#FFFFFF",
+            "primary-container": "#CDEDA3",
+            "on-primary-container": "#354E16",
+            secondary: "#586249",
+            "secondary-container": "#DCE7C8",
+            tertiary: "#386663",
+            "tertiary-container": "#BCECE7",
+            outline: "#75796C",
+            "outline-variant": "#C5C8BA"
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            headline: ["Inter", "sans-serif"],
+            display: ["Inter", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    body {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col justify-between overflow-x-hidden antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- 1. 顶部标题栏：整条贴边（左右到屏幕边缘、贴屏幕顶部，无边距），surfaceContainer 背景 -->
+<header class="fixed top-0 left-0 right-0 z-50 w-full bg-surface-container shadow-none flex flex-col justify-center px-4 pt-3 pb-3">
+<!-- 第一行：左侧返回箭头图标 + 书名「星眠」；右侧三个图标按钮（目录/书本、搜索、更多） -->
+<div class="flex items-center justify-between w-full h-12">
+<div class="flex items-center gap-1">
+<button aria-label="返回" class="w-12 h-12 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-high active:scale-95 transition-transform duration-150 -ml-2" type="button">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<span class="text-[20px] font-semibold tracking-tight text-on-surface font-headline leading-none">星眠</span>
+</div>
+<div class="flex items-center gap-0.5 -mr-2">
+<button aria-label="目录" class="w-12 h-12 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-high active:scale-95 transition-transform duration-150" type="button">
+<span class="material-symbols-outlined text-[24px]">menu_book</span>
+</button>
+<button aria-label="搜索" class="w-12 h-12 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-high active:scale-95 transition-transform duration-150" type="button">
+<span class="material-symbols-outlined text-[24px]">search</span>
+</button>
+<button aria-label="更多" class="w-12 h-12 flex items-center justify-center rounded-full text-on-surface hover:bg-surface-container-high active:scale-95 transition-transform duration-150" type="button">
+<span class="material-symbols-outlined text-[24px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- 第二行：左侧章节名「第七章 雨停之后」，右侧书源名「聚合书源」 -->
+<div class="flex items-center justify-between w-full px-1 pt-1 text-[13px] text-on-surface-variant font-label">
+<span class="truncate max-w-[70%] font-medium">第七章 雨停之后</span>
+<span class="text-outline text-[12px] font-normal shrink-0">聚合书源</span>
+</div>
+</header>
+<!-- 2. 正文区域 -->
+<main class="w-full max-w-2xl mx-auto px-6 pt-28 pb-48 flex-1">
+<!-- 章节标题 -->
+<h1 class="text-[22px] font-semibold text-on-surface mb-8 font-headline tracking-normal leading-snug">
+      第七章 雨停之后
+    </h1>
+<!-- 正文段落 -->
+<div class="space-y-6 text-[17px] leading-[1.85] text-on-surface font-normal">
+<p class="indent-[2em]">
+        窗棂上的雨水终于不再连成线，只剩下零星的残滴沿着微凉的玻璃悄无声息地下滑。整座小镇沉浸在一种近乎透明的阒寂里，空气中浮动着被雨水浸透的青苔与潮湿泥土的气息。街角唯一那盏旧路灯的光线晕染在积水的坑洼中，折射出破碎而朦胧的暖黄色，像是一枚被遗落在人间的陈旧铜币。
+      </p>
+<p class="indent-[2em]">
+        他抬手推开半掩的木窗，迎面而来的夜风微凉而清洌，卷走了屋里郁积已久的沉闷。檐下的铁马在微弱的风里轻轻晃动，发出一两声清脆悠远的叮咚。远处的群山在浓重夜色中只显露出一抹深黛色的轮廓，星子悄然在被风撕开的云隙间苏醒，眨着眼睛，静默地俯瞰着这片在大雨涤荡后安然入睡的荒原。
+      </p>
+</div>
+</main>
+<!-- 3. 底部工具栏：四周留 16px 外边距的悬浮卡片 -->
+<div class="fixed bottom-0 left-0 right-0 z-50 p-4 pointer-events-none flex justify-center">
+<div class="w-full max-w-xl bg-surface-container border border-outline-variant rounded-[16px] p-4 pointer-events-auto flex flex-col gap-4">
+<!-- 卡片内部第一行：左箭头 + 进度条滑块 + 右箭头 (绝无文字/页码/百分比) -->
+<div class="flex items-center justify-between w-full gap-3 px-1">
+<button aria-label="上一章" class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-transform duration-150 shrink-0" type="button">
+<span class="material-symbols-outlined text-[22px]">chevron_left</span>
+</button>
+<!-- 滑块容器 -->
+<div class="relative flex-1 flex items-center h-8 cursor-pointer">
+<!-- 轨道背景 -->
+<div class="absolute left-0 right-0 h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+<!-- 已走进度条 (约60%) -->
+<div class="h-full bg-primary rounded-full w-[60%]"></div>
+</div>
+<!-- 实心圆形手柄 #4C662B -->
+<div class="absolute left-[60%] -translate-x-1/2 w-4 h-4 bg-primary rounded-full border-2 border-surface-container"></div>
+</div>
+<button aria-label="下一章" class="w-10 h-10 flex items-center justify-center rounded-full text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-transform duration-150 shrink-0" type="button">
+<span class="material-symbols-outlined text-[22px]">chevron_right</span>
+</button>
+</div>
+<!-- 卡片内部第二行：五个图标按钮，均分横向排列，完全一致的灰度色调 -->
+<div class="grid grid-cols-5 items-center w-full pt-1 border-t border-outline-variant/40">
+<!-- 目录 -->
+<button class="flex flex-col items-center justify-center py-1 text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-transform duration-150 rounded-xl" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">menu_book</span>
+<span class="text-[11px] font-medium font-label">目录</span>
+</button>
+<!-- 自动翻页 -->
+<button class="flex flex-col items-center justify-center py-1 text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-transform duration-150 rounded-xl" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">auto_stories</span>
+<span class="text-[11px] font-medium font-label">自动翻页</span>
+</button>
+<!-- 听书 -->
+<button class="flex flex-col items-center justify-center py-1 text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-transform duration-150 rounded-xl" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">headphones</span>
+<span class="text-[11px] font-medium font-label">听书</span>
+</button>
+<!-- 护眼 -->
+<button class="flex flex-col items-center justify-center py-1 text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-transform duration-150 rounded-xl" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">visibility</span>
+<span class="text-[11px] font-medium font-label">护眼</span>
+</button>
+<!-- 设置 -->
+<button class="flex flex-col items-center justify-center py-1 text-on-surface-variant hover:bg-surface-container-high active:scale-95 transition-transform duration-150 rounded-xl" type="button">
+<span class="material-symbols-outlined text-[22px] mb-1">settings</span>
+<span class="text-[11px] font-medium font-label">设置</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>

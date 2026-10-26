@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>沉浸阅读 - 星眠</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Serif+SC:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            paper: "#F9FAEF",
+            ink: "#1A1C16",
+            meta: "#74796B"
+          },
+          fontFamily: {
+            headline: ["Inter", "sans-serif"],
+            display: ["Inter", "sans-serif"],
+            body: ["Noto Serif SC", "Inter", "serif"],
+            label: ["Inter", "sans-serif"]
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    /* 彻底屏蔽滚动条与外溢效果，保持沉浸书籍单页展示 */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #F9FAEF;
+      color: #1A1C16;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      user-select: none;
+      -webkit-user-select: none;
+      overflow: hidden;
+    }
+    .chinese-body {
+      text-align: justify;
+      text-justify: inter-ideograph;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-paper text-ink flex items-center justify-center min-h-screen">
+<!-- 手机竖屏标准视口容器 (390px × 844px) -->
+<main class="w-[390px] h-[844px] max-w-full max-h-screen relative flex flex-col justify-between overflow-hidden bg-paper shadow-none select-none">
+<!-- 1. 页眉一行 (Header) -->
+<header class="w-full pt-4 px-6 flex justify-between items-center z-10 pointer-events-none">
+<span class="font-label text-xs text-meta tracking-wider font-normal">21:42</span>
+<span class="font-label text-xs text-meta tracking-wider font-normal">86%</span>
+</header>
+<!-- 2. 正文排版区 (Reader Body Text Content) -->
+<article class="flex-1 px-7 pt-4 pb-2 flex flex-col justify-start overflow-hidden">
+<!-- 章节标题 -->
+<h1 class="font-body font-semibold text-[21px] leading-snug tracking-wide text-ink mb-5">
+        第七章 雨停之后
+      </h1>
+<!-- 正文段落群 -->
+<div class="chinese-body font-body text-[14.5px] leading-[1.82] tracking-wide text-ink/95 space-y-4">
+<p class="indent-[2em]">
+          檐角的积雨终于不再连成线，只剩下偶尔断续的几滴，落在青石板凹陷的水洼里，发出微弱清脆的轻响。巷子深处的路灯在湿漉漉的地面投下泛黄的虚影，空气里弥漫着泥土被彻底浸透后泛起的草木清气。
+        </p>
+<p class="indent-[2em]">
+          陈序推开临街的那扇木格窗，微凉的湿气立刻扑上面颊。远处老城区的铁轨方向，传来了最后一班列车压过轨道接缝的沉闷震颤，随后便是一片漫长无边的寂静，将整座小城彻底包裹起来。
+        </p>
+<p class="indent-[2em]">
+          他伸手摸了摸案台旁尚有余温的青瓷茶盏，泛黄的书页在窗缝溜进来的夜风中轻轻翻动了一下。那些在暴雨如注时翻江倒海的思绪，随着渐次退去的雷声，也慢慢沉淀到了深不见底的心湖之下。
+        </p>
+<p class="indent-[2em]">
+          对街小卖部早早打烊了，铁卷门上悬挂的风铃被穿堂风拂过，叮咚几声，惊动了墙角避雨的一只花猫。它抖了抖爪子上的水珠，迈着极轻的步子，顺着青砖残垣溜进了黑黢黢的巷道深处。
+        </p>
+<p class="indent-[2em]">
+          夜色深得如同研开的徽墨。天际那层浓重如铁的积云边缘，隐约透出了一抹极其微薄的灰白光亮。明天大概会是个晴天，他心里这么想着，指尖在泛旧的木质窗沿上轻轻敲了两下。
+        </p>
+<p class="indent-[2em]">
+          屋里只留了一盏罩着乳白色玻璃罩的钨丝台灯，柔和的光晕刚好照亮摊开的手稿。星眠这两个字写在纸页的最顶端，墨迹早已干透，在昏黄的光下泛着一层淡淡的银灰。
+        </p>
+</div>
+</article>
+<!-- 3. 页脚一行 (Footer) -->
+<footer class="w-full pb-4 px-6 flex justify-between items-center text-xs text-meta font-label pointer-events-none z-10">
+<span class="tracking-wide">星眠</span>
+<span class="tracking-wide text-center">62%</span>
+<span class="tracking-wide text-right">18 / 31</span>
+</footer>
+</main>
+</body></html>
