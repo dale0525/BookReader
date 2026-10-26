@@ -604,18 +604,17 @@ fun MainScreen(
                                 animatedVisibilityScope = animatedVisibilityScope,
                             )
 
-                                MainDestination.Explore -> ExploreMainRoute(
-                                onOpenExploreShow = onNavigateToExploreShow,
-                                    onBookClick = { book, sharedCoverKey ->
-                                        onNavigateToBookInfo(
-                                            book.name,
-                                            book.author,
-                                            book.bookUrl,
-                                            book.origin,
-                                            book.coverUrl,
-                                            sharedCoverKey,
-                                        )
-                                    },
+                            MainDestination.Explore -> ExploreMainRoute(
+                                onBookClick = { book, sharedCoverKey ->
+                                    onNavigateToBookInfo(
+                                        book.name,
+                                        book.author,
+                                        book.bookUrl,
+                                        book.origin,
+                                        book.coverUrl,
+                                        sharedCoverKey,
+                                    )
+                                },
                                 onOpenLogin = { sourceUrl ->
                                     onNavigateToSourceLogin(
                                         io.legado.app.ui.login.SourceLoginType.BookSource,

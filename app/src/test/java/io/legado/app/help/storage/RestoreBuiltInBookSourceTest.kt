@@ -34,7 +34,7 @@ import java.nio.file.Files
  * 冲突成因：内置源规则只在 `LocalConfig.needUpBookSources` 为真时更新，而
  * `bookSourceVersion` 存在 `SharedPreferences("local")` 里；备份的 `config.xml`
  * 只导 `AppConfigStore`（DataStore），这个计数既不进备份也不被恢复。升级门禁早已
- * 推进到 11，恢复时按 url 整行 REPLACE 又把旧规则写回去，之后没有任何路径会再
+ * 推进到最新，恢复时按 url 整行 REPLACE 又把旧规则写回去，之后没有任何路径会再
  * 覆盖它——发现页会一直停在备份那版。
  *
  * 所以这里直接跑真实的 `Restore.restoreBookSources()`，喂一份「备份里的旧书源」，
@@ -47,7 +47,7 @@ class RestoreBuiltInBookSourceTest {
     private lateinit var fixture: InMemoryAppDatabaseFixture
     private lateinit var backupDir: File
 
-    private val builtInUrl = "https://agg.example.com/novel-normal"
+    private val builtInUrl = "https://zuidazy.co"
 
     @Before
     fun setUp() {
@@ -60,7 +60,7 @@ class RestoreBuiltInBookSourceTest {
         // 升级门禁已推进到最新：模拟「装过新版、版本计数早已写满」的设备。
         LocalConfig.edit {
             putLong("appVersionCode", appVersionCode())
-            putInt("bookSourceVersion", 11)
+            putInt("bookSourceVersion", 13)
         }
     }
 
@@ -81,9 +81,9 @@ class RestoreBuiltInBookSourceTest {
         writeBackupSourceFile(
             BookSource(
                 bookSourceUrl = builtInUrl,
-                bookSourceName = "小说·常规",
+                bookSourceName = "最大资源",
                 bookSourceGroup = "我自己的分组",
-                bookSourceType = 0,
+                bookSourceType = 4,
                 enabled = false,
                 enabledExplore = false,
                 customOrder = 42,

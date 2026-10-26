@@ -15,7 +15,10 @@ fun aggregateExploreKinds(kinds: List<ExploreKind>): List<ExploreKind> =
     kinds.groupBy { it.title to it.rank }
         .values
         .map { group ->
-            group.first().copy(url = group.mapNotNull { it.url }.joinToString(URL_SEPARATOR))
+            // 同一个站可能把同一分类列两遍，重复 URL 会让并发取回把同一页抓两次。
+            group.first().copy(
+                url = group.mapNotNull { it.url }.distinct().joinToString(URL_SEPARATOR)
+            )
         }
 
 fun ExploreKind.targetUrls(): List<String> =

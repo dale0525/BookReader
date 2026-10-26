@@ -14,7 +14,9 @@ import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.source.clearExploreKindsCache
 import io.legado.app.model.BookCover
+import io.legado.app.model.SharedJsScope
 import io.legado.app.utils.GSON
+import io.legado.app.utils.MD5Utils
 import io.legado.app.utils.fromJsonArray
 import io.legado.app.utils.fromJsonObject
 import io.legado.app.utils.printOnDebug
@@ -107,13 +109,16 @@ object DefaultData {
         GSON.fromJsonArray<RssSource>(json).getOrDefault(emptyList())
     }
 
-    val bookSources: List<BookSource> by lazy {
-        val json = String(
-            appCtx.assets.open("defaultData/bookSources.json")
-                .readBytes()
-        )
-        GSON.fromJsonArray<BookSource>(json).getOrDefault(emptyList())
+    private val bookSourcesJson: String by lazy {
+        String(appCtx.assets.open("defaultData/bookSources.json").readBytes())
     }
+
+    val bookSources: List<BookSource> by lazy {
+        GSON.fromJsonArray<BookSource>(bookSourcesJson).getOrDefault(emptyList())
+    }
+
+    /** 随包那份的摘要：远端取到的内容与它相同就不必再写一遍库。 */
+    val bookSourcesHash: String by lazy { MD5Utils.md5Encode(bookSourcesJson) }
 
     val coverRule: BookCover.CoverRule by lazy {
         val json = String(
@@ -160,6 +165,14 @@ object DefaultData {
      */
     private val retiredBookSourceUrls = listOf(
         "https://www.kaixin7days.com", // 消消乐听书
+        // 拆源前的 6 个聚合源。`agg.example.com` 是 example.com 下的占位域名，
+        // 从来没有真实内容，书架上的书不可能靠它读到正文。
+        "https://agg.example.com/novel-normal",
+        "https://agg.example.com/manga-normal",
+        "https://agg.example.com/video-normal",
+        "https://agg.example.com/novel-adult",
+        "https://agg.example.com/manga-adult",
+        "https://agg.example.com/video-adult",
     )
 
     /**
@@ -169,7 +182,17 @@ object DefaultData {
      */
     suspend fun importDefaultBookSources() {
         retiredBookSourceUrls.forEach { url -> appDb.bookSourceDao.delete(url) }
-        bookSources.forEach { incoming ->
+        importBookSources(bookSources)
+    }
+
+    /**
+     * 把一批内置源写进库：规则字段用新值覆盖，用户自己的开关/分组/排序保留。
+     * asset 版和远端版都走这里，两边语义必须一致，否则远端更新会悄悄改掉用户的设置。
+     */
+    suspend fun importBookSources(sources: List<BookSource>) {
+        // 远端清单可能是旧版（`main` 上还留着拆源前的聚合源），一写就把刚删掉的
+        // 条目复活。删除只在升级时做一次，导入侧必须按 url 滤掉，否则删不干净。
+        sources.filterNot { it.bookSourceUrl in retiredBookSourceUrls }.forEach { incoming ->
             val existing = appDb.bookSourceDao.getBookSource(incoming.bookSourceUrl)
             if (existing == null) {
                 appDb.bookSourceDao.insert(incoming)
@@ -177,6 +200,10 @@ object DefaultData {
                 // 分类缓存按 exploreUrl 失效，而内置源的 exploreUrl 通常恒为同一段 JS，
                 // 改的是它背后的 jsLib。不清缓存的话，覆盖安装后发现页仍显示旧分类。
                 existing.clearExploreKindsCache()
+                // jsLib 换掉后，旧作用域里的函数还挂在 MD5(旧 jsLib) 这个 key 上；
+                // 远程 jsLib 更是把整段规则按 MD5(url) 缓存在 ACache 里且永不过期，
+                // 不清掉就会继续跑旧规则，表现为「改了 asset 却没生效」。
+                SharedJsScope.remove(existing.jsLib)
                 appDb.bookSourceDao.insert(
                     incoming.copy(
                         enabled = existing.enabled,

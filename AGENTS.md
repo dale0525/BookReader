@@ -40,14 +40,20 @@
 
 ## 内置书源
 
-`app/src/main/assets/defaultData/bookSources.json` 是随包发布的内置书源（6 个聚合源，单站源已全部并入这 6 个分类）。
+`app/src/main/assets/defaultData/bookSources.json` 是随包发布的内置书源：31 个单站源，一个源就是一个站点，发现页不跨源聚合。每源的 `jsLib` 只带自己那一条 `SITES` 记录，规则里取站点配置用 `SITES[0]`。
 
-- 发现页每个 tab 只由一个**目录源**驱动（站点配置里的 `cat: true`），它提供全部分类与周期榜单；其余站点只参与搜索和正文。新增站点默认不设 `cat`，避免同类列表混进多个站的排版。
-- 分类缓存按 `md5(bookSourceUrl + exploreUrl)` 存在 ACache（`cache/explore/`）。内置源的 `exploreUrl` 恒为同一段 JS、改的是它背后的 `jsLib`，所以改 `jsLib` 后必须清缓存（`importDefaultBookSources` 已调用 `clearExploreKindsCache()`），否则覆盖安装后发现页仍显示旧分类。
+- 成人分支靠 `bookSourceUrl` 的路径后缀区分（`https://zuidazy.co` 与 `https://zuidazy.co/adult`）。PK 不同就是两条独立记录，但 host 匹配、Cookie、`is18Plus`、`getBaseUrl` 都按 host 走，两边的登录态和请求头互不影响。不要再加别的后缀做分支，主机会被当成两个站。
+- 发现页只有 6 个分组：`小说` / `漫画` / `视频` / 各自 ` · 18+`，定义在 `constant/ExploreGroups.kt`。界面上的分组**不读** `bookSourceGroup` 字面值，而是经 `ExploreGroups.canonical()` 归一：分组名含「小说/漫画/视频」按它定档，没写或写了别的词（「短剧」「玄幻」）退回 `bookSourceType`（0 文本 / 2 图片 / 4 视频），含 `18+` 归成人档。新增源即使分组名写错也不会多出第 7 个分组标题。
+- 内置源的分组名仍必须原样是那 6 个字符串（含中间空格），`BuiltInExploreKindsTest.everySourceUsesOneOfTheSixGroups` 拦写错的。运行时的归一只是兜底用户自建源，不能用来掩盖内置源的笔误——静默纠正会让人以为改了分组名生效了，实际界面纹丝不动。
+- `bookSourceComment` 是发现页卡片的副标题，也是唯一能承载「这个站有多少分类/榜单」的字段。它不在 `bookSource_part` 里，读它必须查 `book_sources`（`BookSourceDao.flowExploreSummaries()`），不要为了显示副标题去拉整行——每行带 200KB+ 的 `jsLib`。同一个投影还要带上 `bookSourceType`，它是归组的依据。
+- 分类缓存按 `md5(bookSourceUrl + exploreUrl)` 存在 ACache（`cache/explore/`）。内置源的 `exploreUrl` 恒为同一段 JS、改的是它背后的 `jsLib`，所以改 `jsLib` 后必须清缓存（`importBookSources` 已调用 `clearExploreKindsCache()`），否则覆盖安装后发现页仍显示旧分类。
 
 - 导入由 `DefaultData.importDefaultBookSources()` 完成，在 `upVersion()` 里按 `LocalConfig.needUpBookSources` 触发。
+- 规则同时发布在仓库同一路径的 `main` 分支上，`RemoteBookSources.refresh()` 在启动时（12 小时最多一次）静默比对并调用同一个 `DefaultData.importBookSources()`。改规则要 asset 与远端一起改，否则装机用户拿到的和随包的不一致。远端返回空数组、非 2xx 或 HTML 错误页一律不落库——那条路径用户无法预检，出错会直接清空所有人的书源表，`RemoteBookSourcesTest` 守这条。
+- 在真机上验证远端这条路径，要先把三道闸门一起拆掉，否则「没复活」只是没发请求：`bookSourceRemoteCheckTime`（12 小时门）、`bookSourceRemoteEtag`（带上去就是 304）、以及「body hash 与上次相同或与随包 asset 相同就直接返回」——远端内容与 asset 一致时永远不写库，用同一份内容验不出任何东西。清完闸门后 `local.xml` 里落下的 `bookSourceRemoteHash` 就是这次真的落了库的证据。
 - 书源导入**不能**挂在 `LocalConfig.versionCode < AppConst.appInfo.versionCode` 门禁内：本地构建的 versionCode 恒为 32640（无 `COMMIT_NUMBER` 时的兜底值），覆盖安装时两边相等，整段被跳过，只有删除重装才会执行。这是发现页长期报错的真正成因。
 - 升级语义：规则字段用 asset 覆盖，`enabled` / `bookSourceGroup` / `customOrder` / `enabledExplore` 保留用户设置。改了规则或加了源，把 `LocalConfig.needUpBookSources` 的版本号 +1，否则老用户拿不到更新。
+- 已下线的源列在 `DefaultData.retiredBookSourceUrls`：升级时按 url 删掉，导入时还要按同一份清单过滤。删除只做一次，而远端清单的版本由发布节奏决定、随时可能比本地旧，不过滤就会被重新写回库里。`BuiltInBookSourceUpgradeTest` 的两个用例分别守删除与过滤。
 - 验证必须模拟**覆盖安装**（`versionCode` 已等于当前版本），不能只测全新安装。`BuiltInBookSourceUpgradeTest` 守这条。
 - 恢复备份也要按同一套语义覆盖一遍：`Restore.restoreBookSources()` 写完备份里的 `bookSource.json` 后调 `importDefaultBookSources()`。备份里的内置源属于**备份时**的版本，而 `bookSourceVersion` 存在 `SharedPreferences("local")` 里、不在备份的 `config.xml`（只导 `AppConfigStore`）中，升级门禁早已推进过——只写回不覆盖的话，旧规则会永久留在库里，发现页一直停在备份那版，且再没有任何路径会纠正它。`RestoreBuiltInBookSourceTest` 守这条。
 - `exploreUrl` 里的 JS 必须返回 **JSON 字符串**，不能返回 JS 数组对象——`BookSourceExtensions.exploreKinds()` 拿到结果后直接 `.toString()` 再当 JSON 解析，返回数组对象会得到 `org.mozilla.javascript.NativeArray@…`，发现页把它当分类名显示，点进去必然报错。`BuiltInExploreKindsTest` 守这条契约。
@@ -75,6 +81,7 @@
 ## 验收
 
 - 质量门禁组合：`testAppDebugUnitTest`、`lintAppDebug`、`verifyConfigArchitecture`、`assembleAppDebug`。仓库没有 CI 跑这些，本地按需取用。
+- 在 worktree 分支上装包验证前先比一次 `AppDatabase` 的 `version`：分支基于旧 `main` 时它可能低于 `main`（如分支 133、`main` 134），`install -r` 覆盖装到用 `main` 构建过的模拟器上会直接崩在 `A migration from 134 to 133 was required but not found`。这是环境残留，不是代码缺陷——先 `adb uninstall` 再干净安装，别去补降级迁移。
 - 界面相关改动要在真实界面上确认，不要只凭单元测试下结论。模拟器软渲染下容易 ANR，卡住时优先换 JVM 测试验证逻辑，界面只做最后冒烟。
 - 用 `adb shell input tap` 验证点击时，**不要从 `screencap` 截图里量坐标**：截图预览会被缩放，量出来的点和真实触摸坐标能差 300–400px，表现为「点了没反应」，极易被误判成代码缺陷。坐标只从 `Modifier.onGloballyPositioned { it.positionInWindow() }` 打日志取，验完即删。
 - Compose 里整屏浮层会抢走下层按钮的点击。控制层这类「遮罩 + 一排按钮」的结构，把两者放成同一个 `Column` 的兄弟分块，不要用整屏 `Box` 遮罩再靠 `Spacer` 或坐标判定让出底部——让出的高度一旦小于按钮实际高度，按钮就永远点不到。

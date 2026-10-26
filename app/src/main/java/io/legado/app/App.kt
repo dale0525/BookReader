@@ -47,6 +47,7 @@ import io.legado.app.help.AppFreezeMonitor
 import io.legado.app.help.AppWebDav
 import io.legado.app.help.CrashHandler
 import io.legado.app.help.DefaultData
+import io.legado.app.help.source.RemoteBookSources
 import io.legado.app.help.DispatchersMonitor
 import io.legado.app.help.LifecycleHelp
 import io.legado.app.help.RuleBigDataHelp
@@ -213,6 +214,11 @@ class App : Application(), SingletonImageLoader.Factory {
                 .enableLogger(BuildConfig.DEBUG || otherGateway.currentSettings.recordLog)
                 .setLogger(EventLogger())
             DefaultData.upVersion()
+            // 内置书源的远端副本：规则改了只要 push 到 main，装机用户下次启动就能拿到，
+            // 不必等发版。放在 asset 导入之后，避免两边同时写同一张表；失败静默，
+            // 继续用本地那份。不挂进 DefaultData.upVersion()——单元测试直接调它，
+            // 会把真实网络请求带进测试。
+            RemoteBookSources.refresh()
             AppFreezeMonitor.init(this@App)
             DispatchersMonitor.init()
             URL.setURLStreamHandlerFactory(ObsoleteUrlFactory(okHttpClient))

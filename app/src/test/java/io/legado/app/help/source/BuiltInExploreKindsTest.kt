@@ -1,6 +1,7 @@
 package io.legado.app.help.source
 
 import android.app.Application
+import io.legado.app.constant.ExploreGroups
 import io.legado.app.data.entities.BookSource
 import io.legado.app.utils.GSON
 import io.legado.app.utils.fromJsonArray
@@ -24,31 +25,67 @@ import splitties.init.injectAsAppCtx
 @Config(application = Application::class, sdk = [35])
 class BuiltInExploreKindsTest {
 
-    private lateinit var aggregates: List<BookSource>
+    private lateinit var sources: List<BookSource>
 
     @Before
     fun setUp() {
         RuntimeEnvironment.getApplication().injectAsAppCtx()
         val json = RuntimeEnvironment.getApplication().assets
             .open("defaultData/bookSources.json").bufferedReader().use { it.readText() }
-        aggregates = GSON.fromJsonArray<BookSource>(json).getOrThrow()
-            .filter { it.bookSourceUrl.startsWith("https://agg.example.com/") }
+        sources = GSON.fromJsonArray<BookSource>(json).getOrThrow()
     }
 
     @Test
-    fun everyAggregateSourceYieldsRealCategories() = runBlocking {
-        assertEquals(6, aggregates.size)
-        aggregates.forEach { source ->
-            val kinds = source.exploreKinds()
+    fun everySourceIsItsOwnSite() {
+        // 每个书源只带一个站点，发现页才能按源分栏；两个源共用同一个 bookSourceUrl
+        // 在库里根本存不下（主键就是 url）。
+        assertEquals(sources.size, sources.map { it.bookSourceUrl }.toSet().size)
+        sources.forEach { source ->
+            val ids = siteIds(source)
+            assertEquals("${source.bookSourceName} 的 jsLib 站点数不是 1: $ids", 1, ids.size)
+        }
+    }
+
+    /**
+     * 内置源的分组名必须原样就是 6 档之一。
+     *
+     * 界面侧会把任意分组名归一到 6 档（`ExploreGroups.canonical`），但那只兜用户自己导入的源；
+     * 随包发布的内置源是可控的，写错标点就该在测试里拦下，而不是靠运行时静默纠正——
+     * 静默纠正会让人以为改了分组名生效了，实际界面纹丝不动。
+     */
+    @Test
+    fun everySourceUsesOneOfTheSixGroups() {
+        val groups = sources.map { it.bookSourceGroup }
+        assertEquals(
+            "内置源用了 6 档之外的分组: ${groups.filterNot { it in ExploreGroups.ordered }.toSet()}",
+            emptySet<String>(),
+            groups.filterNot { it in ExploreGroups.ordered }.toSet(),
+        )
+        sources.forEach { source ->
+            assertEquals(
+                "${source.bookSourceName} 的分组名与 bookSourceType 不一致",
+                source.bookSourceGroup,
+                ExploreGroups.canonical(source.bookSourceGroup, source.bookSourceType),
+            )
+        }
+    }
+
+    @Test
+    fun everySourceYieldsRealCategories() = runBlocking {
+        sources.forEach { source ->
             val name = source.bookSourceName
+            val kinds = source.exploreKinds()
             assertTrue(
                 "$name 返回了错误分类: ${kinds.map { it.title }}",
                 kinds.none { it.title.startsWith("ERROR:") }
             )
-            assertTrue(
-                "$name 没有任何分类: ${kinds.map { it.title }}",
-                kinds.isNotEmpty()
-            )
+            if (source.bookSourceComment == "仅搜索") {
+                // 站点本身没有分类页（如 favcomic），只参与搜索。
+                // 卡片上写明「仅搜索」，用户才知道它得用搜索进，而不是发现页里凭空少一个源。
+                assertEquals("$name 标了仅搜索却仍有分类", 0, kinds.size)
+                return@forEach
+            }
+            assertTrue("$name 没有任何分类", kinds.isNotEmpty())
             kinds.forEach { kind ->
                 assertTrue(
                     "$name 分类「${kind.title}」不是真实分类名",
@@ -58,53 +95,40 @@ class BuiltInExploreKindsTest {
                     "$name 分类「${kind.title}」URL 非法: ${kind.url}",
                     kind.url?.startsWith("http") == true
                 )
-                // 裸分类名才能跨站合并；带站点前缀会让同名分类拆成多个入口。
-                assertTrue(
-                    "$name 分类「${kind.title}」仍带站点前缀，无法跨站合并",
-                    !kind.title.contains(" · ")
-                )
-                // #站点id 是 exploreAll 的路由标记，缺了它 siteOf() 只能靠域名猜。
+                // 单站源里分类名不必带站点前缀：发现页已经按源分栏了。
                 assertTrue(
                     "$name 分类「${kind.title}」缺少站点路由标记: ${kind.url}",
                     kind.url?.contains('#') == true
+                )
+                // 分类页必须落在本站域名下，否则点进去会被 siteOf() 判成别的站。
+                assertEquals(
+                    "$name 分类「${kind.title}」指向了别的站点",
+                    hostOf(source.bookSourceUrl),
+                    hostOf(kind.url!!.substringBefore('#'))
                 )
             }
         }
     }
 
     @Test
-    fun categoriesComeFromASingleCatalogSource() = runBlocking {
-        // 发现页只由一个目录源驱动：它出分类和榜单，列表尽量完整。
-        // 其余站点仍参与搜索与正文，但不再往发现页塞分类——否则同名分类会混进
-        // 多个站的排版，缺章和取不到列表的问题也会一起暴露在首屏。
-        aggregates.forEach { source ->
-            val kinds = source.exploreKinds()
-            val catalogSites = kinds
+    fun categoriesComeFromTheSourcesOnlySite() = runBlocking {
+        sources.filter { it.bookSourceComment != "仅搜索" }.forEach { source ->
+            val ids = siteIds(source)
+            val kindSites = source.exploreKinds()
                 .mapNotNull { it.url?.substringAfter('#', "")?.ifEmpty { null } }
                 .toSet()
-            val name = source.bookSourceName
-            assertTrue("$name 没有分类入口", catalogSites.isNotEmpty())
-            // 漫画·常规是唯一例外：分类走包子漫画，本周/本月/总榜只有漫画吧提供。
-            val allowed = if (name == "漫画·常规") setOf("m1", "m2") else catalogSites
             assertEquals(
-                "$name 的分类来自多个站点，发现页会混入不同排版: $catalogSites",
-                allowed,
-                catalogSites
+                "${source.bookSourceName} 的分类来自多个站点: $kindSites",
+                ids,
+                kindSites
             )
-            if (name == "漫画·常规") {
-                // 例外仅限榜单：普通分类必须全部来自 m1，否则同名分类会出现两个入口。
-                val plainFromM2 = kinds
-                    .filter { it.rank.isEmpty() }
-                    .count { it.url?.endsWith("#m2") == true }
-                assertEquals("漫画·常规 的普通分类混入了 m2", 0, plainFromM2)
-            }
         }
     }
 
     @Test
     fun rankTiersUseKnownKeys() = runBlocking {
         val allowed = setOf("update", "week", "month", "all")
-        aggregates.forEach { source ->
+        sources.filter { it.bookSourceComment != "仅搜索" }.forEach { source ->
             source.exploreKinds()
                 .filter { it.rank.isNotEmpty() }
                 .forEach { kind ->
@@ -115,4 +139,37 @@ class BuiltInExploreKindsTest {
                 }
         }
     }
+
+    @Test
+    fun adultTwinSharesTheHostButNotTheUrl() {
+        // 普通/成人两份共用同一个采集接口，只能靠 URL 后缀区分：主键是 bookSourceUrl，
+        // 同址两源存不下来；后缀不影响 hostOf/is18Plus/getBaseUrl 的判定。
+        val byUrl = sources.associateBy { it.bookSourceUrl }
+        val twins = sources.filter { it.bookSourceName.endsWith("·18+") }
+        assertEquals(2, twins.size)
+        twins.forEach { adult ->
+            val plainUrl = adult.bookSourceUrl.substringBeforeLast("/adult")
+            val plain = byUrl[plainUrl]
+            assertTrue("${adult.bookSourceName} 找不到对应的普通源", plain != null)
+            assertEquals(hostOf(plainUrl), hostOf(adult.bookSourceUrl))
+            assertEquals(
+                "${adult.bookSourceName} 的分组不对",
+                "视频 · 18+",
+                adult.bookSourceGroup
+            )
+        }
+    }
+
+    private fun siteIds(source: BookSource): Set<String> {
+        val lib = source.jsLib ?: ""
+        val start = lib.indexOf('[')
+        assertTrue("${source.bookSourceName} 的 jsLib 里没有站点表", start >= 0)
+        return Regex("\"id\":\"([^\"]+)\"")
+            .findAll(lib.substring(start))
+            .map { it.groupValues[1] }
+            .toSet()
+    }
+
+    private fun hostOf(url: String): String =
+        Regex("^https?://([^/]+)").find(url)?.groupValues?.get(1) ?: url
 }

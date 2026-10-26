@@ -3823,9 +3823,8 @@
     <string name="home_capsule_restore_navigation">Restore navigation</string>
     <string name="home_capsule_expand_controls">Show playback controls</string>
     <string name="home_capsule_chapter">Chapter %d</string>
-    <string name="explore_main_content">Browse discovery content here</string>
-    <string name="explore_source_list">Show discovery sources</string>
-    <string name="explore_select_source">Select discovery source</string>
+    <string name="explore_group_filter">Select discovery group</string>
+    <string name="explore_group_source_count">%1$d sources</string>
     <string name="background_battery_optimization_title">Background Running &amp; Battery Optimization</string>
     <string name="background_battery_optimization_summary">Configure unrestricted background activity and autostart to prevent reader services from being killed</string>
     <string name="battery_optimization_dialog_title">Background Optimization Settings Guide</string>

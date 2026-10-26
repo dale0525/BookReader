@@ -71,8 +71,6 @@ object PreferKey {
     const val processText = "process_text"
     const val saveTabPosition = "saveTabPosition"
     const val bookshelfSelectedGroupId = "bookshelfSelectedGroupId"
-    const val exploreMainContent = "exploreMainContent"
-    const val exploreMainSourceUrl = "exploreMainSourceUrl"
     const val exploreMainKind = "exploreMainKind"
     const val fontFolder = "fontFolder"
     const val fontSort = "fontSort"

@@ -1,51 +1,56 @@
-# 聚合书源
+# 内置书源
 
-这些书源已作为**内置书源**打进 APK：全新安装首次启动时自动写入书源表，用户无需导入。源码副本在 `app/src/main/assets/defaultData/bookSources.json`（与 `aggregate-sources.json` 内容一致）。
+这些书源已作为**内置书源**打进 APK：全新安装首次启动时自动写入书源表，用户无需导入。源码副本在 `app/src/main/assets/defaultData/bookSources.json`。
 
-书源列表里只有 6 个条目，背后覆盖 32 个站点。一个书源对应发现页的一个 tab。
+## 一个源就是一个站
 
-**发现页每个 tab 只由一个「目录源」驱动**：它提供全部分类和周期榜单，列表尽量完整。其余站点不参与发现页，只负责搜索和正文——同名分类不再混进多个站的排版，缺章也不会直接摆在首屏。点进去读完目录后，用换源找其他站取正文。
+内置源共 31 个，每个对应一个真实站点，书源列表里就能直接看到站名。发现页不跨源聚合，一张卡片就是一个站，点进去只看这个站的分类和榜单。
 
-| tab | 目录源 | 分类 | 周期榜单 |
+| 分组 | 源 | 类型 | 入口 |
 | --- | --- | --- | --- |
-| 小说·常规 | 言情小说阁 | 8 | 最近更新 / 本周 / 本月 / 总榜 |
-| 漫画·常规 | 包子漫画 + 漫画吧 | 10 | 最近更新 / 本周 / 本月 / 总榜 |
-| 视频·常规 | 最大资源 | 17 | 无（maccms 采集接口无此概念） |
-| 小说·成人 | 爱丽丝书屋 | 32 | 日 / 周 / 月 / 总排行 |
-| 漫画·成人 | 禁漫天堂 | 9 | 最新 / 最多观看 / 日 / 周 / 月 / 最多收藏 |
-| 视频·成人 | 最大资源 | 7 | 无 |
+| 小说 | 365小说网、玩文学小说网、天天看小说、飞卢小说、顶点小说、饭饭小说8、言情小说阁、八叉书库 | 文本 | 分类 + 周期榜单 |
+| 漫画 | 包子漫画、漫画吧、卡拉漫画、学外漫画 | 图片 | 分类 + 周期榜单 |
+| 视频 | 最大资源、无尽资源、非凡资源、魔都资源、量子资源、如意资源、黄果短剧、饭果短剧、河果短剧 | 视频 | 分类 |
+| 小说 · 18+ | 成人小说网、腐文小说、BB成人小说、爱丽丝书屋 | 文本 | 分类 + 周期榜单 |
+| 漫画 · 18+ | 开心看漫画、51漫画、favcomic、禁漫天堂 | 图片 | 分类 + 周期榜单 |
+| 视频 · 18+ | 最大资源·18+、无尽资源·18+ | 视频 | 分类 |
 
-封面来源：言情小说阁的分类页自带封面；爱丽丝书屋的分类页是纯文字列表，站点不提供封面，发现页只能逐本取详情页。后者用 `source.put` 按书号缓存，同一本书只抓一次（首屏约 40 秒，之后约 3 秒）。分类页本身没有封面的站点在 `SITES` 里标 `coverFromDetail: true`。
+分组只有这 6 档，没有第 7 档。发现页不读 `bookSourceGroup` 的字面值，而是经 `ExploreGroups.canonical()` 归一：分组名写了「小说 / 漫画 / 视频」就按它定档，没写或写成别的词就退回 `bookSourceType`（0 文本 / 2 图片 / 4 视频），含 `18+` 归到成人档。所以新加的源即使分组名写错标点、或者干脆写了「短剧」，也不会在发现页多出一个分组标题。
 
-漫画·常规是唯一用两个源的分支：分类走包子漫画（每类 36 本、目录 572 章），本周/本月/总榜只有漫画吧提供，所以后者只保留榜单条目。
+反过来，内置源的分组名必须是这 6 个字符串之一（含中间的空格），`BuiltInExploreKindsTest.everySourceUsesOneOfTheSixGroups` 会拦下写错的。运行时归一只是兜底用户自己导入的源，不该用来掩盖内置源的笔误——静默纠正会让人以为改了分组名生效了，实际界面纹丝不动。
 
-| 书源 | 类型 | 站点数 | 分类+榜单入口 |
-| --- | --- | --- | --- |
-| 小说·常规 | 文本 | 8 | 88 |
-| 漫画·常规 | 图片 | 4 | 35 |
-| 视频·常规 | 视频 | 9 | 107 |
-| 小说·成人 | 文本 | 5 | 96 |
-| 漫画·成人 | 图片 | 4 | 47 |
-| 视频·成人 | 视频 | 2 | 8 |
+每张卡片的副标题是 `bookSourceComment`，写着这个站能提供多少分类和榜单（如 `10 个分类 · 2 个榜单`）。没有分类入口的源写 `仅搜索`，卡片仍留在发现页，只是点进去直接给搜索。
 
-单站源里的四个短剧全部并入这 6 个分类，不再单独列出：
+最大资源和无尽资源各有两个源：常规站和 18+ 分类在同一套接口上，靠 URL 末尾的 `/adult` 区分。`bookSourceUrl` 不同就是两条独立记录，但主机名、Cookie、`is18Plus`、`getBaseUrl` 的判定都按 host 走，互不影响。
 
-- 黄果短剧 → 视频·常规（jsoup 规则，正文取页面里的 `<source src>`）
-- 饭果短剧 → 视频·常规（接口型，列表走 `$.result.elements[*].contents[*].duanjuVo`）
-- 河果短剧 → 视频·常规（接口型，`kgPP` 解包页面内嵌 JSON，只收有 mp4/m3u8 的集）
-- 八叉书库 → 小说·常规 + 小说·成人（同时收录两处，内容偏成人）
-- 爱丽丝书屋 → 小说·成人（32 个分类 + 日/周/月/总排行）
-- 禁漫天堂 → 漫画·成人（接口型，三处签名现算）
+封面来源：言情小说阁的分类页自带封面；爱丽丝书屋的分类页是纯文字列表，站点不提供封面，只能逐本取详情页。后者用 `source.put` 按书号缓存，同一本书只抓一次（首屏约 40 秒，之后约 3 秒）。分类页本身没有封面的站点在 `SITES` 里标 `coverFromDetail: true`。
 
-原来的「全站发现」已删除：它把上面 6 个聚合源的站点又平铺了一遍，分类入口与其他 tab 完全重复。
+## 规则怎么更新
 
-「消消乐听书」不再随包分发（`https://www.kaixin7days.com`），也没有并入任何分类。升级时 `DefaultData.retiredBookSourceUrls` 会按 url 从老用户的书源表里清掉这条记录——只删 asset 里的条目只影响全新安装，覆盖安装的用户会一直留着。
+规则同时存在两处：
+
+- APK 里的 `app/src/main/assets/defaultData/bookSources.json`，用于首次安装、离线启动、远端取不到时兜底。
+- 仓库同一路径的 `main` 分支，装机用户每次启动（12 小时最多一次）静默比对，有变化就覆盖规则。
+
+所以改规则只要把 asset 和远端那份一起 push 到 `main`，用户下次启动就能拿到，不必等发版。远端更新沿用与 asset 完全相同的覆盖语义（见下），不会动用户自己的开关和分组。
+
+远端读取走 `RemoteBookSources`：先试 `raw.githubusercontent.com`，失败再试 jsDelivr 镜像；带 `If-None-Match`，内容摘要与上次相同就跳过写库。空数组、非 2xx、HTML 错误页一律当「这次没更新」，绝不落库——远端出问题不能把用户手里那张可用的书源表清空。`RemoteBookSourcesTest` 守这条。
+
+发版时才需要动 `bookSourceVersion`：asset 的导入由 `LocalConfig.needUpBookSources` 触发一次，改了 asset 里的规则或加了源，把版本号 +1，老用户覆盖安装后才拿得到。
 
 ## 内置机制
 
-`DefaultData.importDefaultBookSources()` 在 `upVersion()` 里按 `LocalConfig.needUpBookSources` 触发一次。规则字段用 asset 里的新值覆盖，`enabled` / `bookSourceGroup` / `customOrder` / `enabledExplore` 保留用户设置——内置源的规则是随包发布的代码资产，不该被旧版本锁死，但用户自己的开关和分组要留住。新增内置源或改规则时把 `bookSourceVersion` 版本号 +1，老用户升级后也会补上。
+`DefaultData.importDefaultBookSources()` 在 `upVersion()` 里按 `LocalConfig.needUpBookSources` 触发。规则字段用 asset 里的新值覆盖，`enabled` / `bookSourceGroup` / `customOrder` / `enabledExplore` 保留用户设置——内置源的规则是随包发布的代码资产，不该被旧版本锁死，但用户自己的开关和分组要留住。远端更新走同一个 `importBookSources()`，语义一致。
 
 书源导入**不能**放进 `LocalConfig.versionCode < AppConst.appInfo.versionCode` 那道门禁：本地构建的 versionCode 恒为 32640（无 `COMMIT_NUMBER` 时的兜底值），覆盖安装时两边相等，整段被跳过，只有删除重装才会执行。所以书源导入放在门禁之外，只由自己的 `bookSourceVersion` 计数控制。
+
+分类缓存按 `md5(bookSourceUrl + exploreUrl)` 存在 ACache（`cache/explore/`）。内置源的 `exploreUrl` 恒为同一段 JS、改的是它背后的 `jsLib`，所以改 `jsLib` 后必须清缓存（`importBookSources` 已调用 `clearExploreKindsCache()`），否则覆盖安装后发现页仍显示旧分类。
+
+共享作用域按 `md5(jsLib)` 缓存，远程 jsLib 更是把整段规则按 `md5(url)` 存在 ACache 里且永不过期；`importBookSources` 会调 `SharedJsScope.remove(existing.jsLib)` 清掉，否则改了 asset 也会继续跑旧规则。
+
+`DefaultData.retiredBookSourceUrls` 列出已停止分发的书源（6 个 `https://agg.example.com/*` 聚合源与「消消乐听书」`https://www.kaixin7days.com`）：升级时按 url 从库里删掉，导入时按同一份清单过滤。聚合源挂在 `example.com` 这个占位域名下，没有真实内容，书架上的书不可能靠它读到正文。
+
+删除只在升级时做一次，导入侧必须同时过滤：远端清单的版本由发布节奏决定，随时可能比本地旧，拉下来一写就把刚删掉的条目写回库里。`BuiltInBookSourceUpgradeTest` 的 `upgradeDeletesRetiredAggregateSources` 与 `importIgnoresRetiredAggregateSources` 守这两条。
 
 构建：
 
@@ -66,7 +71,7 @@
 
 视频源另走一路：yckceo 上 `bookSourceType=4` 只有 4 个，且全部重依赖 `$.*` JSONPath 与自建 jsLib，无法直接并入；改用苹果CMS/maccms 采集接口（`/api.php/provide/vod/`），探活 7 个，全部可用。
 
-## 怎么做到的
+## 规则长什么样
 
 一个书源只承载一套规则，站点表存在 `jsLib` 里：
 
@@ -74,9 +79,11 @@
 var SITES = [ { id, n, base, kind, search, s:{…}, b:{…}, t:{…}, c:{…}, e:[…] }, … ];
 ```
 
-- **搜索**：`ruleSearch.bookList` 是一段 JS，逐站抓搜索页、按该站的 `s` 规则取书名/链接，汇总成一个数组返回。单站失败只写日志，不中断其它站。
-- **路由**：搜索结果的 `bookUrl` 是站点真实 URL，详情/目录/正文靠 `siteOf(baseUrl)` 按 host 匹配回站点配置，不需要额外标记。`hostOf()` 只比较主机名、忽略协议，站点在 http/https 间跳转时仍能路由。
-- **发现**：`exploreUrl` 把所有站点的分类平铺成入口。分类标题是**裸名**（`玄幻`，不带站点前缀），URL 是站点真实分类页并在末尾拼 `#<站点id>` 作为路由标记；榜单档位额外带 `rank` 字段（`update` / `week` / `month` / `all`）。客户端按标题合并同名分类，点进去由 `ruleExplore` 并发取回各站再合并。
+拆成单站源后每个 `SITES` 只有一项，规则里取站点配置就是 `SITES[0]`。
+
+- **搜索**：`ruleSearch.bookList` 是一段 JS，抓该站的搜索页、按 `s` 规则取书名/链接，返回数组。
+- **路由**：搜索结果的 `bookUrl` 是站点真实 URL，详情/目录/正文靠 host 匹配回站点配置。`hostOf()` 只比较主机名、忽略协议，站点在 http/https 间跳转时仍能路由。
+- **发现**：`exploreUrl` 恒为 `<js>exploreAll(java)</js>`，把该站的分类和榜单档位列成入口。榜单档位额外带 `rank` 字段（`update` / `week` / `month` / `all`），发现页据此把榜单做成卡片、把普通分类做成 tab。
 - **发现取列表的容错**：`ruleExplore.bookList` 调 `listFrom(..., 'explore')`，先试站点的 `s` 规则，取不到再逐个试该站的 `alt` 备用规则。同一站点在不同页面用不同 DOM（如分类页与榜单页结构不同）时靠 `alt` 兜住。
 - **视频**：maccms 采集接口（`/api.php/provide/vod/`）返回 JSON，走 `kind:"api"` 分支：搜索取 `list`，目录把 `vod_play_url` 按 `$$$`/`#`/`$` 拆成剧集，正文返回 m3u8 直链。
 
@@ -104,34 +111,21 @@ var SITES = [ { id, n, base, kind, search, s:{…}, b:{…}, t:{…}, c:{…}, e
 
 猫果标题带 `<font color=...>` 关键词高亮，`bookList` 必须剥标签后再作为书名，否则搜索页的精确匹配会把条目全部过滤掉。
 
+## 各站的额外条件
 
-## 站点
-
-小说·常规：365小说网、玩文学小说网、天天看小说（ttks.tw）、飞卢小说、顶点小说、饭饭小说8、言情小说阁
-
-漫画·常规：包子漫画、漫画吧、卡拉漫画、学外漫画
-
-视频·常规：最大资源、无尽资源、非凡资源、魔都资源、量子资源、如意资源
-
-小说·成人：成人小说网、腐文小说、BB成人小说
-
-漫画·成人：开心看漫画、51漫画、favcomic
-
-视频·成人：最大资源（伦理/写真类目）、无尽资源
-
-卡拉漫画默认 UA 会被拦（只返回 1737 字节的拦截页），所以「漫画·常规」源带了浏览器 UA 的 `header`。
+卡拉漫画默认 UA 会被拦（只返回 1737 字节的拦截页），所以「卡拉漫画」源带了浏览器 UA 的 `header`。
 
 ## 验证
 
-每个源都用本机 App 调试接口跑过搜索 → 详情 → 目录 → 正文四链路，并额外验证了发现页入口。最后一次全量结果：
+每个源都用本机 App 调试接口跑过搜索 → 详情 → 目录 → 正文四链路，并额外验证了发现页入口。抽样结果：
 
 ```
-novel-normal  ok  search 90   toc 1308  chars 6059     key 剑来
-manga-normal  ok  search 33   toc 996   chars 753      key 斗罗大陆
-video-normal  ok  search 107  toc 175   chars 70       key 斗罗
-novel-adult   ok  search 11   toc 13    chars 11118    key 剑来
-manga-adult   ok  search 2    toc 23    chars 8497     key 斗罗大陆
-video-adult   ok  search 40   toc 1     chars 73       key 日本
+365小说网     ok  search 90   toc 1308  chars 6059     key 剑来
+包子漫画      ok  search 33   toc 996   chars 753      key 斗罗大陆
+最大资源      ok  search 107  toc 175   chars 70       key 斗罗
+成人小说网    ok  search 11   toc 13    chars 11118    key 剑来
+禁漫天堂      ok  search 2    toc 23    chars 8497     key 斗罗大陆
+最大资源·18+  ok  search 40   toc 1     chars 73       key 日本
 ```
 
 搜索条数随关键词变化，不是固定值；目录数与正文字数是站点内容量，可作回归对照。
@@ -145,12 +139,12 @@ video-adult   ok  search 40   toc 1     chars 73       key 日本
 拿到 JS 结果后直接 `.toString()` 再当 JSON 解析，返回数组对象会得到
 `org.mozilla.javascript.NativeArray@…`，发现页把它当分类名显示，点进去必然报错。
 
-`BuiltInExploreKindsTest` 锁住这条契约：在 Rhino 里跑 `exploreAll(java)`，断言结果是能解析的
-JSON 数组、每项 `url` 都以 http 开头且带 `#站点id`、分类标题不含 ` · ` 站点前缀、`rank` 取值合法。
+`BuiltInExploreKindsTest` 锁住这条契约：在 Rhino 里对 31 个源逐个跑 `exploreAll(java)`，断言结果是能解析的
+JSON 数组、每项 `url` 都以 http 开头、`rank` 取值合法；除标了「仅搜索」的源外，每个源都必须给出非空入口。
 
 `BuiltInBookSourceUpgradeTest` 锁住另一条：模拟**覆盖安装**（`versionCode` 已等于当前版本）后
-规则仍被更新。只测全新安装会漏掉升级路径——发现页那个 `NativeArray@…` 在装过旧包的设备上
-一直存在，就是因为旧规则从未被替换。
+规则仍被更新，且用户的分组/排序/开关不被覆盖。只测全新安装会漏掉升级路径——发现页那个 `NativeArray@…`
+在装过旧包的设备上一直存在，就是因为旧规则从未被替换。
 
 分类入口还要求 host 与站点一致（上游有 `ttk.tw → cn.ttkan.co` 这种跨站分类，实测 403），
 且不含 `<a,b>` 分页语法。实测不通的入口已在生成时剔除：ttks.tw 全部分类（403）、
@@ -160,17 +154,18 @@ JSON 数组、每项 `url` 都以 http 开头且带 `#站点id`、分类标题�
 
 ```bash
 node .agents/skills/legado-book-source/scripts/bsv.mjs verify \
-  --source https://agg.example.com/novel-normal --key 剑来
+  --source https://zuidazy.co --key 剑来
 ```
 
-`bookSourceUrl` 用 `https://agg.example.com/*` 只是占位标识，不会被真正请求——所有抓取都发生在 `jsLib` 里指向的真实站点上。
+`bookSourceUrl` 就是站点主域（18+ 分支带 `/adult` 后缀），除采集接口类源外都会被真实请求。
 
 ## 已知限制
 
-- **18+ 组偏薄**：成人小说 3 站、成人漫画 2 站、成人视频 2 路接口。上游可用的就这么多，没有硬凑。
+- **18+ 组偏薄**：成人小说 4 站、成人漫画 4 站、成人视频 2 路接口。上游可用的就这么多，没有硬凑。
 - **发现入口只给已验证的分类**：各站 `exploreUrl` 里很多是 `<js>` 或含分页占位，不能直接平铺；只保留了实测能打开的几组。其余站点仍可通过搜索使用。
+- **favcomic 只有搜索**：站点分类页没有可用列表结构，发现页卡片标「仅搜索」。
 - **漫画正文字数是 HTML 长度**，不是图片张数；漫画正文本来就是 `<img>` 标签。
 
 ## 维护
 
-站点表在 `jsLib` 开头，改站点只需改那一段 JSON。某站挂了：把它的 `search` 删掉（或整条删掉），其它站不受影响。
+站点表在 `jsLib` 开头，改规则只需改那一段 JSON，然后同时更新 asset 与 `main` 分支上的同名文件。某站挂了：把它从 asset 里删掉（并同步远端），其它源不受影响。
