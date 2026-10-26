@@ -111,12 +111,14 @@ interface BookSourceDao {
     fun flowExplore(): Flow<List<BookSourcePart>>
 
     /**
-     * 发现页的源卡片。只取卡片要显示的五列——`book_sources` 每行还挂着 200KB+ 的 jsLib，
+     * 发现页的源卡片。只取卡片要显示的几列——`book_sources` 每行还挂着 200KB+ 的 jsLib，
      * 31 个源一起拉会把整段规则搬进内存。
+     *
+     * `bookSourceType` 决定卡片归到哪个分组（文本/图片/视频），不能省。
      */
     @Query(
         """select bookSourceUrl, bookSourceName, bookSourceGroup, bookSourceComment, customOrder,
-        (loginUrl is not null and trim(loginUrl) <> '') as hasLoginUrl
+        bookSourceType, (loginUrl is not null and trim(loginUrl) <> '') as hasLoginUrl
         from book_sources
         where enabled = 1 and enabledExplore = 1
         order by customOrder asc"""

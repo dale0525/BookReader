@@ -1,6 +1,7 @@
 package io.legado.app.help.source
 
 import android.app.Application
+import io.legado.app.constant.ExploreGroups
 import io.legado.app.data.entities.BookSource
 import io.legado.app.utils.GSON
 import io.legado.app.utils.fromJsonArray
@@ -42,6 +43,30 @@ class BuiltInExploreKindsTest {
         sources.forEach { source ->
             val ids = siteIds(source)
             assertEquals("${source.bookSourceName} 的 jsLib 站点数不是 1: $ids", 1, ids.size)
+        }
+    }
+
+    /**
+     * 内置源的分组名必须原样就是 6 档之一。
+     *
+     * 界面侧会把任意分组名归一到 6 档（`ExploreGroups.canonical`），但那只兜用户自己导入的源；
+     * 随包发布的内置源是可控的，写错标点就该在测试里拦下，而不是靠运行时静默纠正——
+     * 静默纠正会让人以为改了分组名生效了，实际界面纹丝不动。
+     */
+    @Test
+    fun everySourceUsesOneOfTheSixGroups() {
+        val groups = sources.map { it.bookSourceGroup }
+        assertEquals(
+            "内置源用了 6 档之外的分组: ${groups.filterNot { it in ExploreGroups.ordered }.toSet()}",
+            emptySet<String>(),
+            groups.filterNot { it in ExploreGroups.ordered }.toSet(),
+        )
+        sources.forEach { source ->
+            assertEquals(
+                "${source.bookSourceName} 的分组名与 bookSourceType 不一致",
+                source.bookSourceGroup,
+                ExploreGroups.canonical(source.bookSourceGroup, source.bookSourceType),
+            )
         }
     }
 

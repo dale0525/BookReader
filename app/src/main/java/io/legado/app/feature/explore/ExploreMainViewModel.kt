@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
+import io.legado.app.constant.ExploreGroups
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.ExploreSourceSummary
 import io.legado.app.data.entities.rule.ExploreKind
@@ -31,7 +32,7 @@ data class ExploreSourceItem(
     val hasLoginUrl: Boolean = false,
 )
 
-/** 一个分组下的源卡片。`name` 取 [EXPLORE_GROUP_NONE] 表示未分组，由界面换成对应文案。 */
+/** 一个分组下的源卡片。`name` 恒为 `ExploreGroups.ordered` 里的六档之一。 */
 @Stable
 data class ExploreSourceGroup(
     val name: String,
@@ -265,14 +266,12 @@ private data class ExploreLocalState(
 /** 分组筛选下拉里的「全部」。 */
 const val EXPLORE_GROUP_ALL = ""
 
-/** 没有分组的源归到这一档；界面换成「未分组」文案，不与「全部」混淆。 */
-const val EXPLORE_GROUP_NONE = "\u0000"
-
 /**
- * 按源自身的排列切分成分组，组顺序取首次出现的顺序。
+ * 按分组切分源卡片，组顺序固定为 [ExploreGroups.ordered]。
  *
- * 内置源的 `customOrder` 就是按「小说 / 漫画 / 视频 / 小说 · 18+ …」排的，
- * 所以首次出现顺序天然等于分组顺序，不需要另存一份分组顺序表。
+ * 分组名不直接取书源里写的那串文字，而是经 [ExploreGroups.canonical] 归一：
+ * 书源的分组是手写的，写错标点、写成「视频·18+」少个空格、或者新增一个别的组名，
+ * 发现页就会多出第 7 个分组标题。归一之后只可能出现 6 档，顺序也不再依赖源的排列。
  */
 internal fun buildExploreSourceGroups(
     sources: List<ExploreSourceSummary>,
@@ -282,8 +281,10 @@ internal fun buildExploreSourceGroups(
     val key = searchKey.trim()
     return sources
         .filter { key.isEmpty() || it.bookSourceName.contains(key, ignoreCase = true) }
-        .filter { selectedGroup == EXPLORE_GROUP_ALL || groupOf(it) == selectedGroup }
-        .groupBy(::groupOf)
+        .filter { selectedGroup == EXPLORE_GROUP_ALL || it.exploreGroup == selectedGroup }
+        .groupBy { it.exploreGroup }
+        .entries
+        .sortedBy { ExploreGroups.ordered.indexOf(it.key) }
         .map { (name, list) ->
             ExploreSourceGroup(
                 name = name,
@@ -299,11 +300,10 @@ internal fun buildExploreSourceGroups(
         }
 }
 
-private fun groupNamesOf(sources: List<ExploreSourceSummary>): List<String> =
-    sources.map(::groupOf).distinct()
-
-private fun groupOf(source: ExploreSourceSummary): String =
-    source.firstGroup.ifEmpty { EXPLORE_GROUP_NONE }
+private fun groupNamesOf(sources: List<ExploreSourceSummary>): List<String> {
+    val present = sources.map { it.exploreGroup }.toSet()
+    return ExploreGroups.ordered.filter { it in present }
+}
 
 internal fun loadableExploreMainKinds(kinds: List<ExploreKind>): List<ExploreKind> =
     aggregateExploreKinds(

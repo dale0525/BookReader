@@ -621,10 +621,9 @@ private fun rankIcon(rank: String): ImageVector = when (rank) {
     else -> Icons.Default.Leaderboard
 }
 
-/** 「全部 / 未分组」这两个占位分组名要换成本地化文案，其余分组名原样显示。 */
+/** 「全部」这个占位分组名要换成本地化文案，六个真实分组名原样显示。 */
 @Composable
 private fun String.exploreGroupLabel(): String = when (this) {
     EXPLORE_GROUP_ALL -> stringResource(R.string.all)
-    EXPLORE_GROUP_NONE -> stringResource(R.string.no_group)
     else -> this
 }
