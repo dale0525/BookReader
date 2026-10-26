@@ -1,6 +1,6 @@
 name: Release APK
 
-# 正式包只在打 tag 时产出：push 版本号 tag（如 3.26.18）→ 构建签名 release APK 并发布到本仓库 Releases。
+# 正式包只在打 tag 时产出：push 版本号 tag（如 0.0.1）→ 构建签名 release APK 并发布到本仓库 Releases。
 # 客户端的「检查更新」读本仓库 Releases（AppUpdateGitHub.repoPath），更新日志用
 # versionName 直接查 /releases/tags/{versionName}，所以 tag 必须是不带前缀的纯版本号。
 on:
