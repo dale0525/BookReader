@@ -12,6 +12,7 @@ import io.legado.app.support.InMemoryAppDatabaseFixture
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -100,7 +101,40 @@ class BuiltInBookSourceUpgradeTest {
         assertEquals("用户排序被覆盖", 42, after.customOrder)
         assertEquals("用户停用状态被覆盖", false, after.enabled)
         assertEquals("用户发现开关被覆盖", false, after.enabledExplore)
-        assertEquals("bookSourceVersion 未推进", 10, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 11, LocalConfig.getInt("bookSourceVersion", 0))
+    }
+
+    /**
+     * 「消消乐听书」已停止分发，但老设备的书源表里还留着这条记录。
+     * 只从 asset 里删掉只影响全新安装，覆盖安装的用户仍会看到这个已下线的源，
+     * 所以升级时必须按 url 把已有条目清掉。
+     */
+    @Test
+    fun upgradeRemovesRetiredBuiltInSource() {
+        LocalConfig.edit { putInt("bookSourceVersion", 10) }
+        val retiredUrl = "https://www.kaixin7days.com"
+        appDb.bookSourceDao.insert(
+            BookSource(
+                bookSourceUrl = retiredUrl,
+                bookSourceName = "消消乐听书",
+                bookSourceType = 1,
+            )
+        )
+
+        DefaultData.upVersion()
+        val deadline = System.currentTimeMillis() + 10_000
+        while (System.currentTimeMillis() < deadline) {
+            shadowOf(Looper.getMainLooper()).idle()
+            if (appDb.bookSourceDao.getBookSource(retiredUrl) == null) break
+            Thread.sleep(50)
+        }
+        shadowOf(Looper.getMainLooper()).idle()
+
+        assertNull(
+            "已下线的内置书源在覆盖安装后仍然存在",
+            appDb.bookSourceDao.getBookSource(retiredUrl),
+        )
+        assertEquals("bookSourceVersion 未推进", 11, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /** AppConst 静态初始化要读签名，Robolectric 默认不给，补一个假的让它能初始化。 */

@@ -41,6 +41,7 @@ import io.legado.app.domain.gateway.AppLocaleGateway
 import io.legado.app.domain.gateway.ReadStyleGateway
 import io.legado.app.data.repository.HttpTtsRepository
 import io.legado.app.data.entities.ReadAloudVoiceEntity
+import io.legado.app.help.DefaultData
 import io.legado.app.help.DirectLinkUpload
 import io.legado.app.help.LauncherIconHelp
 import io.legado.app.help.book.isLocal
@@ -173,18 +174,7 @@ object Restore : KoinComponent {
             }
         }
         if (BackupConfig.dbIsNotIgnored("bookSource")) {
-            fileToListT<BookSource>(path, "bookSource.json")?.let {
-                try {
-                    appDb.bookSourceDao.insert(*it.toTypedArray())
-                } catch (_: SQLiteConstraintException) {
-                }
-            } ?: run {
-                val bookSourceFile = File(path, "bookSource.json")
-                if (bookSourceFile.exists()) {
-                    val json = bookSourceFile.readText()
-                    ImportOldData.importOldSource(json)
-                }
-            }
+            restoreBookSources(path)
         }
         if (BackupConfig.dbIsNotIgnored("rssSource")) {
             fileToListT<RssSource>(path, "rssSources.json")?.let {
@@ -395,6 +385,30 @@ object Restore : KoinComponent {
             }
             ThemeConfigStore.applyDayNight(appCtx)
         }
+    }
+
+    /**
+     * 恢复书源。
+     *
+     * 内置源是随包发布的代码资产，备份里那份属于备份时的版本。恢复按 url 整行 REPLACE，
+     * 会把内置源连同旧规则一起写回去；而 `bookSourceVersion` 存在
+     * `SharedPreferences("local")`，不在备份的 `config.xml`（只导 `AppConfigStore`）里，
+     * 升级门禁早已推进过，于是旧规则既被写回又永远不会再被覆盖——发现页会一直停在
+     * 备份那版。所以写完之后按升级同一套语义再跑一遍：规则用 asset 覆盖，用户的
+     * enabled / 分组 / 排序 / 发现开关保留。
+     */
+    internal suspend fun restoreBookSources(path: String) {
+        fileToListT<BookSource>(path, "bookSource.json")?.let {
+            try {
+                appDb.bookSourceDao.insert(*it.toTypedArray())
+            } catch (_: SQLiteConstraintException) {
+            }
+        } ?: run {
+            val bookSourceFile = File(path, "bookSource.json")
+            if (!bookSourceFile.exists()) return
+            ImportOldData.importOldSource(bookSourceFile.readText())
+        }
+        DefaultData.importDefaultBookSources()
     }
 
     private fun localBookLocationStatus(bookUrl: String): LocalBookLocationStatus {

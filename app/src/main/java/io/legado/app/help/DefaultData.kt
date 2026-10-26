@@ -70,6 +70,19 @@ object DefaultData {
             ?: emptyList()
     }
 
+    /** 共享排版的内置默认值。读不到就返回 null，由调用方退到「预设5」。 */
+    val shareReadConfig: ReadBookConfig.Config? by lazy {
+        runCatching {
+            val json = String(
+                appCtx.assets.open("defaultData/${ReadBookConfig.shareConfigFileName}")
+                    .readBytes()
+            )
+            GSON.fromJsonObject<ReadBookConfig.Config>(json).getOrThrow()
+        }.onFailure {
+            it.printOnDebug()
+        }.getOrNull()
+    }
+
     val txtTocRules: List<TxtTocRule> by lazy {
         val json = String(
             appCtx.assets.open("defaultData/txtTocRule.json")
@@ -142,11 +155,20 @@ object DefaultData {
     }
 
     /**
+     * 历史上内置过、现已停止分发的书源。只从 asset 里删掉只影响全新安装，
+     * 覆盖安装的用户书源表里还留着这些条目，所以升级时按 url 清掉。
+     */
+    private val retiredBookSourceUrls = listOf(
+        "https://www.kaixin7days.com", // 消消乐听书
+    )
+
+    /**
      * 内置源随版本更新规则：规则字段用 asset 里的新值覆盖，用户自己的开关/分组/排序保留。
      * 内置源的规则是随包发布的代码资产，用户不该改也不该被旧版本锁死；
      * 只按 has() 判重会在升级时留下旧规则，正是发现页报错的成因。
      */
     suspend fun importDefaultBookSources() {
+        retiredBookSourceUrls.forEach { url -> appDb.bookSourceDao.delete(url) }
         bookSources.forEach { incoming ->
             val existing = appDb.bookSourceDao.getBookSource(incoming.bookSourceUrl)
             if (existing == null) {
