@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>星眠 - 阅读器</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Serif+SC:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            surface: "#12140E",
+            onSurface: "#E2E3D8",
+            onSurfaceVariant: "#C5C8BA",
+            outline: "#8F9285",
+            outlineVariant: "#44483D",
+            primary: "#B1D18A",
+            surfaceContainer: "#1E201A",
+          },
+          borderRadius: {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "full": "9999px"
+          },
+          fontFamily: {
+            headline: ["Inter", "Noto Serif SC", "serif"],
+            display: ["Inter", "Noto Serif SC", "serif"],
+            body: ["Noto Serif SC", "Inter", "serif"],
+            label: ["Inter", "sans-serif"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    /* 屏蔽滚动条并维持原生纸张触感 */
+    ::-webkit-scrollbar {
+      display: none;
+      width: 0px;
+    }
+    body {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background-color: #12140E;
+    }
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+    }
+    .reader-p {
+      text-indent: 2em;
+      text-align: justify;
+      text-justify: inter-ideograph;
+      line-height: 2.15;
+      letter-spacing: 0.035em;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-onSurfaceVariant font-body min-h-screen flex justify-center items-center selection:bg-[#354E16] selection:text-[#CDEDA3] select-none m-0 p-0">
+<!-- 390×844 设备模拟画框（居中对齐） -->
+<main class="w-[390px] h-[844px] bg-[#12140E] relative flex flex-col justify-between overflow-hidden px-6 py-4 shadow-none">
+<!-- 顶部状态信息行：纯粹自然，无眩光 -->
+<header class="w-full flex justify-between items-center h-8 text-[12px] font-label text-[#8E9285] tracking-tight shrink-0 select-none opacity-90">
+<span class="font-normal font-sans">23:18</span>
+<span class="font-normal font-sans">86%</span>
+</header>
+<!-- 沉浸式小说排版正文区 -->
+<article class="flex-1 flex flex-col justify-start pt-3 pb-2 overflow-hidden text-justify">
+<!-- 章节标题 -->
+<h1 class="font-headline font-semibold text-[23px] text-[#E2E3D8] leading-tight mb-5 tracking-tight">
+        第七章 雨停之后
+      </h1>
+<!-- 正文六段 -->
+<div class="space-y-4 text-[13.5px] text-[#C5C8BA] font-normal">
+<p class="reader-p">
+          檐角的积雨终于不再连成线，只剩下偶尔断续的几滴，落在青石板凹陷的水洼里，发出微弱清脆的轻响。巷子深处的路灯在湿漉漉的地面投下泛黄的虚影，空气里弥漫着泥土被彻底浸透后泛起的草木清气。
+        </p>
+<p class="reader-p">
+          陈序推开临街的那扇木格窗，微凉的湿气立刻扑上面颊。远处老城区的铁轨方向，传来了最后一班列车压过轨道接缝的沉闷震颤，随后便是一片漫长无边的寂静，将整座小城彻底包裹起来。
+        </p>
+<p class="reader-p">
+          他伸手摸了摸案台旁尚有余温的青瓷茶盏，泛黄的书页在窗缝溜进来的夜风中轻轻翻动了一下。那些在暴雨如注时翻江倒海的思绪，也慢慢沉淀到了深不见底的心湖之下。
+        </p>
+<p class="reader-p">
+          对街小卖部早早打烊了，铁卷门上悬挂的风铃被穿堂风拂过，叮咚几声，惊动了墙角避雨的一只花猫。它抖了抖爪子上的水珠，迈着极轻的步子，顺着青砖残垣溜进了黑黢黢的巷道深处。
+        </p>
+<p class="reader-p">
+          夜色深得如同研开的徽墨。天际那层浓重如铁的积云边缘，隐约透出了一抹极其微薄的灰白光亮。明天大概会是个晴天，他心里这么想着，指尖在泛旧的木质窗沿上轻轻敲了两下。
+        </p>
+<p class="reader-p">
+          屋里只留了一盏罩着乳白色玻璃罩的钨丝台灯，光晕被压得很低，仅能照亮书案方寸之间。他重新坐回圈椅中，把搭在膝头的旧毛毯往上拉了拉，阖上眼，听着雨后夜色里细碎而安稳的虫鸣。
+        </p>
+</div>
+</article>
+<!-- 底部书籍信息与进度行 -->
+<footer class="w-full flex justify-between items-center h-8 text-[12px] font-label text-[#76786D] tracking-normal shrink-0 select-none opacity-85">
+<span class="font-normal font-sans">星眠</span>
+<span class="font-normal font-sans text-center">62%</span>
+<span class="font-normal font-sans text-right">18 / 31</span>
+</footer>
+</main>
+</body></html>

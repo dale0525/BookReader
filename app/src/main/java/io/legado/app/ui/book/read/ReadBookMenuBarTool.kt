@@ -402,7 +402,7 @@ private fun ToolButtonContent(
             AppIcon(
                 imageVector = button.icon,
                 contentDescription = null,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(24.dp),
                 tint = tint,
             )
         } else {
