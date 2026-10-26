@@ -54,7 +54,10 @@ class AppUiConfigurationRepositoryTest {
     @Test
     fun `系统主题变化进入同一份根配置`() {
         val locale = FakeAppLocaleGateway()
-        val preferences = MutableStateFlow<Preferences>(mutablePreferencesOf())
+        // 默认 themeMode 是固定浅色，只有自动模式（"0"）才跟随系统。
+        val preferences = MutableStateFlow<Preferences>(
+            mutablePreferencesOf(stringPreferencesKey(PreferKey.themeMode) to "0"),
+        )
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Unconfined)
         val repository = AppUiConfigurationRepository(
             appLocaleGateway = locale,

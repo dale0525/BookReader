@@ -9,7 +9,7 @@ class ThemePackageSettingsRepository : ThemePackageSettingsGateway {
 
     override fun exportCurrent(): ThemeExportData = ThemeExportData(
         appTheme = string(PreferKey.appTheme, "0"),
-        themeMode = string(PreferKey.themeMode, "0"),
+        themeMode = string(PreferKey.themeMode, "1"),
         isPureBlack = boolean(PreferKey.pureBlack, false),
         composeEngine = string(PreferKey.composeEngine, "material"),
         paletteStyle = string(PreferKey.paletteStyle, "tonalSpot"),

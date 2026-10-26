@@ -51,7 +51,11 @@ class AppUiConfigurationTest {
 
     @Test
     fun resolvedTheme_followsSystemOnlyInAutoMode() {
-        val systemDark = AppUiConfiguration(isSystemDarkTheme = true)
+        // 默认 themeMode 是固定浅色，自动模式必须显式指定，否则这里测的就不是「跟随系统」。
+        val systemDark = AppUiConfiguration(
+            isSystemDarkTheme = true,
+            appShell = AppShellSettings(themeMode = "0"),
+        )
 
         assertTrue(systemDark.isDarkTheme)
         assertFalse(
@@ -67,7 +71,10 @@ class AppUiConfigurationTest {
 
     @Test
     fun diff_reportsSystemThemeChangeOnlyInAutoMode() {
-        val autoLight = AppUiConfiguration(isSystemDarkTheme = false)
+        val autoLight = AppUiConfiguration(
+            isSystemDarkTheme = false,
+            appShell = AppShellSettings(themeMode = "0"),
+        )
         val autoDark = autoLight.copy(isSystemDarkTheme = true)
         val fixedLight = autoLight.copy(appShell = autoLight.appShell.copy(themeMode = "1"))
 

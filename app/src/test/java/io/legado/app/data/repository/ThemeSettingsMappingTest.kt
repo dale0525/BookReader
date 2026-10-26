@@ -62,6 +62,17 @@ class ThemeSettingsMappingTest {
     }
 
     @Test
+    fun `已下线的 E-Ink 主题取值读回时回退为默认主题`() {
+        // 「4」曾经是可选的 E-Ink 主题，已随该主题一起下线。老用户的 DataStore 里
+        // 还存着这个值，不归一化就会让界面按默认主题渲染、正文却仍走 E-Ink 分支。
+        val preferences = mutablePreferencesOf(
+            stringPreferencesKey(PreferKey.appTheme) to "4",
+        )
+
+        assertEquals("0", preferences.toThemeSettings().appTheme)
+    }
+
+    @Test
     fun `关闭模糊通过真实原子路径同时关闭渐进模糊`() {
         val values = captureAtomicUpdateValues(
             current = ThemeSettings(enableBlur = true, enableProgressiveBlur = true),

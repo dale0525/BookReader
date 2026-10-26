@@ -51,7 +51,8 @@ class ReadStyleRepository(
                 e.printOnDebug()
             }
         }
-        return fallbackConfig
+        // 共享排版有自己的内置默认值；没有 asset 或解析失败时才退到「预设5」。
+        return DefaultData.shareReadConfig ?: fallbackConfig
     }
 
     fun save(

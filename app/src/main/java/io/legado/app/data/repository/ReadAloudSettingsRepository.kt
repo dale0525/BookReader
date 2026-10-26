@@ -110,7 +110,7 @@ internal fun Preferences.toReadAloudSettings(): ReadAloudSettings = ReadAloudSet
         compatDsValue(ReadAloudKeys.TimerChapters, 0)
     ),
     ttsFollowSys = compatDsValue(ReadAloudKeys.TtsFollowSys, true),
-    ttsSpeechRate = compatDsValue(ReadAloudKeys.TtsSpeechRate, 5),
+    ttsSpeechRate = compatDsValue(ReadAloudKeys.TtsSpeechRate, 15),
     speechAnalysisMode = compatDsValue(ReadAloudKeys.SpeechAnalysisMode, "rule"),
     speechAnalysisReasoningLevel = compatDsValue(
         ReadAloudKeys.SpeechAnalysisReasoningLevel,

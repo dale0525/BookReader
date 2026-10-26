@@ -1,34 +1,38 @@
 [
   {
-    "themeName": "默认",
-    "isNightTheme": false,
-    "primaryColor": "#795548",
     "accentColor": "#E53935",
     "backgroundColor": "#F5F5F5",
-    "bottomBackground": "#EEEEEE"
+    "backgroundImgBlur": 0,
+    "bottomBackground": "#EEEEEE",
+    "isNightTheme": false,
+    "primaryColor": "#795548",
+    "themeName": "默认"
   },
   {
-    "themeName": "典雅蓝",
-    "isNightTheme": false,
-    "primaryColor": "#03A9F4",
     "accentColor": "#AD1457",
     "backgroundColor": "#F5F5F5",
-    "bottomBackground": "#EEEEEE"
+    "backgroundImgBlur": 0,
+    "bottomBackground": "#EEEEEE",
+    "isNightTheme": false,
+    "primaryColor": "#03A9F4",
+    "themeName": "典雅蓝"
   },
   {
-    "themeName": "黑白",
-    "isNightTheme": true,
-    "primaryColor": "#303030",
     "accentColor": "#E0E0E0",
     "backgroundColor": "#424242",
-    "bottomBackground": "#424242"
+    "backgroundImgBlur": 0,
+    "bottomBackground": "#424242",
+    "isNightTheme": true,
+    "primaryColor": "#303030",
+    "themeName": "黑白"
   },
   {
-    "themeName": "A屏黑",
-    "isNightTheme": true,
-    "primaryColor": "#000000",
     "accentColor": "#FFFFFF",
     "backgroundColor": "#000000",
-    "bottomBackground": "#000000"
+    "backgroundImgBlur": 0,
+    "bottomBackground": "#000000",
+    "isNightTheme": true,
+    "primaryColor": "#000000",
+    "themeName": "A屏黑"
   }
 ]
