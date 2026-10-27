@@ -57,6 +57,32 @@ UA 要写完整。截断的 UA（只有 `Mozilla/5.0 (Linux; Android 11) AppleWe
 
 登录态按 eTLD+1 归一存储，`www` 子域登录后 `wap`/`m` 子域也能用同一份 cookie。
 
+## 表单登录
+
+站点有 JSON 登录接口时，用 `loginUi` + `loginUrl` 让用户在 App 内填账号密码，不必开 WebView：
+
+```json
+"loginUi": "[{\"name\":\"账号\",\"type\":\"text\"},{\"name\":\"密码\",\"type\":\"password\"}]",
+"loginUrl": "@js:uaaLogin()"
+```
+
+- `loginUi` 渲染成表单，值存进 `source.getLoginInfoMap()`（AES 加密落盘），`loginUrl` 执行时可用。
+- **`loginUrl` 里必须定义名为 `login` 的函数。** 客户端提交表单后会把 `loginUrl` 与
+  `if (typeof login=='function'){ login.apply(this); }` 拼接执行，只定义 `uaaLogin()` 会抛
+  `Function login not implements!!!`，而且报错发生在登录按钮的回调里，界面上只显示「登录出错」。
+  稳妥写法是定义 `login()` 做一层转发。
+- 拿到凭据后调 `source.putLoginHeader(JSON.stringify({...}))` 存进登录请求头；`AnalyzeUrl`
+  默认 `hasLoginHeader = true`，之后所有请求自动带上，不必在 `header` 里手写。
+
+## 图片验证码
+
+`java.getVerificationCode(imageUrl)` 弹出客户端通用的验证码对话框（输入框 + 图片，等待 1 分钟），
+返回用户输入的字符串。它是**阻塞调用**，只能在后台线程执行，且弹窗是通用组件，任何源都能用。
+
+坑：**验证码与取图请求绑定，每次取图都会刷新答案。** 取图 → 弹窗 → 提交之间不能再调一次取图接口，
+否则提交的是上一张图的答案，服务端回「验证码不正确」。取图地址里带时间戳参数也没用——服务端认的是
+最后一次下发的那张。
+
 ## 发现页
 
 `exploreUrl` 是 JSON 数组：
