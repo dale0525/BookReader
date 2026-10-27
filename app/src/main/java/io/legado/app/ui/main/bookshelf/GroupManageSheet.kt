@@ -129,8 +129,9 @@ fun GroupManageSheet(
         show = show,
         onDismissRequest = onDismissRequest,
         title = if (!isEditing) stringResource(R.string.group_manage) else stringResource(R.string.group_edit),
+        // 除「全部」外都可删除：它是书架的兜底分组，没有重建入口
         startAction = editingGroup?.takeIf {
-            isEditing && (it.groupId > 0 || it.groupId == Long.MIN_VALUE)
+            isEditing && it.groupId != BookGroup.IdAll
         }?.let { group ->
             {
                 GroupDeleteAction(

@@ -1524,6 +1524,9 @@
     <string name="private_change_password">修改本地密码</string>
     <string name="private_feature_enabled">启用私密功能</string>
     <string name="private_feature_enabled_summary">关闭后不再验证、不再脱敏；本地密码与书籍/分组标记都保留。</string>
+    <string name="private_hide_adult_content">隐藏成人内容</string>
+    <string name="private_hide_adult_content_summary">在最近阅读、书架、发现和书源管理中隐藏分组名带 18+ 的书源及其书籍。与私密功能互不影响。</string>
+    <string name="private_content_display_title">内容显示</string>
     <string name="private_unlock_scope_until_background">离开应用前有效</string>
     <string name="private_background_grace_title">离开后重新验证</string>
     <string name="private_background_grace_summary">离开多久之后需要重新验证。</string>
@@ -2183,6 +2186,7 @@
     <string name="homepage_layout_config_label">布局配置</string>
     <string name="homepage_edit_raw_json">编辑原始 JSON (LayoutConfig)</string>
     <string name="home_recent_reading">最近阅读</string>
+    <string name="home_recent_reading_more">更多最近阅读</string>
     <string name="home_recent_books">最近阅读记录</string>
     <string name="home_dashboard_settings">首页组件</string>
     <string name="home_no_recent_reading">暂无阅读记录</string>

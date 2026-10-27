@@ -51,6 +51,9 @@ sealed interface PrivateConfigIntent {
     /** "离开应用前有效"频率下的宽限期（秒），0 = 离开即失效 */
     data class SetBackgroundGraceSeconds(val seconds: Int) : PrivateConfigIntent
 
+    /** 隐藏成人内容：判定只看书源分组名是否带 18+，与私密功能总开关互不影响 */
+    data class SetHideAdultContent(val hide: Boolean) : PrivateConfigIntent
+
     data object RequestNotificationPermission : PrivateConfigIntent
     data object RequestBatteryPermission : PrivateConfigIntent
 }

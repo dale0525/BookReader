@@ -9,11 +9,16 @@ import io.legado.app.data.entities.SearchBook
 import io.legado.app.data.entities.rule.ExploreKind
 import io.legado.app.data.repository.ExploreRepository
 import io.legado.app.data.repository.SettingsRepository
+import io.legado.app.domain.gateway.PrivateAccessGateway
+import io.legado.app.domain.model.PrivateAccessState
+import io.legado.app.domain.model.PrivateUnlockTarget
+import io.legado.app.domain.model.settings.PrivateAccessSettings
 import io.legado.app.help.config.AppConfigStore
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -209,8 +214,33 @@ class ExploreMainViewModelTest {
         assertEquals(listOf("a", "a"), repository.requests)
     }
 
-    private fun createModel() = ExploreMainViewModel(repository, SettingsRepository())
-        .also { store.put("main", it) }
+    private fun createModel() = ExploreMainViewModel(
+        repository,
+        SettingsRepository(),
+        FakePrivateAccessGateway(),
+    ).also { store.put("main", it) }
+
+    /** 发现页只用到 settings 里的「隐藏成人内容」；其余能力本测试不涉及，保持空实现 */
+    private class FakePrivateAccessGateway : PrivateAccessGateway {
+        private val settingsFlow = MutableStateFlow(PrivateAccessSettings())
+        override val state: Flow<PrivateAccessState> = MutableStateFlow(PrivateAccessState())
+        override val settings: Flow<PrivateAccessSettings> get() = settingsFlow
+        override suspend fun updateSettings(
+            transform: (PrivateAccessSettings) -> PrivateAccessSettings,
+        ) {
+            settingsFlow.value = transform(settingsFlow.value)
+        }
+
+        override fun isGrantedNow(bookUrl: String, group: Long): Boolean = false
+        override suspend fun verifyPassword(password: String, target: PrivateUnlockTarget?) = true
+        override suspend fun verifyPasswordOnly(password: String): Boolean = true
+        override fun revoke(target: PrivateUnlockTarget) = Unit
+        override suspend fun disableBiometricShortcut() = Unit
+        override suspend fun storeBiometricEnvelope(ciphertext: String, iv: String) = false
+        override fun refreshBiometricStatus() = Unit
+        override fun lock() = Unit
+        override fun onAppBackground() = Unit
+    }
 
     private fun kind(source: String) = ExploreKind(title = source, url = "https://$source/books")
 

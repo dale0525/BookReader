@@ -88,6 +88,9 @@ class PrivateConfigViewModel(
             is PrivateConfigIntent.SetBackgroundGraceSeconds ->
                 updateSettings { it.copy(backgroundGraceSeconds = intent.seconds) }
 
+            is PrivateConfigIntent.SetHideAdultContent ->
+                updateSettings { it.copy(hideAdultContent = intent.hide) }
+
             PrivateConfigIntent.RequestNotificationPermission ->
                 _effects.tryEmit(PrivateConfigEffect.RequestNotificationPermission)
 

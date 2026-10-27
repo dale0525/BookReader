@@ -10,6 +10,8 @@ import io.legado.app.domain.model.NewBookGroup
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -120,6 +122,55 @@ class BookGroupMutationRepositoryTest {
 
         assertTrue(database.bookGroupDao.all.isEmpty())
         assertTrue(database.tagGroupRuleDao.getAll().isEmpty())
+        assertEquals(0L, database.bookDao.getBook(book.bookUrl)?.group)
+    }
+
+    @Test
+    fun `删除内置分组时只删分组行不碰书籍分组位`() = runBlocking {
+        val builtIn = BookGroup(
+            groupId = BookGroup.IdNetNone,
+            groupName = "网络未分组",
+            order = -7,
+            show = false,
+        )
+        // 用户分组 id 取 4：内置分组 -4 的位与之按位与为 4，正好落在
+        // `update books set group = group - :group where group & :group > 0` 的命中区间里
+        val userGroup = BookGroup(groupId = 4L, groupName = "Fantasy", order = 1)
+        val book = Book(
+            bookUrl = "book-1",
+            name = "Book",
+            author = "Author",
+            group = userGroup.groupId,
+        )
+        database.bookGroupDao.insert(builtIn, userGroup)
+        database.bookDao.insert(book)
+
+        repository.deleteGroup(builtIn.groupId)
+
+        assertNull(database.bookGroupDao.getByID(builtIn.groupId))
+        assertEquals(
+            "删除内置分组不应改动用户分组位",
+            userGroup.groupId,
+            database.bookDao.getBook(book.bookUrl)?.group,
+        )
+        assertNotNull(database.bookGroupDao.getByID(userGroup.groupId))
+    }
+
+    @Test
+    fun `全部分组不可删除`() = runBlocking {
+        val all = BookGroup(groupId = BookGroup.IdAll, groupName = "全部", order = -10)
+        val book = Book(
+            bookUrl = "book-1",
+            name = "Book",
+            author = "Author",
+            group = 0L,
+        )
+        database.bookGroupDao.insert(all)
+        database.bookDao.insert(book)
+
+        repository.deleteGroup(all.groupId)
+
+        assertNotNull("「全部」被删掉了", database.bookGroupDao.getByID(BookGroup.IdAll))
         assertEquals(0L, database.bookDao.getBook(book.bookUrl)?.group)
     }
 

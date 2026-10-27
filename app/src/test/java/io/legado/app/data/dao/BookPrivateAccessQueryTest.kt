@@ -118,7 +118,7 @@ class BookPrivateAccessQueryTest {
 
     @Test
     fun privateGroupBookCount_isVisibleToItsOwnGroupQuery() = runBlocking {
-        assertEquals(1, db.bookDao.flowUserGroupBookCount(privateGroupId).first())
+        assertEquals(1, db.bookDao.flowUserGroupBookCount(privateGroupId, false).first())
     }
 
     private fun newBook(url: String, group: Long) = SearchBook(

@@ -3,19 +3,29 @@ package io.legado.app.data.repository
 import io.legado.app.data.dao.ReadRecordDao
 import io.legado.app.data.local.preferences.LocalPreferencesKeys
 import io.legado.app.domain.gateway.HomeDashboardGateway
+import io.legado.app.domain.gateway.PrivateAccessGateway
 import io.legado.app.domain.model.DEFAULT_HOME_DASHBOARD_SECTIONS
 import io.legado.app.domain.model.HomeDashboardSection
 import io.legado.app.domain.model.HomeReadingBook
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 
 class HomeDashboardRepository(
     private val readRecordDao: ReadRecordDao,
     private val localPreferencesRepository: SettingsRepository,
+    private val bookSourceRepository: BookSourceRepository,
+    private val privateAccessGateway: PrivateAccessGateway,
 ) : HomeDashboardGateway {
 
+    /** 统计与最近阅读必须同口径：只藏列表不改数字，差值本身就会暴露被藏了几本 */
     override fun observeTotalReadBooks(): Flow<Int> =
-        readRecordDao.observeTotalReadBookCount()
+        privateAccessGateway.settings
+            .map { it.hideAdultContent }
+            .distinctUntilChanged()
+            .flatMapLatest { hideAdult -> readRecordDao.observeTotalReadBookCount(hideAdult) }
 
     override fun observeTotalReadTime(): Flow<Long> =
         readRecordDao.getTotalReadTime().map { it ?: 0L }
@@ -24,7 +34,15 @@ class HomeDashboardRepository(
         readRecordDao.observeReadTimeByDate(date).map { it ?: 0L }
 
     override fun observeRecentBooks(limit: Int): Flow<List<HomeReadingBook>> =
-        readRecordDao.observeRecentHomeBooks(limit).map { rows ->
+        combine(
+            readRecordDao.observeRecentHomeBooks(limit),
+            privateAccessGateway.settings.map { it.hideAdultContent }.distinctUntilChanged(),
+            bookSourceRepository.flowAdultSourceUrls(),
+        ) { rows, hideAdult, adultOrigins ->
+            // 阅读记录表本身没有来源字段，只有这条查询 JOIN 了 books 才拿得到 origin。
+            // 源已被删掉的书反查不到来源，按"没有证据就不算成人"保留。
+            if (!hideAdult) rows else rows.filterNot { it.origin in adultOrigins }
+        }.map { rows ->
             rows.map { row ->
                 HomeReadingBook(
                     bookUrl = row.bookUrl,

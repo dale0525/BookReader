@@ -27,16 +27,36 @@ interface ReadRecordDao {
     @Query("SELECT sum(readTime) FROM readRecord")
     fun getTotalReadTime(): Flow<Long?>
 
+    /**
+     * 首页「Books Read」统计的读过本数。
+     *
+     * `readRecord` 没有来源字段，只能按书名+作者反查 `books` 拿 `origin`——与
+     * [observeRecentHomeBooks] 用的是同一套反查。反查不到（源已删除）或本地书一律保留：
+     * 没有证据就不当成人处理，与书架、发现页的口径一致。
+     *
+     * 必须与最近阅读同口径。只藏列表不改数字，会出现「最近阅读列 1 本、统计说读过 2 本」，
+     * 等于用差值告诉别人还有一本被藏了。
+     */
     @Query(
         """
         SELECT COUNT(*) FROM (
             SELECT 1
-            FROM readRecord
-            GROUP BY bookName, bookAuthor
+            FROM readRecord AS record
+            WHERE :hideAdult = 0 OR NOT EXISTS (
+                SELECT 1
+                FROM books AS book
+                WHERE book.name = record.bookName
+                    AND book.author = record.bookAuthor
+                    AND book.origin IN (
+                        SELECT bookSourceUrl FROM book_sources
+                        WHERE instr(bookSourceGroup, '18+') > 0
+                    )
+            )
+            GROUP BY record.bookName, record.bookAuthor
         )
         """
     )
-    fun observeTotalReadBookCount(): Flow<Int>
+    fun observeTotalReadBookCount(hideAdult: Boolean): Flow<Int>
 
     @Query("SELECT SUM(readTime) FROM readRecordDetail WHERE date = :date")
     fun observeReadTimeByDate(date: String): Flow<Long?>

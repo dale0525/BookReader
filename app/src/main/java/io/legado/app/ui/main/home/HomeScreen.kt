@@ -993,21 +993,37 @@ private fun RecentReadingProgress(
     }
 }
 
+/**
+ * 最近阅读里除最新一本之外的封面。
+ *
+ * 这一行原先没有任何标题，孤零零一排封面夹在统计卡与阅读目标之间，看不出是什么；
+ * 它和大卡片显示的是同一份数据的剩余部分，所以标题沿用 [R.string.home_recent_reading]
+ * 并标注「更多」，避免看起来像第二个互不相干的区块。
+ */
 @Composable
 private fun RecentBooksRow(
     books: List<HomeRecentBookUi>,
     onBookClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LazyRow(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        itemsIndexed(books, key = { index, book -> "${book.bookUrl}_$index" }) { index, book ->
-            RecentHistoryBookCard(
-                book = book,
-                onClick = { book.bookUrl?.let(onBookClick) },
-            )
+        AppText(
+            text = stringResource(R.string.home_recent_reading_more),
+            style = LegadoTheme.typography.titleSmall,
+            color = LegadoTheme.colorScheme.onSurfaceVariant,
+        )
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            itemsIndexed(books, key = { index, book -> "${book.bookUrl}_$index" }) { index, book ->
+                RecentHistoryBookCard(
+                    book = book,
+                    onClick = { book.bookUrl?.let(onBookClick) },
+                )
+            }
         }
     }
 }

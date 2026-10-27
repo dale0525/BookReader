@@ -83,6 +83,16 @@ interface BookSourceDao {
     @Query("select * from book_sources_part where enabled = 0 order by customOrder asc")
     fun flowDisabled(): Flow<List<BookSourcePart>>
 
+    /**
+     * 成人书源的 url，供「隐藏成人内容」反查书籍来源。
+     *
+     * 只取 url：判定靠 `bookSourceGroup` 里有没有 `18+`，但 `book_sources` 每行带 200KB+ 的
+     * `jsLib`，拉整行只为看一眼分组名不值得。分组匹配用 `instr` 而不是 `like`，免得 `18+`
+     * 里的 `+` 在 like 里没有特殊含义却要多想一层。
+     */
+    @Query("select bookSourceUrl from book_sources where instr(bookSourceGroup, '18+') > 0")
+    fun flowAdultSourceUrls(): Flow<List<String>>
+
     @Query(
         """select * from book_sources
         where enabled = 1 and enabledExplore = 1 and homepageModules is not null
