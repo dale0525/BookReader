@@ -71,6 +71,25 @@ jsoup 里 `:eq(n)` 就是 `:nth-child()` 的 0 基别名，`:lt`/`:gt` 同理—
 
 `@css:` 段里要按位置取，只能靠 `:nth-child()` / `:nth-of-type()` 这类 CSS 伪类，或者改用默认规则。
 
+## 整条规则没有取值动作
+
+只写选择器、不写 `@动作` 时，**那串选择器本身会被当成属性名**，不是"默认取文本"。
+
+`AnalyzeByJSoup.getResultList` 按 `@` 切成段，最后一段交给 `getResultLast`；它只认 `text` / `ownText` / `textNodes` / `html` / `all` 这几个动作，其余一律走 `element.attr(最后一段)`。所以 `.booktitle` 这种写法取的是根元素的 `attr(".booktitle")`——恒为空串，且**不报错**。
+
+实测（台湾小说网详情页）：`coverUrl: .bookcover img.thumbnail@src` 正常出图，同一次解析里 `name: .booktitle`、`author: .booktag a.red`、`intro: .bookintro`、`lastChapter: a.bookchapter` 全部返回空，`verify` 的 `detail` 段四项都是 `""`，`errors` 里干干净净。
+
+症状是「选择器明明能命中，字段却全空」，很容易误判成选择器写错或站点改版。补上 `@text` 即可：
+
+| 写法 | 结果 |
+| --- | --- |
+| `.booktitle` | ❌ 空（被当成 `attr(".booktitle")`） |
+| `.booktitle@text` | ✅ 文本 |
+| `class.booktitle` | ❌ 空（同上，`class.` 只是取值方式，仍缺动作） |
+| `class.booktitle@text` | ✅ 文本 |
+
+判据：**除 JS / 正则段外，每条规则都该有 `@` 动作**。用 `class.` / `tag.` / `id.` 前缀写法时也一样，前缀只决定怎么选元素，不决定取什么。
+
 ## `@css:` 与默认规则的差别
 
 两者最终都走 `Element.select()`，**伪类支持完全一样**（`:contains`、`:has`、`:nth-child` 都可用）。差别在段结构：

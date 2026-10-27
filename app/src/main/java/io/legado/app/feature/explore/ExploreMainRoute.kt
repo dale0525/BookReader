@@ -87,7 +87,7 @@ import org.koin.androidx.compose.koinViewModel
  * 发现页：分组 → 源卡片 → 单个源的榜单/分类与书列表。
  *
  * 与旧版的关键差别是**不再跨源聚合**：每张卡片就是一个真实书源，点进去只看这个站。
- * 内置源已按站拆开（31 个），所以卡片名就是站点名，副标题写着这个站能提供多少分类和榜单。
+ * 内置源已按站拆开（28 个），所以卡片名就是站点名，副标题写着这个站能提供多少分类和榜单。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

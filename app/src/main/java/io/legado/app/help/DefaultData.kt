@@ -165,6 +165,12 @@ object DefaultData {
      */
     private val retiredBookSourceUrls = listOf(
         "https://www.kaixin7days.com", // 消消乐听书
+        // 已从内置源下线：365小说网、玩文学小说网。
+        "http://www.shukuge.com",
+        "https://www.wanwx.com",
+        // 18+ 采集接口的孪生源，与同名常规源只差 `/adult` 后缀，内容重复且卡片翻倍。
+        "https://zuidazy.co/adult",
+        "https://api.wujinapi.me/adult",
         // 拆源前的 6 个聚合源。`agg.example.com` 是 example.com 下的占位域名，
         // 从来没有真实内容，书架上的书不可能靠它读到正文。
         "https://agg.example.com/novel-normal",

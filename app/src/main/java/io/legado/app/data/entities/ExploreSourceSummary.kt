@@ -5,7 +5,7 @@ import io.legado.app.constant.ExploreGroups
 
 /**
  * 发现页源卡片需要的字段。刻意不查 `book_sources` 整行：那里有 200KB+ 的 `jsLib`，
- * 31 个源一次拉全表会把整段规则搬进内存，而卡片只需要名字和一行说明。
+ * 28 个源一次拉全表会把整段规则搬进内存，而卡片只需要名字和一行说明。
  *
  * `bookSourceComment` 由内置源随包写入「N 个分类 · M 个榜单」——
  * 这行数据要跑一遍站点的 JS 才能算出来，不能在界面上现算。
