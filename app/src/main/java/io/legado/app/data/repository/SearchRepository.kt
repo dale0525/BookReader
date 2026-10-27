@@ -9,6 +9,7 @@ import io.legado.app.domain.gateway.BookSearchGateway
 import io.legado.app.domain.model.BookSearchScope
 import io.legado.app.domain.usecase.BookShelfKey
 import io.legado.app.ui.main.bookshelf.BookShelfItem
+import io.legado.app.utils.ChineseUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -149,10 +150,17 @@ class SearchRepositoryImpl(
         screenKey: String,
         group: String,
     ): List<SearchBook> = withContext(Dispatchers.IO) {
-        if (screenKey.isEmpty()) {
-            appDb.searchBookDao.changeSourceByGroup(name, author, group)
+        val names = ChineseUtils.variants(name)
+        val cached = if (screenKey.isEmpty()) {
+            appDb.searchBookDao.changeSourceByGroup(names, group)
         } else {
-            appDb.searchBookDao.changeSourceSearch(name, author, screenKey, group)
+            appDb.searchBookDao.changeSourceSearch(names, screenKey, group)
+        }
+        // 字形候选只负责把行捞出来，判等仍按同一份归一规则：
+        // 站点返回的书名可能是繁体，书架的检索词是简体，直接比对会把同一本书判成不同。
+        cached.filter {
+            ChineseUtils.sameText(it.name, name) &&
+                (author.isEmpty() || ChineseUtils.containsText(it.author, author))
         }
     }
 

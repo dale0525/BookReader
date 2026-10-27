@@ -17,18 +17,21 @@ interface SearchBookDao {
     @Query("select * from searchBooks where name = :name and author = :author and origin in (select bookSourceUrl from book_sources) order by originOrder limit 1")
     fun getFirstByNameAuthor(name: String, author: String): SearchBook?
 
+    // 书名条件放宽成一组字形候选：站点返回的书名可能是繁体，书架的检索词是简体，
+    // 只按原样比对会把同一本书判成不同。候选字形由 ChineseUtils.variants 给出，
+    // 最终判等仍走同一份归一规则（见 SearchRepositoryImpl.findChangeSourceBooks）。
     @Query(
         """select t1.name, t1.author, t1.origin, t1.originName, t1.coverUrl, t1.bookUrl, 
         t1.type, t1.time, t1.intro, t1.kind, t1.latestChapterTitle, t1.tocUrl, t1.variable, 
         t1.wordCount, t2.customOrder as originOrder, t1.chapterWordCountText, t1.respondTime, t1.chapterWordCount
         from searchBooks as t1 inner join book_sources as t2 
         on t1.origin = t2.bookSourceUrl 
-        where t1.name = :name and t1.author like '%'||:author||'%' 
+        where t1.name in (:names) 
         and t2.enabled = 1
         and (:sourceGroup = "" or t2.bookSourceGroup like '%'||:sourceGroup||'%')
         order by t2.customOrder"""
     )
-    fun changeSourceByGroup(name: String, author: String, sourceGroup: String): List<SearchBook>
+    fun changeSourceByGroup(names: List<String>, sourceGroup: String): List<SearchBook>
 
     @Query(
         """select t1.name, t1.author, t1.origin, t1.originName, t1.coverUrl, t1.bookUrl, 
@@ -36,15 +39,14 @@ interface SearchBookDao {
         t1.wordCount, t2.customOrder as originOrder, t1.chapterWordCountText, t1.respondTime, t1.chapterWordCount
         from searchBooks as t1 inner join book_sources as t2 
         on t1.origin = t2.bookSourceUrl 
-        where t1.name = :name and t1.author like '%'||:author||'%'
+        where t1.name in (:names)
         and (:sourceGroup = "" or t2.bookSourceGroup like '%'||:sourceGroup||'%')
         and (originName like '%'||:key||'%' or t1.latestChapterTitle like '%'||:key||'%')
         and t2.enabled = 1 
         order by t2.customOrder"""
     )
     fun changeSourceSearch(
-        name: String,
-        author: String,
+        names: List<String>,
         key: String,
         sourceGroup: String
     ): List<SearchBook>

@@ -14,6 +14,7 @@ import io.legado.app.help.book.releaseHtmlData
 import io.legado.app.help.source.SourceHelp
 import io.legado.app.model.webBook.WebBook
 import io.legado.app.ui.book.changesource.ObservableSourceConfig
+import io.legado.app.utils.ChineseUtils
 import io.legado.app.utils.internString
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -216,7 +217,7 @@ class ChangeSourceSearchUseCase(
         val resultBooks = WebBook.searchBookAwait(
             source, name,
             filter = { fName, fAuthor, _ ->
-                fName == name && (!checkAuthor || fAuthor.contains(author))
+                matchesChangeSourceTarget(fName, fAuthor, name, author, checkAuthor)
             }
         )
 
@@ -376,4 +377,21 @@ class ChangeSourceSearchUseCase(
         SourceHelp.deleteBookSource(searchBook.origin)
         io.legado.app.data.appDb.searchBookDao.delete(searchBook)
     }
+}
+
+/**
+ * 换源结果的入选判据。
+ *
+ * 书名按简繁归一后必须与目标书名一致：站点的检索接口对简体关键词会返回繁体书名
+ * （台湾小说网搜「剑来」返回「劍來」），直接比较字符串会把整条结果判成别的书而丢弃。
+ */
+internal fun matchesChangeSourceTarget(
+    resultName: String,
+    resultAuthor: String,
+    name: String,
+    author: String,
+    checkAuthor: Boolean,
+): Boolean {
+    if (!ChineseUtils.sameText(resultName, name)) return false
+    return !checkAuthor || ChineseUtils.containsText(resultAuthor, author)
 }

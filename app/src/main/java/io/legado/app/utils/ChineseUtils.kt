@@ -18,6 +18,37 @@ object ChineseUtils {
         return ChineseUtils.t2s(content)
     }
 
+    /**
+     * 简繁字形归一后再比较。
+     *
+     * 书源的检索词与站点返回的书名可能分处两种字形（简体「剑来」对繁体「劍來」），
+     * 直接比较字符串会把同一本书判成不同。先转繁再转简做基准，两种字形由此落到同一形态。
+     *
+     * 走底层库而不是本对象的 [t2s]：后者会加载排除词表（[fixT2sDict]），那是阅读界面的转换设置，
+     * 搜索路径不该顺手改掉它。排除词表是否加载不影响这里的结果——只有基准形态会变
+     * （「规则」要么归到「守则」要么归到「規則」），两侧始终一致。
+     */
+    fun sameText(a: String, b: String): Boolean = toComparable(a) == toComparable(b)
+
+    fun containsText(text: String, part: String): Boolean =
+        toComparable(text).contains(toComparable(part))
+
+    /**
+     * 同一段文字可能被站点写成的几种字形：原样、通用繁体、台湾繁体、通用简体、归一基准。
+     *
+     * 给「按书名查库」用。SQL 没法做简繁归一，只能拿候选字形去撞库，
+     * 因此这份清单决定了哪些结果能被捞出来；判等仍以 [sameText] 为准。
+     */
+    fun variants(text: String): List<String> = listOf(
+        text,
+        ChineseUtils.s2t(text),
+        ChineseUtils.s2tw(text),
+        ChineseUtils.t2s(text),
+        toComparable(text),
+    ).distinct()
+
+    private fun toComparable(text: String): String = ChineseUtils.t2s(ChineseUtils.s2t(text))
+
     fun preLoad(async: Boolean, vararg transType: TransType) {
         ChineseUtils.preLoad(async, *transType)
     }
