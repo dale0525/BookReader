@@ -21,7 +21,7 @@
 
 每张卡片的副标题是 `bookSourceComment`，写着这个站能提供多少分类和榜单（如 `10 个分类 · 2 个榜单`）。没有分类入口的源写 `仅搜索`，卡片仍留在发现页，只是点进去直接给搜索。
 
-18+ 视频档只有黄果短剧一个独立站点。孪生写法（同名常规源加 `/adult` 后缀）会让卡片翻倍而内容完全重复，最大资源、无尽资源那两条 url 留在 `retiredBookSourceUrls` 里，升级时按它删、导入时按它滤。
+18+ 视频档只有黄果短剧一个独立站点。孪生写法（同名常规源加 `/adult` 后缀）会让卡片翻倍而内容完全重复，最大资源、无尽资源那两条 url 留在 `retiredBookSourceUrls` 里，每次导入都按它删、按它滤。
 
 封面来源：言情小说阁的分类页自带封面；爱丽丝书屋和台湾小说网的分类页是纯文字列表，站点不提供封面，只能逐本取详情页。后两者用 `source.put` 按书号缓存，同一本书只抓一次（首屏约 40 秒，之后约 3 秒）。分类页本身没有封面的站点在 `SITES` 里标 `coverFromDetail: true`。
 
@@ -48,9 +48,9 @@
 
 共享作用域按 `md5(jsLib)` 缓存，远程 jsLib 更是把整段规则按 `md5(url)` 存在 ACache 里且永不过期；`importBookSources` 会调 `SharedJsScope.remove(existing.jsLib)` 清掉，否则改了 asset 也会继续跑旧规则。
 
-`DefaultData.retiredBookSourceUrls` 列出已停止分发的书源（6 个 `https://agg.example.com/*` 聚合源与「消消乐听书」`https://www.kaixin7days.com`）：升级时按 url 从库里删掉，导入时按同一份清单过滤。聚合源挂在 `example.com` 这个占位域名下，没有真实内容，书架上的书不可能靠它读到正文。
+`DefaultData.retiredBookSourceUrls` 列出已停止分发的书源：每次导入都先按 url 从库里删掉，再按同一份清单过滤传入的列表。删除管的是库里已有的行，过滤管的是远端清单自带的旧条目——远端版本由发布节奏决定，随时可能比本地旧，不过滤就会写回库里。两件事都放在 `importBookSources()` 里，asset 与远端两条路径共用它，所以对两条路径都生效；只在升级路径里删的话，`bookSourceVersion` 已推进的设备远端刷新只能加新源、删不掉下线源。
 
-删除只在升级时做一次，导入侧必须同时过滤：远端清单的版本由发布节奏决定，随时可能比本地旧，拉下来一写就把刚删掉的条目写回库里。`BuiltInBookSourceUpgradeTest` 的 `upgradeDeletesRetiredAggregateSources` 与 `importIgnoresRetiredAggregateSources` 守这两条。
+聚合源挂在 `example.com` 这个占位域名下，没有真实内容，书架上的书不可能靠它读到正文。`BuiltInBookSourceUpgradeTest` 的 `upgradeDeletesRetiredAggregateSources`、`importIgnoresRetiredAggregateSources` 与 `importRemovesRetiredSourcesAlreadyInDb` 守这几条。
 
 构建：
 

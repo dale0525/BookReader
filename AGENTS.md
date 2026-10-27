@@ -42,7 +42,7 @@
 
 `app/src/main/assets/defaultData/bookSources.json` 是随包发布的内置书源：28 个单站源，一个源就是一个站点，发现页不跨源聚合。每源的 `jsLib` 只带自己那一条 `SITES` 记录，规则里取站点配置用 `SITES[0]`。
 
-- 6 档都是一个 host 一条记录，不靠 `bookSourceUrl` 的路径后缀拆分支。孪生写法（同名常规源加 `/adult` 后缀）会让卡片翻倍而内容完全重复，这类 url 列在 `retiredBookSourceUrls`，升级时按它删除、导入时按它过滤。
+- 6 档都是一个 host 一条记录，不靠 `bookSourceUrl` 的路径后缀拆分支。孪生写法（同名常规源加 `/adult` 后缀）会让卡片翻倍而内容完全重复，这类 url 列在 `retiredBookSourceUrls`，每次导入都按它删除并过滤。
 - 发现页只有 6 个分组：`小说` / `漫画` / `视频` / 各自 ` · 18+`，定义在 `constant/ExploreGroups.kt`。界面上的分组**不读** `bookSourceGroup` 字面值，而是经 `ExploreGroups.canonical()` 归一：分组名含「小说/漫画/视频」按它定档，没写或写了别的词（「短剧」「玄幻」）退回 `bookSourceType`（0 文本 / 2 图片 / 4 视频），含 `18+` 归成人档。新增源即使分组名写错也不会多出第 7 个分组标题。
 - 内置源的分组名仍必须原样是那 6 个字符串（含中间空格），`BuiltInExploreKindsTest.everySourceUsesOneOfTheSixGroups` 拦写错的。运行时的归一只是兜底用户自建源，不能用来掩盖内置源的笔误——静默纠正会让人以为改了分组名生效了，实际界面纹丝不动。
 - `bookSourceComment` 是发现页卡片的副标题，也是唯一能承载「这个站有多少分类/榜单」的字段。它不在 `bookSource_part` 里，读它必须查 `book_sources`（`BookSourceDao.flowExploreSummaries()`），不要为了显示副标题去拉整行——每行带 200KB+ 的 `jsLib`。同一个投影还要带上 `bookSourceType`，它是归组的依据。
@@ -52,8 +52,8 @@
 - 规则同时发布在仓库同一路径的 `main` 分支上，`RemoteBookSources.refresh()` 在启动时（12 小时最多一次）静默比对并调用同一个 `DefaultData.importBookSources()`。改规则要 asset 与远端一起改，否则装机用户拿到的和随包的不一致。远端返回空数组、非 2xx 或 HTML 错误页一律不落库——那条路径用户无法预检，出错会直接清空所有人的书源表，`RemoteBookSourcesTest` 守这条。
 - 在真机上验证远端这条路径，要先把三道闸门一起拆掉，否则「没复活」只是没发请求：`bookSourceRemoteCheckTime`（12 小时门）、`bookSourceRemoteEtag`（带上去就是 304）、以及「body hash 与上次相同或与随包 asset 相同就直接返回」——远端内容与 asset 一致时永远不写库，用同一份内容验不出任何东西。清完闸门后 `local.xml` 里落下的 `bookSourceRemoteHash` 就是这次真的落了库的证据。
 - 书源导入**不能**挂在 `LocalConfig.versionCode < AppConst.appInfo.versionCode` 门禁内：本地构建的 versionCode 恒为 32640（无 `COMMIT_NUMBER` 时的兜底值），覆盖安装时两边相等，整段被跳过，只有删除重装才会执行。这是发现页长期报错的真正成因。
-- 升级语义：规则字段用 asset 覆盖，`enabled` / `bookSourceGroup` / `customOrder` / `enabledExplore` 保留用户设置。改了规则或加了源，把 `LocalConfig.needUpBookSources` 的版本号 +1，否则老用户拿不到更新。
-- 已下线的源列在 `DefaultData.retiredBookSourceUrls`：升级时按 url 删掉，导入时还要按同一份清单过滤。删除只做一次，而远端清单的版本由发布节奏决定、随时可能比本地旧，不过滤就会被重新写回库里。`BuiltInBookSourceUpgradeTest` 的两个用例分别守删除与过滤。
+- 升级语义：规则字段用 asset 覆盖，`enabled` / `bookSourceGroup` / `customOrder` / `enabledExplore` 保留用户设置。改了规则或加了源，把 `LocalConfig.needUpBookSources` 的版本号 +1，否则老用户拿不到更新。注意 `bookSourceGroup` 也在这份保留名单里：**改内置源的分组名只对全新安装生效**，老用户库里留的还是旧值（实测 0.2.0 设备上 `黄果短剧` 停在 `视频`，asset 已是 `视频 · 18+`）。要推动这类变更得另写迁移判断，光改 asset 不行。
+- 已下线的源列在 `DefaultData.retiredBookSourceUrls`：`importBookSources()` 每次进来先按 url 删一遍，再按同一份清单过滤传入列表。两件事都得做——删除只管库里已有的行，过滤管远端清单自带的旧条目（远端版本由发布节奏决定、随时可能比本地旧，不过滤就会写回库里）。删除放在 `importBookSources()` 而不是只放在升级路径，是因为远端刷新走的也是它：只在升级时删，`bookSourceVersion` 已推进的设备就永远删不掉下线源。`BuiltInBookSourceUpgradeTest` 的四个用例守这几条。
 - 验证必须模拟**覆盖安装**（`versionCode` 已等于当前版本），不能只测全新安装。`BuiltInBookSourceUpgradeTest` 守这条。
 - 恢复备份也要按同一套语义覆盖一遍：`Restore.restoreBookSources()` 写完备份里的 `bookSource.json` 后调 `importDefaultBookSources()`。备份里的内置源属于**备份时**的版本，而 `bookSourceVersion` 存在 `SharedPreferences("local")` 里、不在备份的 `config.xml`（只导 `AppConfigStore`）中，升级门禁早已推进过——只写回不覆盖的话，旧规则会永久留在库里，发现页一直停在备份那版，且再没有任何路径会纠正它。`RestoreBuiltInBookSourceTest` 守这条。
 - `exploreUrl` 里的 JS 必须返回 **JSON 字符串**，不能返回 JS 数组对象——`BookSourceExtensions.exploreKinds()` 拿到结果后直接 `.toString()` 再当 JSON 解析，返回数组对象会得到 `org.mozilla.javascript.NativeArray@…`，发现页把它当分类名显示，点进去必然报错。`BuiltInExploreKindsTest` 守这条契约。
