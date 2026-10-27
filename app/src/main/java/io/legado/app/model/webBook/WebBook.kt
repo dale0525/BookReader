@@ -18,6 +18,7 @@ import io.legado.app.model.analyzeRule.AnalyzeRule.Companion.setCoroutineContext
 import io.legado.app.model.analyzeRule.AnalyzeUrl
 import io.legado.app.model.analyzeRule.RuleData
 import io.legado.app.model.analyzeRule.RuleDataInterface
+import io.legado.app.utils.ChineseUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -481,7 +482,9 @@ object WebBook {
             coroutineContext.ensureActive()
             searchBookAwait(
                 bookSource, name,
-                filter = { fName, fAuthor, _ -> fName == name && fAuthor == author },
+                filter = { fName, fAuthor, _ ->
+                    matchesPreciseSearchTarget(fName, fAuthor, name, author)
+                },
                 shouldBreak = { it > 0 }
             ).firstOrNull()?.let { searchBook ->
                 coroutineContext.ensureActive()
@@ -491,6 +494,23 @@ object WebBook {
         }.onFailure {
             coroutineContext.ensureActive()
         }
+    }
+
+    /**
+     * 精准搜索的入选判据：书源返回的书名、作者可能写的是繁体（台湾小说网把「谁让他修仙的！」
+     * 返回成「誰讓他修仙的！」），书架里的检索词是简体，直接比对字符串会把这本书判成不存在，
+     * 表现为「搜得到但导不进来」。
+     *
+     * 用简繁归一后再比。
+     */
+    internal fun matchesPreciseSearchTarget(
+        resultName: String,
+        resultAuthor: String,
+        name: String,
+        author: String,
+    ): Boolean {
+        if (!ChineseUtils.sameText(resultName, name)) return false
+        return ChineseUtils.sameText(resultAuthor, author)
     }
 
     /**

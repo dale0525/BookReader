@@ -5,7 +5,6 @@ import android.net.Uri
 import io.legado.app.data.entities.Book
 import io.legado.app.data.repository.BookRepository
 import io.legado.app.data.repository.BookSourceRepository
-import io.legado.app.domain.gateway.DownloadCacheSettingsGateway
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.http.decompressed
 import io.legado.app.help.http.newCallResponseBody
@@ -19,6 +18,9 @@ import io.legado.app.utils.isJsonArray
 import io.legado.app.utils.readText
 import io.legado.app.utils.toastOnUi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -28,7 +30,6 @@ class ImportBookshelfUseCase(
     private val context: Context,
     private val bookRepository: BookRepository,
     private val bookSourceRepository: BookSourceRepository,
-    private val downloadCacheSettingsGateway: DownloadCacheSettingsGateway,
 ) {
     suspend fun import(
         str: String,
@@ -69,42 +70,59 @@ class ImportBookshelfUseCase(
         onProgress: suspend (String) -> Unit
     ) {
         onProgress("导入中...")
+        // 书单只有书名和作者，判断不了类型。文字源排在前面先搜，命中就不必再碰
+        // 漫画源与视频源（它们对文字书命中率为 0，却要花 2~3 秒）；仍未命中时
+        // 继续搜剩下的源，覆盖率与全部源一致。
+        val textSourceUrls = bookSourceRepository.getAllTextEnabledPart()
+            .mapTo(HashSet()) { it.bookSourceUrl }
         val bookSourceParts = bookSourceRepository.getAllEnabledPart()
-        val semaphore = Semaphore(downloadCacheSettingsGateway.currentSettings.threadCount)
+            .sortedBy { it.bookSourceUrl !in textSourceUrls }
+        val semaphore = Semaphore(IMPORT_CONCURRENCY)
         val books = GSON.fromJsonArray<Map<String, String?>>(json).getOrThrow()
 
         withContext(Dispatchers.IO) {
-            books.forEach { bookInfo ->
-                val name = bookInfo["name"] ?: ""
-                val author = bookInfo["author"] ?: ""
-                if (name.isEmpty() || bookRepository.getBook(name, author) != null) {
-                    return@forEach
-                }
-                semaphore.withPermit {
-                    var foundBook: Book? = null
-                    for (s in bookSourceParts) {
-                        ensureActive()
-                        val source = s.getBookSource() ?: continue
-                        foundBook = WebBook.preciseSearchAwait(source, name, author).getOrNull()
-                        if (foundBook != null) break
+            // 每本书各自走完自己的源序列；书与书之间并发，受 semaphore 限制。
+            coroutineScope {
+                books.map { bookInfo ->
+                    async {
+                        val name = bookInfo["name"] ?: ""
+                        val author = bookInfo["author"] ?: ""
+                        if (name.isEmpty() || bookRepository.getBook(name, author) != null) {
+                            return@async
+                        }
+                        semaphore.withPermit {
+                            var foundBook: Book? = null
+                            for (s in bookSourceParts) {
+                                ensureActive()
+                                val source = s.getBookSource() ?: continue
+                                foundBook =
+                                    WebBook.preciseSearchAwait(source, name, author).getOrNull()
+                                if (foundBook != null) break
+                            }
+                            if (foundBook != null) {
+                                val book = foundBook
+                                if (groupId > 0) {
+                                    book.group = groupId
+                                }
+                                if (bookRepository.getBook(book.bookUrl) != null) {
+                                    bookRepository.update(book)
+                                } else {
+                                    bookRepository.insert(book)
+                                }
+                            } else {
+                                withContext(Dispatchers.Main) {
+                                    context.toastOnUi("没有搜索到<$name>$author")
+                                }
+                            }
+                        }
                     }
-                    if (foundBook != null) {
-                        val book = foundBook
-                        if (groupId > 0) {
-                            book.group = groupId
-                        }
-                        if (bookRepository.getBook(book.bookUrl) != null) {
-                            bookRepository.update(book)
-                        } else {
-                            bookRepository.insert(book)
-                        }
-                    } else {
-                        withContext(Dispatchers.Main) {
-                            context.toastOnUi("没有搜索到<$name>$author")
-                        }
-                    }
-                }
+                }.awaitAll()
             }
         }
+    }
+
+    private companion object {
+        /** 同时处理的书籍数。每本书内部仍按源顺序串行搜索。 */
+        const val IMPORT_CONCURRENCY = 10
     }
 }
