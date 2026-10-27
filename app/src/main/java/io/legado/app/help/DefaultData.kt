@@ -161,7 +161,7 @@ object DefaultData {
 
     /**
      * 历史上内置过、现已停止分发的书源。只从 asset 里删掉只影响全新安装，
-     * 覆盖安装的用户书源表里还留着这些条目，所以升级时按 url 清掉。
+     * 覆盖安装的用户书源表里还留着这些条目，所以每次导入都按 url 清掉。
      */
     private val retiredBookSourceUrls = listOf(
         "https://www.kaixin7days.com", // 消消乐听书
@@ -187,7 +187,6 @@ object DefaultData {
      * 只按 has() 判重会在升级时留下旧规则，正是发现页报错的成因。
      */
     suspend fun importDefaultBookSources() {
-        retiredBookSourceUrls.forEach { url -> appDb.bookSourceDao.delete(url) }
         importBookSources(bookSources)
     }
 
@@ -196,8 +195,12 @@ object DefaultData {
      * asset 版和远端版都走这里，两边语义必须一致，否则远端更新会悄悄改掉用户的设置。
      */
     suspend fun importBookSources(sources: List<BookSource>) {
+        // 删除必须放在这里而不是只放在升级路径里：远端刷新走的也是这个函数，
+        // 只在 importDefaultBookSources 里删的话，bookSourceVersion 已推进的设备
+        // 远端更新只能加新源、删不掉下线源，365小说网这类条目会永久留在表里。
+        retiredBookSourceUrls.forEach { url -> appDb.bookSourceDao.delete(url) }
         // 远端清单可能是旧版（`main` 上还留着拆源前的聚合源），一写就把刚删掉的
-        // 条目复活。删除只在升级时做一次，导入侧必须按 url 滤掉，否则删不干净。
+        // 条目复活，所以导入侧还要按 url 滤掉。
         sources.filterNot { it.bookSourceUrl in retiredBookSourceUrls }.forEach { incoming ->
             val existing = appDb.bookSourceDao.getBookSource(incoming.bookSourceUrl)
             if (existing == null) {

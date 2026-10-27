@@ -225,6 +225,45 @@ class BuiltInBookSourceUpgradeTest {
         )
     }
 
+    /**
+     * 远端刷新必须和 asset 导入一样能删掉已下线的源。
+     *
+     * 真实成因：删除原本只写在 `importDefaultBookSources()` 里，远端走的是
+     * `importBookSources()`，只对传入清单做 filterNot、不碰库里已有的行。
+     * 于是 `bookSourceVersion` 门禁已推进的设备，远端更新只能加新源、删不掉旧源：
+     * 365小说网、玩文学小说网、两个 `/adult` 孪生源会永久留在书源表里。
+     */
+    @Test
+    fun importRemovesRetiredSourcesAlreadyInDb() = runBlocking {
+        val retiredUrl = "http://www.shukuge.com"
+        appDb.bookSourceDao.insert(
+            BookSource(
+                bookSourceUrl = retiredUrl,
+                bookSourceName = "365小说网",
+                bookSourceType = 0,
+            )
+        )
+
+        DefaultData.importBookSources(
+            listOf(
+                BookSource(
+                    bookSourceUrl = "https://www.twkan.cc",
+                    bookSourceName = "台湾小说网",
+                    bookSourceType = 0,
+                ),
+            )
+        )
+
+        assertNull(
+            "已下线的源没被远端刷新删掉，书源列表里会一直留着它",
+            appDb.bookSourceDao.getBookSource(retiredUrl),
+        )
+        assertNotNull(
+            "正常源也被一起删掉了",
+            appDb.bookSourceDao.getBookSource("https://www.twkan.cc"),
+        )
+    }
+
     /** upVersion 走协程，Robolectric 的主 looper 不会自己转，要轮询直到条件成立。 */
     private fun awaitSource(url: String, until: (BookSource) -> Boolean): BookSource? {
         val deadline = System.currentTimeMillis() + 10_000
