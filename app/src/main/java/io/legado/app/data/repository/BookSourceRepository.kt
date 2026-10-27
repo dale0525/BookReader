@@ -18,6 +18,11 @@ class BookSourceRepository(private val bookSourceDao: BookSourceDao) {
         return bookSourceDao.flowEnabled()
     }
 
+    /** 分组名带 18+ 的书源 url，供「隐藏成人内容」反查书籍来源 */
+    fun flowAdultSourceUrls(): Flow<List<String>> {
+        return bookSourceDao.flowAdultSourceUrls()
+    }
+
     fun flowGroups(): Flow<List<String>> {
         return bookSourceDao.flowGroups()
     }

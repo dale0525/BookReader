@@ -106,6 +106,19 @@ fun PrivateConfigScreen(
             }
 
             item {
+                SplicedColumnGroup(title = stringResource(R.string.private_content_display_title)) {
+                    SwitchSettingItem(
+                        title = stringResource(R.string.private_hide_adult_content),
+                        description = stringResource(R.string.private_hide_adult_content_summary),
+                        checked = state.settings.hideAdultContent,
+                        onCheckedChange = {
+                            onIntent(PrivateConfigIntent.SetHideAdultContent(it))
+                        }
+                    )
+                }
+            }
+
+            item {
                 SplicedColumnGroup(title = stringResource(R.string.private_verify_timing_title)) {
                     SwitchSettingItem(
                         title = stringResource(R.string.private_verify_on_enter_group),

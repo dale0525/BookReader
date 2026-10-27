@@ -9,8 +9,10 @@ import io.legado.app.constant.ExploreGroups
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.ExploreSourceSummary
 import io.legado.app.data.entities.rule.ExploreKind
+import io.legado.app.data.repository.AdultContentFilter
 import io.legado.app.data.repository.ExploreRepository
 import io.legado.app.data.repository.SettingsRepository
+import io.legado.app.domain.gateway.PrivateAccessGateway
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
@@ -20,6 +22,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -71,6 +75,7 @@ sealed interface ExploreMainIntent {
 class ExploreMainViewModel(
     private val repository: ExploreRepository,
     private val settingsRepository: SettingsRepository,
+    private val privateAccessGateway: PrivateAccessGateway,
 ) : ViewModel(), ViewModelStoreOwner {
     override val viewModelStore = ViewModelStore()
 
@@ -91,13 +96,17 @@ class ExploreMainViewModel(
             combine(
                 repository.getExploreSourceSummaries(),
                 settingsRepository.getString(PreferKey.exploreMainKind),
-            ) { sources, savedKinds ->
-                sources to savedKinds
-            }.collect { (sources, savedKinds) ->
-                rawSources = sources
+                privateAccessGateway.settings.map { it.hideAdultContent }.distinctUntilChanged(),
+            ) { sources, savedKinds, hideAdult ->
+                Triple(sources, savedKinds, hideAdult)
+            }.collect { (sources, savedKinds, hideAdult) ->
+                // 过滤放在 rawSources 之前：分组标题由实际存在的源推导，源被滤光后
+                // 「漫画 · 18+」这类标题自然不会再出现，不用另外维护一份标题黑名单。
+                val visibleSources = AdultContentFilter.filterSources(sources, hideAdult)
+                rawSources = visibleSources
                 // 写偏好是异步的，回读可能仍是不含刚选分类的旧快照，本地记录优先。
                 kindSelections = parseExploreKindSelections(savedKinds) + kindSelections
-                if (openedOverride != null && sources.none { it.bookSourceUrl == openedOverride }) {
+                if (openedOverride != null && visibleSources.none { it.bookSourceUrl == openedOverride }) {
                     openedOverride = null
                 }
                 publish()

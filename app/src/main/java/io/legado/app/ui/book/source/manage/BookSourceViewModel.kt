@@ -20,11 +20,13 @@ import io.legado.app.domain.gateway.BookSourceCheckStatus
 import io.legado.app.domain.gateway.CheckSourceSettings
 import io.legado.app.domain.gateway.CheckSourceSettingsGateway
 import io.legado.app.domain.gateway.OtherSettingsGateway
+import io.legado.app.domain.gateway.PrivateAccessGateway
 import io.legado.app.help.book.ContentProcessor
 import io.legado.app.help.http.decompressed
 import io.legado.app.help.http.newCallResponseBody
 import io.legado.app.help.http.okHttpClient
 import io.legado.app.help.http.text
+import io.legado.app.help.source.AdultContentPolicy
 import io.legado.app.help.source.SourceHelp
 import io.legado.app.ui.widget.components.importComponents.BaseImportUiState
 import io.legado.app.ui.widget.components.importComponents.ImportItemWrapper
@@ -47,7 +49,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -60,6 +64,7 @@ class BookSourceViewModel(
     private val otherSettingsGateway: OtherSettingsGateway,
     private val checkGateway: BookSourceCheckGateway,
     private val checkSettingsGateway: CheckSourceSettingsGateway,
+    private val privateAccessGateway: PrivateAccessGateway,
 ) : ViewModel() {
     companion object {
         const val FILTER_ENABLED = "@enabled"
@@ -123,13 +128,23 @@ class BookSourceViewModel(
         SourceSort(activeSort, ascending, byDomain)
     }
 
+    private val hideAdultContent = privateAccessGateway.settings
+        .map { it.hideAdultContent }
+        .distinctUntilChanged()
+
     private val importedOrFilteredItems = combine(
         repository.flowAll(),
         localItems,
         sourceFilter,
-    ) { sourceItems, local, activeFilter ->
+        hideAdultContent,
+    ) { sourceItems, local, activeFilter, hideAdult ->
         if (local == null) {
-            sourceItems.filterFor(activeFilter.name, activeFilter.query)
+            val visible = if (hideAdult) {
+                sourceItems.filterNot { AdultContentPolicy.containsMarker(it.bookSourceGroup) }
+            } else {
+                sourceItems
+            }
+            visible.filterFor(activeFilter.name, activeFilter.query)
         } else {
             val latestById = sourceItems.associateBy { it.bookSourceUrl }
             local.mapNotNull { latestById[it.bookSourceUrl] }

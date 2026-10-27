@@ -31,4 +31,11 @@ data class PrivateAccessSettings(
      * 0 表示"离开即失效"，>0 表示这段时间内回来不重验。
      */
     val backgroundGraceSeconds: Int = 0,
+    /**
+     * 隐藏成人内容，默认开启。开启后最近阅读、书架、发现、书源管理都不显示成人书源与书籍。
+     *
+     * 与 [enabled] 无关：私密功能是"要验证才能看"，这个是"根本不显示"，关掉私密总开关
+     * 不该让成人内容重新露出来。
+     */
+    val hideAdultContent: Boolean = true,
 )

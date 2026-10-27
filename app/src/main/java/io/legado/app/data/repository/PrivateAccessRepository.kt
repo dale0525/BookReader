@@ -70,6 +70,10 @@ class PrivateAccessRepository(
         .getInt(LocalPreferencesKeys.PRIVATE_BACKGROUND_GRACE_SECONDS.name, 0)
         .distinctUntilChanged()
 
+    private val hideAdultContentFlow = settingsRepository
+        .getBoolean(LocalPreferencesKeys.PRIVATE_HIDE_ADULT_CONTENT.name, true)
+        .distinctUntilChanged()
+
     private val verifyOnEnterGroupFlow = settingsRepository
         .getBoolean(LocalPreferencesKeys.PRIVATE_VERIFY_ON_ENTER_GROUP.name, true)
         .distinctUntilChanged()
@@ -109,6 +113,8 @@ class PrivateAccessRepository(
         )
     }.combine(backgroundGraceFlow) { settings, graceSeconds ->
         settings.copy(backgroundGraceSeconds = graceSeconds)
+    }.combine(hideAdultContentFlow) { settings, hideAdult ->
+        settings.copy(hideAdultContent = hideAdult)
     }.distinctUntilChanged().flowOn(Dispatchers.Default)
 
     override suspend fun updateSettings(transform: (PrivateAccessSettings) -> PrivateAccessSettings) {
@@ -123,7 +129,8 @@ class PrivateAccessRepository(
                 LocalPreferencesKeys.PRIVATE_UNLOCK_SCOPE.name to next.unlockScope.name,
                 LocalPreferencesKeys.PRIVATE_ENABLED.name to next.enabled,
                 LocalPreferencesKeys.PRIVATE_BACKGROUND_GRACE_SECONDS.name to
-                        next.backgroundGraceSeconds
+                        next.backgroundGraceSeconds,
+                LocalPreferencesKeys.PRIVATE_HIDE_ADULT_CONTENT.name to next.hideAdultContent
             )
         )
     }
@@ -314,7 +321,10 @@ class PrivateAccessRepository(
             ?: PrivateUnlockScope.AppSession,
         enabled = AppConfigStore.getBoolean(LocalPreferencesKeys.PRIVATE_ENABLED.name) ?: false,
         backgroundGraceSeconds =
-            AppConfigStore.getInt(LocalPreferencesKeys.PRIVATE_BACKGROUND_GRACE_SECONDS.name) ?: 0
+            AppConfigStore.getInt(LocalPreferencesKeys.PRIVATE_BACKGROUND_GRACE_SECONDS.name) ?: 0,
+        hideAdultContent = AppConfigStore.getBoolean(
+            LocalPreferencesKeys.PRIVATE_HIDE_ADULT_CONTENT.name
+        ) ?: true
     )
 
 }

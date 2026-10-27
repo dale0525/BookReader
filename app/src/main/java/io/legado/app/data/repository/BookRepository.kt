@@ -87,16 +87,16 @@ class BookRepository(
         return bookDao.flowBookShelfByGroup(groupId)
     }
 
-    fun flowSystemGroupCounts(): Flow<List<GroupBookCount>> {
-        return bookDao.flowSystemGroupCounts()
+    fun flowSystemGroupCounts(hideAdult: Boolean = false): Flow<List<GroupBookCount>> {
+        return bookDao.flowSystemGroupCounts(hideAdult)
     }
 
-    fun flowAllBookShelfCount(): Flow<Int> {
-        return bookDao.flowAllBookShelfCount()
+    fun flowAllBookShelfCount(hideAdult: Boolean = false): Flow<Int> {
+        return bookDao.flowAllBookShelfCount(hideAdult)
     }
 
-    fun flowUserGroupBookCount(groupId: Long): Flow<Int> {
-        return bookDao.flowUserGroupBookCount(groupId)
+    fun flowUserGroupBookCount(groupId: Long, hideAdult: Boolean = false): Flow<Int> {
+        return bookDao.flowUserGroupBookCount(groupId, hideAdult)
     }
 
     fun flowGroupPreview(groupId: Long): Flow<List<BookShelfItem>> {

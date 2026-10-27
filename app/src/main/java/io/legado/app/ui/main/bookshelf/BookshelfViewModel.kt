@@ -219,6 +219,34 @@ class BookshelfViewModel(
             privateGroupMask = groupMask
         )
 
+    /**
+     * 「隐藏成人内容」的判定依据：成人书源的 url 集合。
+     *
+     * 与私密判定同一套做法——在内存侧按 `BookShelfItem.origin` 反查，不改 `BookDao` 里
+     * 三十多个投影。列表、分组预览、分组数量三处都走这里，否则会出现「显示 5 本、只列 3 本」。
+     */
+    private data class AdultFilter(val hide: Boolean, val adultOrigins: Set<String>) {
+        fun isAdult(item: BookShelfItem): Boolean =
+            hide && item.origin in adultOrigins
+
+        /** 数量与列表必须同步收缩，界面上的「N 本」才和实际条目对得上 */
+        fun filter(books: List<BookShelfItem>): List<BookShelfItem> =
+            if (!hide) books else books.filterNot(::isAdult)
+    }
+
+    private val adultFilterFlow: StateFlow<AdultFilter> = combine(
+        privateAccessSettingsFlow,
+        bookSourceRepository.flowAdultSourceUrls()
+    ) { settings, adultOrigins ->
+        AdultFilter(settings.hideAdultContent, adultOrigins.toSet())
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        // 初始快照先不放行任何过滤：成人源集合还没读出来，此时过滤等于空操作，
+        // 而 hide 的初值取默认 true，等真正的设置与源列表到达后立刻生效。
+        AdultFilter(hide = true, adultOrigins = emptySet())
+    )
+
     private val privateMarkersFlow: StateFlow<PrivateMarkers> = combine(
         allGroupsFlow,
         privateContentGateway.flowPrivateBookUrls()
@@ -245,14 +273,19 @@ class BookshelfViewModel(
      * 关闭时始终为空集。「全部」分组永不隐藏，避免书架清空后无标签页可显示。
      */
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val hiddenGroupIdsFlow: SharedFlow<Set<Long>> = hideEmptyGroupsFlow
-        .flatMapLatest { hide ->
+    private val hiddenGroupIdsFlow: SharedFlow<Set<Long>> = combine(
+        hideEmptyGroupsFlow,
+        adultFilterFlow
+    ) { hide, adult ->
+        hide to adult
+    }
+        .flatMapLatest { (hide, adult) ->
             if (!hide) {
                 flowOf(emptySet())
             } else {
                 combine(
                     groupsFlow,
-                    bookRepository.flowSystemGroupCounts()
+                    bookRepository.flowSystemGroupCounts(adult.hide)
                 ) { groups, systemCounts ->
                     groups to systemCounts.associate { it.groupId to it.count }
                 }.flatMapLatest { (groups, systemCountsMap) ->
@@ -262,7 +295,7 @@ class BookshelfViewModel(
                     } else {
                         combine(
                             userGroups.map { group ->
-                                bookRepository.flowUserGroupBookCount(group.groupId)
+                                bookRepository.flowUserGroupBookCount(group.groupId, adult.hide)
                                     .map { group.groupId to it }
                             }
                         ) { pairs ->
@@ -294,14 +327,6 @@ class BookshelfViewModel(
         val previews: ImmutableMap<Long, ImmutableList<BookUiItem>>,
         val counts: ImmutableMap<Long, Int>,
         val allBookCount: Int
-    )
-
-    private data class DataForPreviews(
-        val groups: List<BookGroup>,
-        val bookGroupStyle: Int,
-        val systemCountsMap: Map<Long, Int>,
-        val allBookCount: Int,
-        val markers: PrivateMarkers
     )
 
     val groupSelectorState: StateFlow<BookshelfGroupSelectorState> = combine(
@@ -341,12 +366,13 @@ class BookshelfViewModel(
                 bookRepository.flowBookShelfByGroup(groupId),
                 groupsFlow,
                 sortConfigFlow,
-                privateMarkersFlow
-            ) { list, groups, sortConfig, markers ->
+                privateMarkersFlow,
+                adultFilterFlow
+            ) { list, groups, sortConfig, markers, adult ->
                 SelectedGroupBooksState(
                     groupId = groupId,
                     books = bookshelfRepository.sortBooks(
-                        list,
+                        adult.filter(list),
                         groups.find { it.groupId == groupId },
                         sortConfig.sort,
                         sortConfig.sortOrder
@@ -364,16 +390,17 @@ class BookshelfViewModel(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val allGroupBooksImmutableFlow: Flow<ImmutableMap<Long, ImmutableList<BookUiItem>>> =
-        combine(groupsFlow, sortConfigFlow, privateMarkersFlow) { groups, sortConfig, markers ->
-            Triple(groups, sortConfig, markers)
-        }.flatMapLatest { (groups, sortConfig, markers) ->
+        combine(groupsFlow, sortConfigFlow, privateMarkersFlow, adultFilterFlow) {
+                groups, sortConfig, markers, adult ->
+            AdultGroupBooksInput(groups, sortConfig, markers, adult)
+        }.flatMapLatest { (groups, sortConfig, markers, adult) ->
             if (groups.isEmpty()) {
                 flowOf(persistentMapOf())
             } else {
                 val flows = groups.map { group ->
                     bookRepository.flowBookShelfByGroup(group.groupId).map { books ->
                         group.groupId to bookshelfRepository.sortBooks(
-                            books,
+                            adult.filter(books),
                             group,
                             sortConfig.sort,
                             sortConfig.sortOrder
@@ -388,6 +415,13 @@ class BookshelfViewModel(
             }
         }.distinctUntilChanged()
             .flowOn(Dispatchers.Default)
+
+    private data class AdultGroupBooksInput(
+        val groups: List<BookGroup>,
+        val sortConfig: BookshelfSortConfig,
+        val markers: PrivateMarkers,
+        val adult: AdultFilter
+    )
 
     private val selectedBooksStateFlow: Flow<SelectedBooksState> = combine(
         selectedGroupBooksFlow,
@@ -442,55 +476,77 @@ class BookshelfViewModel(
     private val groupPreviewsFlow = combine(
         groupsFlow,
         bookGroupStyleFlow,
-        bookRepository.flowSystemGroupCounts(),
-        bookRepository.flowAllBookShelfCount(),
-        privateMarkersFlow
-    ) { groups, bookGroupStyle, systemCounts, totalCount, markers ->
-        DataForPreviews(
-            groups,
-            bookGroupStyle,
-            systemCounts.associate { it.groupId to it.count },
-            totalCount,
-            markers
-        )
-    }.flatMapLatest { data ->
-        val groups = data.groups
-        val bookGroupStyle = data.bookGroupStyle
-        val systemCountsMap = data.systemCountsMap
-        val allBookCount = data.allBookCount
-        val markers = data.markers
-
-        if (bookGroupStyle !in 2..3) {
-            flowOf(GroupPreviewState(persistentMapOf(), persistentMapOf(), allBookCount))
-        } else if (groups.isEmpty()) {
-            flowOf(GroupPreviewState(persistentMapOf(), persistentMapOf(), allBookCount))
-        } else {
-            val groupFlows = groups.map { group ->
-                val countFlow: Flow<Int> = if (group.groupId > 0) {
-                    bookRepository.flowUserGroupBookCount(group.groupId)
-                } else {
-                    flowOf(systemCountsMap[group.groupId] ?: 0)
-                }
-                val previewFlow = bookRepository.flowGroupPreview(group.groupId)
-                combine(countFlow, previewFlow) { count, preview ->
-                    Triple(
-                        group.groupId,
-                        count,
-                        preview.map { it.toUiItem(markers.isPrivate(it)) }
-                    )
-                }
-            }
-            combine(groupFlows) { results ->
-                var previews = persistentMapOf<Long, ImmutableList<BookUiItem>>()
-                var counts = persistentMapOf<Long, Int>()
-                results.forEach { (groupId, count, preview) ->
-                    counts = counts.putting(groupId, count)
-                    previews = previews.putting(groupId, preview.toImmutableList())
-                }
-                GroupPreviewState(previews, counts, allBookCount)
-            }
+        privateMarkersFlow,
+        adultFilterFlow
+    ) { groups, bookGroupStyle, markers, adult ->
+        PreviewInputs(groups, bookGroupStyle, markers, adult)
+    }.flatMapLatest { inputs ->
+        // 数量必须用同一个开关去查：列表在内存侧过滤，数量若照旧统计全部书籍，
+        // 界面就会出现「显示 5 本、只列 3 本」，等于告诉别人有内容被藏起来了。
+        combine(
+            bookRepository.flowSystemGroupCounts(inputs.adult.hide),
+            bookRepository.flowAllBookShelfCount(inputs.adult.hide)
+        ) { systemCounts, totalCount ->
+            systemCounts.associate { it.groupId to it.count } to totalCount
+        }.flatMapLatest { (systemCountsMap, allBookCount) ->
+            buildGroupPreviews(
+                groups = inputs.groups,
+                bookGroupStyle = inputs.bookGroupStyle,
+                systemCountsMap = systemCountsMap,
+                allBookCount = allBookCount,
+                markers = inputs.markers,
+                adult = inputs.adult
+            )
         }
     }.distinctUntilChanged().flowOn(Dispatchers.Default)
+
+    private data class PreviewInputs(
+        val groups: List<BookGroup>,
+        val bookGroupStyle: Int,
+        val markers: PrivateMarkers,
+        val adult: AdultFilter
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun buildGroupPreviews(
+        groups: List<BookGroup>,
+        bookGroupStyle: Int,
+        systemCountsMap: Map<Long, Int>,
+        allBookCount: Int,
+        markers: PrivateMarkers,
+        adult: AdultFilter
+    ): Flow<GroupPreviewState> {
+        if (bookGroupStyle !in 2..3) {
+            return flowOf(GroupPreviewState(persistentMapOf(), persistentMapOf(), allBookCount))
+        }
+        if (groups.isEmpty()) {
+            return flowOf(GroupPreviewState(persistentMapOf(), persistentMapOf(), allBookCount))
+        }
+        val groupFlows = groups.map { group ->
+            val countFlow: Flow<Int> = if (group.groupId > 0) {
+                bookRepository.flowUserGroupBookCount(group.groupId, adult.hide)
+            } else {
+                flowOf(systemCountsMap[group.groupId] ?: 0)
+            }
+            val previewFlow = bookRepository.flowGroupPreview(group.groupId)
+            combine(countFlow, previewFlow) { count, preview ->
+                Triple(
+                    group.groupId,
+                    count,
+                    adult.filter(preview).map { it.toUiItem(markers.isPrivate(it)) }
+                )
+            }
+        }
+        return combine(groupFlows) { results ->
+            var previews = persistentMapOf<Long, ImmutableList<BookUiItem>>()
+            var counts = persistentMapOf<Long, Int>()
+            results.forEach { (groupId, count, preview) ->
+                counts = counts.putting(groupId, count)
+                previews = previews.putting(groupId, preview.toImmutableList())
+            }
+            GroupPreviewState(previews, counts, allBookCount)
+        }
+    }
 
     private val internalStateFlow = combine(
         groupIdFlow,

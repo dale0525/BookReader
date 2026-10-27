@@ -33,6 +33,17 @@ private const val PUBLIC_GROUP_MASK =
 private const val PUBLIC_BOOK_FILTER =
     "(`group` = 0 OR (`group` & $PRIVATE_GROUP_MASK) = 0)"
 
+/**
+ * 「隐藏成人内容」的数量口径，`:hideAdult` 为真时排掉成人源的书。
+ *
+ * 数量必须和列表同口径：列表在内存侧按 `BookShelfItem.origin` 过滤，数量若照旧统计全部
+ * 书籍，界面就会显示「5 本」却只列出 3 本——等于明说这里有内容被藏起来了。
+ * 子查询只取 url：`book_sources` 每行带 200KB+ 的 `jsLib`。
+ */
+private const val ADULT_BOOK_FILTER =
+    "(:hideAdult = 0 OR origin IS NULL OR origin NOT IN " +
+        "(SELECT bookSourceUrl FROM book_sources WHERE instr(bookSourceGroup, '18+') > 0))"
+
 @Dao
 interface BookDao {
 
@@ -862,47 +873,48 @@ interface BookDao {
 
     // ── Group preview / count queries (DB-level, replaces in-memory buildGroupPreviewState) ──
 
-    @Query("SELECT COUNT(*) FROM books WHERE $PUBLIC_BOOK_FILTER")
-    fun flowAllBookShelfCount(): Flow<Int>
+    @Query("SELECT COUNT(*) FROM books WHERE $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER")
+    fun flowAllBookShelfCount(hideAdult: Boolean): Flow<Int>
 
     @Query(
         """
-        SELECT ${BookGroup.IdAll} AS groupId, COUNT(*) AS count FROM books WHERE $PUBLIC_BOOK_FILTER
+        SELECT ${BookGroup.IdAll} AS groupId, COUNT(*) AS count FROM books WHERE $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
         UNION ALL SELECT ${BookGroup.IdRoot}, COUNT(*) FROM books
             WHERE type & ${BookType.text} > 0 AND type & ${BookType.local} = 0
             AND ($PUBLIC_GROUP_MASK & `group`) = 0
-            AND $PUBLIC_BOOK_FILTER
+            AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
             AND coalesce((SELECT show FROM book_groups WHERE groupId = ${BookGroup.IdNetNone}), 0) != 1
-        UNION ALL SELECT ${BookGroup.IdLocal}, COUNT(*) FROM books WHERE type & ${BookType.local} > 0 AND $PUBLIC_BOOK_FILTER
-        UNION ALL SELECT ${BookGroup.IdAudio}, COUNT(*) FROM books WHERE type & ${BookType.audio} > 0 AND $PUBLIC_BOOK_FILTER
+        UNION ALL SELECT ${BookGroup.IdLocal}, COUNT(*) FROM books WHERE type & ${BookType.local} > 0 AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
+        UNION ALL SELECT ${BookGroup.IdAudio}, COUNT(*) FROM books WHERE type & ${BookType.audio} > 0 AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
         UNION ALL SELECT ${BookGroup.IdNetNone}, COUNT(*) FROM books
             WHERE type & ${BookType.audio} = 0 AND type & ${BookType.local} = 0
             AND ($PUBLIC_GROUP_MASK & `group`) = 0
-            AND $PUBLIC_BOOK_FILTER
+            AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
         UNION ALL SELECT ${BookGroup.IdLocalNone}, COUNT(*) FROM books
             WHERE type & ${BookType.local} > 0
             AND ($PUBLIC_GROUP_MASK & `group`) = 0
-            AND $PUBLIC_BOOK_FILTER
-        UNION ALL SELECT ${BookGroup.IdManga}, COUNT(*) FROM books WHERE type & ${BookType.image} > 0 AND $PUBLIC_BOOK_FILTER
-        UNION ALL SELECT ${BookGroup.IdText}, COUNT(*) FROM books WHERE type & ${BookType.text} > 0 AND $PUBLIC_BOOK_FILTER
-        UNION ALL SELECT ${BookGroup.IdError}, COUNT(*) FROM books WHERE type & ${BookType.updateError} > 0 AND $PUBLIC_BOOK_FILTER
-        UNION ALL SELECT ${BookGroup.IdUnread}, COUNT(*) FROM books WHERE durChapterIndex = 0 AND durChapterPos = 0 AND $PUBLIC_BOOK_FILTER
-        UNION ALL SELECT ${BookGroup.IdReading}, COUNT(*) FROM books WHERE totalChapterNum > 0 AND durChapterIndex > 0 AND durChapterIndex < totalChapterNum - 1 AND $PUBLIC_BOOK_FILTER
-        UNION ALL SELECT ${BookGroup.IdReadFinished}, COUNT(*) FROM books WHERE totalChapterNum > 0 AND durChapterIndex >= totalChapterNum - 1 AND $PUBLIC_BOOK_FILTER
-        UNION ALL SELECT ${BookGroup.IdReadFinishedUpdate}, COUNT(*) FROM books WHERE totalChapterNum > 0 AND durChapterIndex >= totalChapterNum - 1 AND canUpdate = 1 AND $PUBLIC_BOOK_FILTER
-        UNION ALL SELECT ${BookGroup.IdReadFinishedComplete}, COUNT(*) FROM books WHERE totalChapterNum > 0 AND durChapterIndex >= totalChapterNum - 1 AND canUpdate = 0 AND $PUBLIC_BOOK_FILTER
+            AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
+        UNION ALL SELECT ${BookGroup.IdManga}, COUNT(*) FROM books WHERE type & ${BookType.image} > 0 AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
+        UNION ALL SELECT ${BookGroup.IdText}, COUNT(*) FROM books WHERE type & ${BookType.text} > 0 AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
+        UNION ALL SELECT ${BookGroup.IdError}, COUNT(*) FROM books WHERE type & ${BookType.updateError} > 0 AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
+        UNION ALL SELECT ${BookGroup.IdUnread}, COUNT(*) FROM books WHERE durChapterIndex = 0 AND durChapterPos = 0 AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
+        UNION ALL SELECT ${BookGroup.IdReading}, COUNT(*) FROM books WHERE totalChapterNum > 0 AND durChapterIndex > 0 AND durChapterIndex < totalChapterNum - 1 AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
+        UNION ALL SELECT ${BookGroup.IdReadFinished}, COUNT(*) FROM books WHERE totalChapterNum > 0 AND durChapterIndex >= totalChapterNum - 1 AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
+        UNION ALL SELECT ${BookGroup.IdReadFinishedUpdate}, COUNT(*) FROM books WHERE totalChapterNum > 0 AND durChapterIndex >= totalChapterNum - 1 AND canUpdate = 1 AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
+        UNION ALL SELECT ${BookGroup.IdReadFinishedComplete}, COUNT(*) FROM books WHERE totalChapterNum > 0 AND durChapterIndex >= totalChapterNum - 1 AND canUpdate = 0 AND $PUBLIC_BOOK_FILTER AND $ADULT_BOOK_FILTER
         """
     )
-    fun flowSystemGroupCounts(): Flow<List<GroupBookCount>>
+    fun flowSystemGroupCounts(hideAdult: Boolean): Flow<List<GroupBookCount>>
 
     @Query(
         """
         SELECT COUNT(*) FROM books
         WHERE (`group` & :groupId) > 0
         AND ((SELECT isPrivate FROM book_groups WHERE groupId = :groupId) = 1 OR $PUBLIC_BOOK_FILTER)
+        AND $ADULT_BOOK_FILTER
         """
     )
-    fun flowUserGroupBookCount(groupId: Long): Flow<Int>
+    fun flowUserGroupBookCount(groupId: Long, hideAdult: Boolean): Flow<Int>
 
     fun flowGroupPreview(groupId: Long): Flow<List<BookShelfItem>> {
         return when (groupId) {
