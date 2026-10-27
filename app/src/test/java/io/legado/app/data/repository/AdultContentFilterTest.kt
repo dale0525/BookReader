@@ -62,4 +62,26 @@ class AdultContentFilterTest {
         val visible = AdultContentFilter.filterSources(sources, hideAdult = true)
         assertTrue(visible.isEmpty())
     }
+
+    private val allGroups = listOf("漫画", "漫画 · 18+", "视频", "视频 · 18+", "小说", "小说 · 18+")
+
+    @Test
+    fun `开关关闭时分组名列表原样返回`() {
+        assertEquals(allGroups, AdultContentFilter.filterGroups(allGroups, hideAdult = false))
+    }
+
+    @Test
+    fun `开关开启时分组名列表去掉成人分组`() {
+        val result = AdultContentFilter.filterGroups(allGroups, hideAdult = true)
+        assertEquals(listOf("漫画", "视频", "小说"), result)
+    }
+
+    @Test
+    fun `分组名判成人只看 18+ 标记`() {
+        val groups = listOf("小说", "短剧", "玄幻", "小说 · 18+")
+        assertEquals(
+            listOf("小说", "短剧", "玄幻"),
+            AdultContentFilter.filterGroups(groups, hideAdult = true)
+        )
+    }
 }

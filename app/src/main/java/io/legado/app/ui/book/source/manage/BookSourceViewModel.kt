@@ -11,6 +11,7 @@ import io.legado.app.constant.AppConst
 import io.legado.app.constant.AppPattern
 import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.BookSourcePart
+import io.legado.app.data.repository.AdultContentFilter
 import io.legado.app.data.repository.BookSourceRepository
 import io.legado.app.data.repository.UploadRepository
 import io.legado.app.domain.gateway.BookSourceCheckFailure
@@ -176,8 +177,10 @@ class BookSourceViewModel(
     private val listState = combine(
         visibleItems,
         repository.flowGroups(),
+        hideAdultContent,
         listConfiguration,
-    ) { visible, groups, configuration ->
+    ) { visible, allGroups, hideAdult, configuration ->
+        val groups = AdultContentFilter.filterGroups(allGroups, hideAdult)
         BookSourceUiState(
             items = visible.map { source ->
                 BookSourceItemUi(
