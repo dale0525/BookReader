@@ -5,8 +5,9 @@
 # 手工解压的 zip 里没有这个文件，SDK 会被判定为未安装。sdkmanager 会一并写好。
 set -euo pipefail
 
-ROOT="$PIXI_PROJECT_ROOT"
-SDK="$ROOT/.android-sdk"
+# 取 activate.sh 定下的位置，而不是 $PIXI_PROJECT_ROOT：在 worktree 里跑时两者不同，
+# 按 PIXI_PROJECT_ROOT 装会把 SDK 装进 worktree，而 ANDROID_HOME 指向主检出。
+SDK="${ANDROID_HOME:?ANDROID_HOME 未设置，检查 scripts/activate.sh}"
 AVD_NAME="legado-api37"
 IMAGE="system-images;android-37.0;google_apis;arm64-v8a"
 PACKAGES=(
