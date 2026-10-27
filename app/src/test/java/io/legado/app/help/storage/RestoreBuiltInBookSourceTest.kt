@@ -60,7 +60,7 @@ class RestoreBuiltInBookSourceTest {
         // 升级门禁已推进到最新：模拟「装过新版、版本计数早已写满」的设备。
         LocalConfig.edit {
             putLong("appVersionCode", appVersionCode())
-            putInt("bookSourceVersion", 14)
+            putInt("bookSourceVersion", 15)
         }
     }
 

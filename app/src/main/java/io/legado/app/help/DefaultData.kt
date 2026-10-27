@@ -182,6 +182,20 @@ object DefaultData {
     )
 
     /**
+     * 历史上内置过、后来改过分组名的源：`url` -> 它曾经的内置分组名。
+     *
+     * 分组名不能像规则字段那样无条件覆盖——用户可能自己整理过。判据是「库里存的值是否
+     * 等于这里的旧内置值」：相等说明用户没动过，可以刷成 asset 的新值；不相等就是用户
+     * 自己改的，保留。只登记真的变过的条目，不要拿它当白名单。
+     *
+     * 为什么必须刷：0.2.0 里 `黄果短剧` 的组名是 `视频`，asset 已是 `视频 · 18+`。
+     * 不刷的话它不带 `18+` 标记，「隐藏成人内容」对它不生效，会继续显示在普通「视频」里。
+     */
+    private val legacyBookSourceGroups = mapOf(
+        "https://huangguoai.com" to "视频",
+    )
+
+    /**
      * 内置源随版本更新规则：规则字段用 asset 里的新值覆盖，用户自己的开关/分组/排序保留。
      * 内置源的规则是随包发布的代码资产，用户不该改也不该被旧版本锁死；
      * 只按 has() 判重会在升级时留下旧规则，正是发现页报错的成因。
@@ -216,13 +230,25 @@ object DefaultData {
                 appDb.bookSourceDao.insert(
                     incoming.copy(
                         enabled = existing.enabled,
-                        bookSourceGroup = existing.bookSourceGroup,
+                        bookSourceGroup = keepOrRefreshGroup(existing, incoming),
                         customOrder = existing.customOrder,
                         enabledExplore = existing.enabledExplore,
                     )
                 )
             }
         }
+    }
+
+    /**
+     * 分组名沿用用户的，除非它还是那份没人动过的旧内置值。
+     *
+     * 用户自己改过（既不是当前 asset 值、也不是登记的旧内置值）就原样保留。
+     */
+    private fun keepOrRefreshGroup(existing: BookSource, incoming: BookSource): String? {
+        val current = existing.bookSourceGroup
+        if (current == incoming.bookSourceGroup) return current
+        val legacy = legacyBookSourceGroups[incoming.bookSourceUrl]
+        return if (current == legacy) incoming.bookSourceGroup else current
     }
 
     /**

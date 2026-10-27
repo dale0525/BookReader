@@ -95,11 +95,12 @@ class BuiltInBookSourceUpgradeTest {
             "覆盖安装后旧规则没被替换，发现页仍会显示 NativeArray@…：jsLib=${after!!.jsLib?.take(40)}",
             after.jsLib?.contains("return JSON.stringify(out)") == true
         )
-        assertEquals("用户分组被覆盖", "我自己的分组", after.bookSourceGroup)
+        // 用户自己起的组名要留着，只有「等于旧内置值」的才允许被刷新
+        assertEquals("用户自定义分组被覆盖", "我自己的分组", after.bookSourceGroup)
         assertEquals("用户排序被覆盖", 42, after.customOrder)
         assertEquals("用户停用状态被覆盖", false, after.enabled)
         assertEquals("用户发现开关被覆盖", false, after.enabledExplore)
-        assertEquals("bookSourceVersion 未推进", 14, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 15, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /** 拆源后新站必须一起补进来，老用户升级才能拿到全部单站源。 */
@@ -147,7 +148,7 @@ class BuiltInBookSourceUpgradeTest {
             "已下线的内置书源在覆盖安装后仍然存在",
             appDb.bookSourceDao.getBookSource(retiredUrl),
         )
-        assertEquals("bookSourceVersion 未推进", 14, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 15, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /**
@@ -261,6 +262,60 @@ class BuiltInBookSourceUpgradeTest {
         assertNotNull(
             "正常源也被一起删掉了",
             appDb.bookSourceDao.getBookSource("https://www.twkan.cc"),
+        )
+    }
+
+    /**
+     * 内置源的分组名改了，老用户也必须跟着变。
+     *
+     * 真实成因：`importBookSources()` 无条件保留 `existing.bookSourceGroup`，于是
+     * 0.2.0 里 `黄果短剧` 停在 `视频`、asset 已是 `视频 · 18+`，升级后它不带 18+ 标记，
+     * 「隐藏成人内容」对它不生效——它会继续显示在普通「视频」分组里。
+     *
+     * 判据是「库里存的组名是否等于旧版内置值」：相等说明用户没动过，可以刷新；
+     * 不相等说明是用户自己改的，必须保留。
+     */
+    @Test
+    fun upgradeRefreshesBuiltInGroupNameWhenUserDidNotChangeIt() {
+        // 覆盖安装：库里是 0.2.0 的旧组名，与旧内置值一致
+        appDb.bookSourceDao.insert(
+            BookSource(
+                bookSourceUrl = "https://huangguoai.com",
+                bookSourceName = "黄果短剧",
+                bookSourceGroup = "视频",
+                bookSourceType = 4,
+            )
+        )
+
+        DefaultData.upVersion()
+        val after = awaitSource("https://huangguoai.com") { it.bookSourceGroup == "视频 · 18+" }
+
+        assertEquals(
+            "内置源的分组名没随 asset 刷新，隐藏成人内容对它不生效",
+            "视频 · 18+",
+            after?.bookSourceGroup,
+        )
+    }
+
+    /** 用户自己改过的组名不能被内置值覆盖，否则等于悄悄重置用户的整理结果。 */
+    @Test
+    fun upgradeKeepsGroupNameTheUserChanged() {
+        appDb.bookSourceDao.insert(
+            BookSource(
+                bookSourceUrl = "https://huangguoai.com",
+                bookSourceName = "黄果短剧",
+                bookSourceGroup = "我自己分的类",
+                bookSourceType = 4,
+            )
+        )
+
+        DefaultData.upVersion()
+        awaitSource("https://huangguoai.com") { it.bookSourceGroup == "视频 · 18+" }
+
+        assertEquals(
+            "用户自己改的分组名被内置值覆盖了",
+            "我自己分的类",
+            appDb.bookSourceDao.getBookSource("https://huangguoai.com")?.bookSourceGroup,
         )
     }
 
