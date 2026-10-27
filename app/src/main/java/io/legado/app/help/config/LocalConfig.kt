@@ -119,11 +119,6 @@ by appCtx.getSharedPreferences("local", Context.MODE_PRIVATE) {
         get() = getString("bookSourceRemoteEtag", null)
         set(value) = putString("bookSourceRemoteEtag", value.orEmpty())
 
-    /** 上次检查远端内置书的时间，避免每次冷启动都发一次请求。 */
-    var bookSourceRemoteCheckTime: Long
-        get() = getLong("bookSourceRemoteCheckTime", 0L)
-        set(value) = putLong("bookSourceRemoteCheckTime", value)
-
     /** 上次应用过的远端内容摘要，用来跳过「内容没变但没给 304」的重复写入。 */
     var bookSourceRemoteHash: String?
         get() = getString("bookSourceRemoteHash", null)

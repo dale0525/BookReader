@@ -33,24 +33,15 @@ object RemoteBookSources {
     private val urls = listOf(rawUrl, jsDelivrUrl)
 
     /**
-     * 同一台设备一天最多查一次：规则更新不是时效性要求，没必要每次冷启动都发请求。
-     *
-     * 只有真的拿到响应才记这次的时间——离线、被墙导致的全军覆没不占额度，
-     * 否则装机当天断网一次，接下来一天都不会再试。
-     */
-    private const val checkIntervalMillis = 12 * 60 * 60 * 1000L
-
-    /**
      * 比对并应用远端规则。返回是否真的改了本地书源表。
+     *
+     * 每次冷启动都查，不设时间冷却：`If-None-Match` 让「没变化」只花一个 304 的头部，
+     * 而冷却会让「推完 main 立刻生效」这个承诺变成「最坏等半天」——规则失效时用户
+     * 读不到正文，那点延迟是实打实的损失。
      *
      * 全程静默：离线、被墙、返回体异常都只是「这次没更新」，不弹提示、不影响本地已有规则。
      */
     suspend fun refresh(): Boolean {
-        if (System.currentTimeMillis() - LocalConfig.bookSourceRemoteCheckTime <
-            checkIntervalMillis
-        ) {
-            return false
-        }
         for (url in urls) {
             val changed = try {
                 fetch(url)
@@ -76,8 +67,6 @@ object RemoteBookSources {
         }
         response.use {
             val body = it.body.string()
-            // 拿到响应就记下检查时间，不管内容有没有变。
-            LocalConfig.bookSourceRemoteCheckTime = System.currentTimeMillis()
             val sources = parseRemoteSources(it.code, body) ?: return false
             val hash = MD5Utils.md5Encode(body)
             LocalConfig.bookSourceRemoteUrl = url
