@@ -2186,6 +2186,7 @@
     <string name="homepage_layout_config_label">布局配置</string>
     <string name="homepage_edit_raw_json">编辑原始 JSON (LayoutConfig)</string>
     <string name="home_recent_reading">最近阅读</string>
+    <string name="home_recent_reading_more">更多最近阅读</string>
     <string name="home_recent_books">最近阅读记录</string>
     <string name="home_dashboard_settings">首页组件</string>
     <string name="home_no_recent_reading">暂无阅读记录</string>
