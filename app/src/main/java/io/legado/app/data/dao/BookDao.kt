@@ -89,7 +89,7 @@ interface BookDao {
         and type & ${BookType.local} = 0
         and ($PUBLIC_GROUP_MASK & `group`) = 0
         and $PUBLIC_BOOK_FILTER
-        and (select show from book_groups where groupId = ${BookGroup.IdNetNone}) != 1
+        and coalesce((select show from book_groups where groupId = ${BookGroup.IdNetNone}), 0) != 1
         """
     )
     fun flowRoot(): Flow<List<Book>>
@@ -125,7 +125,7 @@ interface BookDao {
         and type & ${BookType.local} = 0
         and ($PUBLIC_GROUP_MASK & `group`) = 0
         and $PUBLIC_BOOK_FILTER
-        and (select show from book_groups where groupId = ${BookGroup.IdNetNone}) != 1
+        and coalesce((select show from book_groups where groupId = ${BookGroup.IdNetNone}), 0) != 1
         """
     )
     fun flowBookShelfRoot(): Flow<List<BookShelfItem>>
@@ -872,7 +872,7 @@ interface BookDao {
             WHERE type & ${BookType.text} > 0 AND type & ${BookType.local} = 0
             AND ($PUBLIC_GROUP_MASK & `group`) = 0
             AND $PUBLIC_BOOK_FILTER
-            AND (SELECT show FROM book_groups WHERE groupId = ${BookGroup.IdNetNone}) != 1
+            AND coalesce((SELECT show FROM book_groups WHERE groupId = ${BookGroup.IdNetNone}), 0) != 1
         UNION ALL SELECT ${BookGroup.IdLocal}, COUNT(*) FROM books WHERE type & ${BookType.local} > 0 AND $PUBLIC_BOOK_FILTER
         UNION ALL SELECT ${BookGroup.IdAudio}, COUNT(*) FROM books WHERE type & ${BookType.audio} > 0 AND $PUBLIC_BOOK_FILTER
         UNION ALL SELECT ${BookGroup.IdNetNone}, COUNT(*) FROM books
@@ -954,7 +954,7 @@ interface BookDao {
         WHERE type & ${BookType.text} > 0 AND type & ${BookType.local} = 0
             AND ($PUBLIC_GROUP_MASK & `group`) = 0
             AND $PUBLIC_BOOK_FILTER
-            AND (SELECT show FROM book_groups WHERE groupId = ${BookGroup.IdNetNone}) != 1
+            AND coalesce((SELECT show FROM book_groups WHERE groupId = ${BookGroup.IdNetNone}), 0) != 1
         ORDER BY durChapterTime DESC
         LIMIT 10
         """

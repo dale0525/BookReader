@@ -64,7 +64,8 @@ fun GroupEditSheet(
     AppModalBottomSheet(
         show = show,
         onDismissRequest = onDismissRequest,
-        startAction = if (group != null && (group.groupId > 0 || group.groupId == Long.MIN_VALUE)) {
+        // 除「全部」外都可删除：它是书架的兜底分组，没有重建入口
+        startAction = if (group != null && group.groupId != BookGroup.IdAll) {
             {
                 GroupDeleteAction(
                     group = group,

@@ -83,12 +83,20 @@ class BookGroupMutationRepository(
     }
 
     override suspend fun deleteGroup(groupId: Long) {
+        // 「全部」是书架的唯一兜底分组：分组列表、分页器和保存的选中分组都指向它，
+        // 删掉之后书架没有任何分组可显示，且没有重建入口。
+        if (groupId == BookGroup.IdAll) return
         database.withTransaction {
             val group = database.bookGroupDao.getByID(groupId) ?: return@withTransaction
             database.tagGroupRuleDao.getByGroupName(group.groupName)?.let {
                 database.tagGroupRuleDao.delete(it)
             }
-            database.bookDao.removeGroup(groupId)
+            // 只有用户分组在 books.group 里占位。内置分组 id 为负数，拿它去跑
+            // `group = group - :group where group & :group > 0` 会命中别的分组位并把位改掉
+            // （例如 -4 与 4 按位与为 4，4 - (-4) 得到 8），等于凭空搬动用户的书籍分组。
+            if (groupId > 0) {
+                database.bookDao.removeGroup(groupId)
+            }
             database.bookGroupDao.delete(group)
         }
     }
