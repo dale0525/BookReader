@@ -73,6 +73,8 @@
 
 菜单配色是第三套开关，由 `readBarStyle` 决定：0=黑白、1=跟随阅读背景、2=自定义。只有 2 会读 `readMenuBgColor/AccentColor/ContainerColor/TextColor`（见 `ReadBookColorTheme.kt` 的 `rememberCustomReadMenuTheme`）。菜单卡片默认 `readMenuBlurAlpha = 85` 是半透明，要做实心卡片必须设 100，否则正文会透上来。
 
+`assets/defaultData/` 这三份是**兜底**：`ReadStyleRepository.readConfigs/readShareConfig` 先看 `filesDir` 下的同名文件，取不到才读 asset。因此改内置默认值只对全新安装生效，已装过的设备读的是它自己的那份，不会被覆盖——要让升级也换排版，得另做一条覆盖路径，光改 asset 不生效。
+
 ## 上游同步
 
 `upstream` 指向 `HapeLee/legado-with-MD3`，fork 在 `main` 上累积自己的删除与改造。合并上游时有两处必查：
