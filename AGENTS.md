@@ -10,8 +10,7 @@
 - 迭代期只跑**单个测试类**，例如：
 
   ```bash
-  pixi run bash -c 'export ANDROID_HOME=$PWD/.android-sdk; export ANDROID_SDK_ROOT=$ANDROID_HOME; \
-    ./gradlew :app:testAppDebugUnitTest --tests "io.legado.app.help.source.BuiltInExploreKindsTest" --console=plain'
+  pixi run bash -c './gradlew :app:testAppDebugUnitTest --tests "io.legado.app.help.source.BuiltInExploreKindsTest" --console=plain'
   ```
 
   单类约 30–40 秒。`--tests` 可重复传多个类。
@@ -33,8 +32,8 @@
 
 - `pixi run sdk` — 首次从国内镜像安装 Android SDK 并建 AVD（一次性）。
 - `pixi run web` — 起模拟器 → 装调试包 → 打开 web 服务开关 → 打印本机与局域网地址。
-- 直接跑 gradle 需要 pixi 注入的环境变量，用
-  `pixi run bash -c 'export ANDROID_HOME=$PWD/.android-sdk; export ANDROID_SDK_ROOT=$ANDROID_HOME; ./gradlew …'`。
+- `scripts/activate.sh` 已经注入 `JAVA_HOME` / `ANDROID_HOME` / `ANDROID_SDK_ROOT` / `ANDROID_AVD_HOME`，`pixi run bash -c './gradlew …'` 直接用，不要再手动 `export`。
+- 这些路径一律指向**主检出**（`git rev-parse --git-common-dir` 的上级目录），不是 `$PIXI_PROJECT_ROOT`。worktree 里跑 gradle 时若 `JAVA_HOME` 指向 worktree 自己的 `.pixi`，会启动一个 `javaHome` 绑在该 worktree 上的 daemon；worktree 删掉后这个 daemon 仍在复用，主工作区就报 `Directory '…/.worktrees/<name>/.pixi/…' (Current JVM) … does not exist` + `Cannot find a Java installation … languageVersion=21`，且只有 `./gradlew --stop` 加清 `.gradle/configuration-cache` 才能恢复。JDK 路径固定在主检出后，删 worktree 不再影响任何 daemon。
 
 模块：`:app`、`:modules:book`、`:modules:rhino`、`:baselineprofile`。单元测试只在 `:app` 下。
 
