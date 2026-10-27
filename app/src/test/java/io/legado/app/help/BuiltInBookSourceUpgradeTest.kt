@@ -99,7 +99,7 @@ class BuiltInBookSourceUpgradeTest {
         assertEquals("用户排序被覆盖", 42, after.customOrder)
         assertEquals("用户停用状态被覆盖", false, after.enabled)
         assertEquals("用户发现开关被覆盖", false, after.enabledExplore)
-        assertEquals("bookSourceVersion 未推进", 13, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 14, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /** 拆源后新站必须一起补进来，老用户升级才能拿到全部单站源。 */
@@ -115,7 +115,7 @@ class BuiltInBookSourceUpgradeTest {
             .map { it.bookSourceUrl }
         val installed = appDb.bookSourceDao.all.map { it.bookSourceUrl }
         assertTrue("八叉书库没装进来", installed.contains("https://bcshuku.com"))
-        assertTrue("成人孪生源没装进来", installed.contains("https://zuidazy.co/adult"))
+        assertTrue("台湾小说网没装进来", installed.contains("https://www.twkan.cc"))
         assertEquals(
             "拆源后的单站源与 asset 不一致: ${installed.filterNot { it in assetUrls }}",
             assetUrls.toSet(),
@@ -147,7 +147,7 @@ class BuiltInBookSourceUpgradeTest {
             "已下线的内置书源在覆盖安装后仍然存在",
             appDb.bookSourceDao.getBookSource(retiredUrl),
         )
-        assertEquals("bookSourceVersion 未推进", 13, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 14, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /**

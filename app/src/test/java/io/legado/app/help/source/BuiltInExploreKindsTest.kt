@@ -141,23 +141,19 @@ class BuiltInExploreKindsTest {
     }
 
     @Test
-    fun adultTwinSharesTheHostButNotTheUrl() {
-        // 普通/成人两份共用同一个采集接口，只能靠 URL 后缀区分：主键是 bookSourceUrl，
-        // 同址两源存不下来；后缀不影响 hostOf/is18Plus/getBaseUrl 的判定。
-        val byUrl = sources.associateBy { it.bookSourceUrl }
-        val twins = sources.filter { it.bookSourceName.endsWith("·18+") }
-        assertEquals(2, twins.size)
-        twins.forEach { adult ->
-            val plainUrl = adult.bookSourceUrl.substringBeforeLast("/adult")
-            val plain = byUrl[plainUrl]
-            assertTrue("${adult.bookSourceName} 找不到对应的普通源", plain != null)
-            assertEquals(hostOf(plainUrl), hostOf(adult.bookSourceUrl))
-            assertEquals(
-                "${adult.bookSourceName} 的分组不对",
-                "视频 · 18+",
-                adult.bookSourceGroup
-            )
-        }
+    fun adultVideoSourcesAreNotUrlTwins() {
+        // 18+ 视频档曾经是两条采集接口的 `/adult` 孪生源：与同名常规源共用 host，
+        // 只靠 URL 后缀区分主键，内容完全重复、卡片翻倍，已下线。
+        // 现在这一档是独立的站（黄果短剧），不该再出现靠后缀拆出来的条目。
+        assertTrue(
+            "18+ 视频档空了",
+            sources.any { it.bookSourceGroup == "视频 · 18+" }
+        )
+        assertEquals(
+            "又出现了靠 URL 后缀拆出的孪生源",
+            emptyList<String>(),
+            sources.map { it.bookSourceUrl }.filter { it.endsWith("/adult") },
+        )
     }
 
     private fun siteIds(source: BookSource): Set<String> {

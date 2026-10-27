@@ -101,7 +101,7 @@
   {
     "bookSourceUrl": "https://huangguoai.com",
     "bookSourceName": "黄果短剧",
-    "bookSourceGroup": "视频·18+",
+    "bookSourceGroup": "视频 · 18+",
     "bookSourceType": 4,
     "bookSourceComment": "网页版搜索与详情，正文返回 HLS(m3u8) 播放地址。",
     "enabled": true,
