@@ -17,6 +17,8 @@
 
 - 测试先行仍然适用：改动有可冻结的长期契约时，先写测试。契约是否值得冻结的判据见全局规范。
 - 测试必须能复现**用户实际遇到的那条路径**。同一份规则在「全新安装」和「升级已有安装」下行为可能不同，只测前者会漏掉升级路径的缺陷。
+- Robolectric 里起不了 Koin，凡是碰 `CacheManager` / `AppConst` 等容器的入口都会抛 `ExceptionInInitializerError`——`source.getLoginInfoMap()`、`getLoginInfo()` 都属此类，这是**测试环境限制，不是缺陷**。要测登录就绕开它们：用探针替换掉那一句、只断言闭包能取到句柄（`LoginChainTest` 就是这么做的），别为了让它跑通去改生产代码或补 Koin 初始化。
+- `--tests` 写错包名或类名时 Gradle 不报错、只跑匹配上的类并回 `BUILD SUCCESSFUL`。判定是否真跑过，看 `app/build/test-results/testAppDebugUnitTest/TEST-<全限定类名>.xml` 的 `tests=` 计数，别只看构建结果；改过测试文件后 XML 可能是上一轮的，先删再跑。
 
 ### 交付
 
