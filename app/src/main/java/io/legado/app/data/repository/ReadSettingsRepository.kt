@@ -437,7 +437,7 @@ class ReadSettingsRepository(
             clickActionTL = compatDsValue(Keys.ClickActionTL, 2),
             clickActionTC = compatDsValue(Keys.ClickActionTC, 2),
             clickActionTR = compatDsValue(Keys.ClickActionTR, 1),
-            clickActionML = compatDsValue(Keys.ClickActionML, 2),
+            clickActionML = compatDsValue(Keys.ClickActionML, 1),
             clickActionMC = compatDsValue(Keys.ClickActionMC, 0),
             clickActionMR = compatDsValue(Keys.ClickActionMR, 1),
             clickActionBL = compatDsValue(Keys.ClickActionBL, 2),

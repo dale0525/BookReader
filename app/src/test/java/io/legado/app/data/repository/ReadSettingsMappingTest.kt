@@ -125,6 +125,8 @@ class ReadSettingsMappingTest {
         assertEquals(10, settings.preDownloadNum)
         assertEquals(0, settings.preDownloadNumPrev)
         assertEquals(4, settings.themeGridColumns)
+        // 左中区域默认翻到下一页，与右侧同向；旧默认 2 是上一页。
+        assertEquals(1, settings.clickActionML)
     }
 }
 

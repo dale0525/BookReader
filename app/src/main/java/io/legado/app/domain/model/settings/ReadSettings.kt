@@ -70,7 +70,7 @@ data class ReadSettings(
     val clickActionTL: Int = 2,
     val clickActionTC: Int = 2,
     val clickActionTR: Int = 1,
-    val clickActionML: Int = 2,
+    val clickActionML: Int = 1,
     val clickActionMC: Int = 0,
     val clickActionMR: Int = 1,
     val clickActionBL: Int = 2,
