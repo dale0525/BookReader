@@ -100,7 +100,7 @@ class BuiltInBookSourceUpgradeTest {
         assertEquals("用户排序被覆盖", 42, after.customOrder)
         assertEquals("用户停用状态被覆盖", false, after.enabled)
         assertEquals("用户发现开关被覆盖", false, after.enabledExplore)
-        assertEquals("bookSourceVersion 未推进", 18, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 19, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /** 拆源后新站必须一起补进来，老用户升级才能拿到全部单站源。 */
@@ -150,7 +150,7 @@ class BuiltInBookSourceUpgradeTest {
             "已下线的内置书源在覆盖安装后仍然存在",
             appDb.bookSourceDao.getBookSource(retiredUrl),
         )
-        assertEquals("bookSourceVersion 未推进", 18, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 19, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /**
@@ -295,6 +295,34 @@ class BuiltInBookSourceUpgradeTest {
         assertEquals(
             "内置源的分组名没随 asset 刷新，隐藏成人内容对它不生效",
             "视频 · 18+",
+            after?.bookSourceGroup,
+        )
+    }
+
+    /**
+     * 八叉书库按「零命中」下线过、随后恢复并改判到成人档。
+     *
+     * 老设备的库里可能还留着它（停在没有执行下线删除的那个版本），组名是旧内置值
+     * `小说`；升级时必须跟着 asset 变成 `小说 · 18+`，否则它不带 18+ 标记，
+     * 「隐藏成人内容」对它不生效。
+     */
+    @Test
+    fun restoredSourceMovesToAdultGroup() {
+        appDb.bookSourceDao.insert(
+            BookSource(
+                bookSourceUrl = "https://bcshuku.com",
+                bookSourceName = "八叉书库",
+                bookSourceGroup = "小说",
+                bookSourceType = 0,
+            )
+        )
+
+        DefaultData.upVersion()
+        val after = awaitSource("https://bcshuku.com") { it.bookSourceGroup == "小说 · 18+" }
+
+        assertEquals(
+            "恢复的八叉书库没进成人档，隐藏成人内容对它不生效",
+            "小说 · 18+",
             after?.bookSourceGroup,
         )
     }

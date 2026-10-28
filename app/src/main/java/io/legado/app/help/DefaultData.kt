@@ -171,7 +171,6 @@ object DefaultData {
         // 已从内置源下线：对书架上 40 本书零命中，搜不到其中任何一本。
         "https://wap.faloo.com",
         "https://www.ffxs8.com",
-        "https://bcshuku.com",
         // 18+ 采集接口的孪生源，与同名常规源只差 `/adult` 后缀，内容重复且卡片翻倍。
         "https://zuidazy.co/adult",
         "https://api.wujinapi.me/adult",
@@ -197,6 +196,8 @@ object DefaultData {
      */
     private val legacyBookSourceGroups = mapOf(
         "https://huangguoai.com" to "视频",
+        // 八叉书库原归「小说」，按成人内容改判到「小说 · 18+」。
+        "https://bcshuku.com" to "小说",
     )
 
     /**
