@@ -9,6 +9,7 @@ import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.ShelfBookSummary
 import io.legado.app.ui.main.bookshelf.BookShelfItem
+import io.legado.app.utils.ChineseUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -60,6 +61,25 @@ class BookRepository(
     suspend fun getBook(name: String, author: String): Book? {
         return withContext(Dispatchers.IO) {
             bookDao.getBook(name, author)
+        }
+    }
+
+    /**
+     * 按书名与作者找书架上的书，书名做简繁归一。
+     *
+     * 书单里的书名是简体，书架上的书名来自站点、可能是繁体（台湾小说网给「誰讓他修仙的！」），
+     * 精确比对会把同一本书判成没导入过，于是重新搜一遍再插一行。
+     *
+     * 字形候选只负责把行捞出来，判等仍走 [ChineseUtils.sameText]；作者同样归一，
+     * 但库里的作者常带「作者：」之外的写法差异，因此只在作者非空时比对。
+     */
+    suspend fun getBookByAnyScript(name: String, author: String): Book? {
+        return withContext(Dispatchers.IO) {
+            bookDao.getBook(name, author) ?: bookDao.getBooksByNames(ChineseUtils.variants(name))
+                .firstOrNull {
+                    ChineseUtils.sameText(it.name, name) &&
+                        (author.isEmpty() || ChineseUtils.sameText(it.author, author))
+                }
         }
     }
 
