@@ -71,6 +71,11 @@ UA 要写完整。截断的 UA（只有 `Mozilla/5.0 (Linux; Android 11) AppleWe
   `if (typeof login=='function'){ login.apply(this); }` 拼接执行，只定义 `uaaLogin()` 会抛
   `Function login not implements!!!`，而且报错发生在登录按钮的回调里，界面上只显示「登录出错」。
   稳妥写法是定义 `login()` 做一层转发。
+- **转发时要把 `this` 传下去，写 `uaaLogin.call(this)`，不能写 `uaaLogin()`。** 客户端是
+  `login.apply(this)` 进来的，`this` 绑着 `source`；而 `login()` 里写 `uaaLogin()` 属于普通
+  函数调用，`this` 会退回全局对象，`uaaLogin` 里的 `this.source` 同样是 `undefined`，真机抛
+  `EcmaError`、界面只显示「登录出错」。只把裸 `source` 改成 `this.source` 解决不了——裸用
+  确实会炸，但 `this` 没传下来一样取不到。
 - 拿到凭据后调 `source.putLoginHeader(JSON.stringify({...}))` 存进登录请求头；`AnalyzeUrl`
   默认 `hasLoginHeader = true`，之后所有请求自动带上，不必在 `header` 里手写。
 
@@ -84,6 +89,11 @@ UA 要写完整。截断的 UA（只有 `Mozilla/5.0 (Linux; Android 11) AppleWe
 最后一次下发的那张。
 
 ## 发现页
+
+分类地址末尾的 `#id` 是路由标记（多站源用它区分站点），不是 URL 的 query。客户端切 query 时以
+`?` 起、以 `#` 止，所以标记不会被发出去。写规则时注意：**不要指望服务端容忍多余参数**——实测
+UAA 的接口对 `%23id` 直接回 400，body 只有 120 字节的错误 JSON，列表恒空，界面只显示「没有更多
+数据」，而同一份规则走搜索链路（`searchUrl` 不带 `#`）完全正常，极易误判成规则写错。
 
 `exploreUrl` 是 JSON 数组：
 
