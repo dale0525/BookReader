@@ -39,7 +39,7 @@
 
 ## 内置书源
 
-`app/src/main/assets/defaultData/bookSources.json` 是随包发布的内置书源：29 个单站源，一个源就是一个站点，发现页不跨源聚合。每源的 `jsLib` 只带自己那一条 `SITES` 记录，规则里取站点配置用 `SITES[0]`。
+`app/src/main/assets/defaultData/bookSources.json` 是随包发布的内置书源：28 个单站源，一个源就是一个站点，发现页不跨源聚合。每源的 `jsLib` 只带自己那一条 `SITES` 记录，规则里取站点配置用 `SITES[0]`。
 
 - 6 档都是一个 host 一条记录，不靠 `bookSourceUrl` 的路径后缀拆分支。孪生写法（同名常规源加 `/adult` 后缀）会让卡片翻倍而内容完全重复，这类 url 列在 `retiredBookSourceUrls`，每次导入都按它删除并过滤。
 - 发现页只有 6 个分组：`小说` / `漫画` / `视频` / 各自 ` · 18+`，定义在 `constant/ExploreGroups.kt`。界面上的分组**不读** `bookSourceGroup` 字面值，而是经 `ExploreGroups.canonical()` 归一：分组名含「小说/漫画/视频」按它定档，没写或写了别的词（「短剧」「玄幻」）退回 `bookSourceType`（0 文本 / 2 图片 / 4 视频），含 `18+` 归成人档。新增源即使分组名写错也不会多出第 7 个分组标题。

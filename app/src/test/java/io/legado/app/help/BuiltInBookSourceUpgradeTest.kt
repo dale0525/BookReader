@@ -100,7 +100,7 @@ class BuiltInBookSourceUpgradeTest {
         assertEquals("用户排序被覆盖", 42, after.customOrder)
         assertEquals("用户停用状态被覆盖", false, after.enabled)
         assertEquals("用户发现开关被覆盖", false, after.enabledExplore)
-        assertEquals("bookSourceVersion 未推进", 17, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 18, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /** 拆源后新站必须一起补进来，老用户升级才能拿到全部单站源。 */
@@ -108,14 +108,16 @@ class BuiltInBookSourceUpgradeTest {
     fun upgradeInstallsEverySplitSource() {
         LocalConfig.edit { putInt("bookSourceVersion", 12) }
         DefaultData.upVersion()
-        awaitSource("https://bcshuku.com") { true }
+        // 等 asset 里最后一条落库：导入是按 asset 顺序逐条写的，
+        // 拿靠前的源当信号会在还没写完时就去比对。
+        awaitSource("https://www.cdngwc.cc") { true }
 
         val assetUrls = RuntimeEnvironment.getApplication().assets
             .open("defaultData/bookSources.json").bufferedReader().use { it.readText() }
             .let { GSON.fromJsonArray<BookSource>(it).getOrThrow() }
             .map { it.bookSourceUrl }
         val installed = appDb.bookSourceDao.all.map { it.bookSourceUrl }
-        assertTrue("八叉书库没装进来", installed.contains("https://bcshuku.com"))
+        assertTrue("看书网没装进来", installed.contains("https://www.kanshuw.com"))
         assertTrue("台湾小说网没装进来", installed.contains("https://www.twkan.cc"))
         assertEquals(
             "拆源后的单站源与 asset 不一致: ${installed.filterNot { it in assetUrls }}",
@@ -148,7 +150,7 @@ class BuiltInBookSourceUpgradeTest {
             "已下线的内置书源在覆盖安装后仍然存在",
             appDb.bookSourceDao.getBookSource(retiredUrl),
         )
-        assertEquals("bookSourceVersion 未推进", 17, LocalConfig.getInt("bookSourceVersion", 0))
+        assertEquals("bookSourceVersion 未推进", 18, LocalConfig.getInt("bookSourceVersion", 0))
     }
 
     /**
@@ -209,8 +211,8 @@ class BuiltInBookSourceUpgradeTest {
                     bookSourceType = 0,
                 ),
                 BookSource(
-                    bookSourceUrl = "https://bcshuku.com",
-                    bookSourceName = "八叉书库",
+                    bookSourceUrl = "https://www.twkan.cc",
+                    bookSourceName = "台湾小说网",
                     bookSourceType = 0,
                 ),
             )
@@ -222,7 +224,7 @@ class BuiltInBookSourceUpgradeTest {
         )
         assertNotNull(
             "正常源也被一起滤掉了",
-            appDb.bookSourceDao.getBookSource("https://bcshuku.com"),
+            appDb.bookSourceDao.getBookSource("https://www.twkan.cc"),
         )
     }
 
