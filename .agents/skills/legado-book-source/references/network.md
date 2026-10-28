@@ -71,11 +71,12 @@ UA 要写完整。截断的 UA（只有 `Mozilla/5.0 (Linux; Android 11) AppleWe
   `if (typeof login=='function'){ login.apply(this); }` 拼接执行，只定义 `uaaLogin()` 会抛
   `Function login not implements!!!`，而且报错发生在登录按钮的回调里，界面上只显示「登录出错」。
   稳妥写法是定义 `login()` 做一层转发。
-- **转发时要把 `this` 传下去，写 `uaaLogin.call(this)`，不能写 `uaaLogin()`。** 客户端是
-  `login.apply(this)` 进来的，`this` 绑着 `source`；而 `login()` 里写 `uaaLogin()` 属于普通
-  函数调用，`this` 会退回全局对象，`uaaLogin` 里的 `this.source` 同样是 `undefined`，真机抛
-  `EcmaError`、界面只显示「登录出错」。只把裸 `source` 改成 `this.source` 解决不了——裸用
-  确实会炸，但 `this` 没传下来一样取不到。
+- **登录函数要直接写在 `loginUrl` 里，不要写在 `jsLib` 里。** 实测：`jsLib` 是独立原型作用域，
+  函数体里看不到 `evalJS` 绑定的 `source`（裸 `source` 与 `this.source` 都是 `undefined`）；
+  而 `loginUrl` 那段代码与 bindings 同一作用域，裸 `source` 直接可用。写在 `jsLib` 里、
+  `loginUrl` 写 `@js:uaaLogin()` 时，客户端会先跑 `uaaLogin()` 这一行，`this` 还是 `undefined`，
+  于是抛 `EcmaError`，界面只显示「登录出错」。`loginUrl` 里也别再定义一层同名 `login` 去转发，
+  会遮蔽 `jsLib` 里的同名函数。
 - 拿到凭据后调 `source.putLoginHeader(JSON.stringify({...}))` 存进登录请求头；`AnalyzeUrl`
   默认 `hasLoginHeader = true`，之后所有请求自动带上，不必在 `header` 里手写。
 

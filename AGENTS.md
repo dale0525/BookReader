@@ -60,7 +60,11 @@
 - `exploreUrl` 里的 JS 必须返回 **JSON 字符串**，不能返回 JS 数组对象——`BookSourceExtensions.exploreKinds()` 拿到结果后直接 `.toString()` 再当 JSON 解析，返回数组对象会得到 `org.mozilla.javascript.NativeArray@…`，发现页把它当分类名显示，点进去必然报错。`BuiltInExploreKindsTest` 守这条契约。
 - `source.get(key)` 在键不存在时返回**空串**而不是 null，`source.put` 的底层键是 `v_${sourceKey}_${key}`（落在 `caches` 表）。判缓存命中不能只写 `!= null`，否则首次读到的空值会被当成命中，表现为「缓存已生效但数据全空」。
 - `jsLib` 是共享作用域，里面**没有** `baseUrl` 和 `source`。要在共享函数里用 `source`，得在 `exploreUrl` / `ruleExplore` 的 `<js>` 块里把句柄挂到站点对象上传进去（`s.v=source`），并判断句柄非空再调用。
-- 登录是唯一能白拿到 `source` 的场合，但**必须一路把 `this` 传下去**：客户端拼的是 `login.apply(this)`，`this` 绑着 source；而 `login()` 里写 `uaaLogin()` 是普通函数调用，`this` 会退回全局对象，`uaaLogin` 里的 `this.source` 于是也是 `undefined`，真机抛 `EcmaError`、界面只显示「登录出错」。要写成 `uaaLogin.call(this)`（或直接在 `login()` 里做完）。只把裸 `source` 改成 `this.source` 解决不了——裸用确实会炸，但 `this` 没传下来一样取不到。`BuiltInExploreKindsTest.loginFunctionForwardsThis` 守这条。
+- 登录函数**必须定义在 `loginUrl` 里，不能定义在 `jsLib` 里**。实测三种写法的差别（`LoginChainTest` 守）：
+  - 定义在 `jsLib`、`loginUrl` 写 `@js:uaaLogin()`：客户端会先执行 `uaaLogin()` 这一行，此时 `this` 是 `undefined`，而 jsLib 是独立原型作用域、看不到 `evalJS` 绑定的 `source` —— 两处都取不到，抛 `EcmaError`，界面只显示「登录出错」。改成 `this.source` 也没用，因为 `this` 本身就是空的。
+  - 定义在 `jsLib`、靠客户端追加的 `login.apply(this)` 触发：`this` 同样传不进来。
+  - **定义在 `loginUrl`**：那段代码与 `evalJS` 的 bindings 同一作用域，裸 `source` 直接可用（实测 `typeof source === 'object'`）。正解。
+  - `loginUrl` 里不要另外再定义一层同名 `login` 去转发——会遮蔽 jsLib 里的同名函数（实测 `URL_LOGIN` 覆盖了 `LIB_LOGIN_CALLED`）。
 - 发现页分类地址末尾的 `#id` 是路由标记，**不是 query 的一部分**。`AnalyzeUrl` 切 query 时以 `?` 起、以 `#` 止，否则标记会被编码成 `%23id` 一起发出去——实测 UAA 的接口对多余参数直接回 400，body 只有 120 字节的错误 JSON，列表恒空、界面只显示「没有更多数据」，而同一份规则走搜索链路（`searchUrl` 不带 `#`）完全正常，极易误判成规则写错。`AnalyzeUrlPagingTest.siteMarkerAfterQueryIsNotSentAsParameter` 守这条。
 - 漫画正文图片**不经过** `CoverFetcher`：`CoverInterceptor` 会先把在线页下载成本地文件，再以 `data(File)` 交给解码器。任何需要改写图片字节的处理（如禁漫天堂的切条重排）必须接在 `BookHelp.saveImageFile` 的落盘处，并且要绕开 `skipDecode` 的流式直写分支，否则错位原图会被缓存下来反复显示。
 - 书源制作用 `.agents/skills/legado-book-source/` 技能；书源说明见 [docs/book-source/README.md](docs/book-source/README.md)。
