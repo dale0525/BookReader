@@ -8,6 +8,7 @@ import io.legado.app.utils.fromJsonArray
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -135,6 +136,27 @@ class BuiltInExploreKindsTest {
                 }
             }
         }
+    }
+
+    /**
+     * 登录走 `login.apply(this)`，this 绑着 source；而 login() 里若直接
+     * `uaaLogin()`，this 会丢回全局对象，uaaLogin 第一行 `this.source...`
+     * 就抛 EcmaError，界面只显示「登录出错」。必须 `.call(this)` 传下去。
+     */
+    @Test
+    fun loginFunctionForwardsThis() {
+        val source = sources.first { it.bookSourceName == "UAA小说" }
+        val lib = source.jsLib ?: ""
+        val loginBody = Regex("""function\s+login\s*\(\)\s*\{([\s\S]*?)\}""")
+            .find(lib)?.groupValues?.get(1)
+        if (loginBody == null) {
+            fail("UAA小说 的 jsLib 里没有 login()")
+            return
+        }
+        assertTrue(
+            "login() 没有把 this 传给 uaaLogin，真机登录会抛 EcmaError：$loginBody",
+            loginBody.contains(".call(this)")
+        )
     }
 
     @Test
