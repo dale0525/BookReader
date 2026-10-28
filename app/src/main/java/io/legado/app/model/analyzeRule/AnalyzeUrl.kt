@@ -285,7 +285,11 @@ class AnalyzeUrl(
             RequestMethod.GET -> {
                 val pos = url.indexOf('?')
                 if (pos != -1) {
-                    analyzeQuery(url.substring(pos + 1))
+                    // `#id` 是发现页分类用来路由到具体站点的标记（`exploreAll` 拼在 URL 末尾），
+                    // 不属于 query。不切掉就会被编码成 `%23id` 一起发出去——实测 UAA 的接口对
+                    // 多余参数直接回 400，列表永远是空的，界面只显示「没有更多数据」。
+                    val queryEnd = url.indexOf('#', pos).takeIf { it != -1 } ?: url.length
+                    analyzeQuery(url.substring(pos + 1, queryEnd))
                     urlNoQuery = url.substring(0, pos)
                 }
             }

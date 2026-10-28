@@ -43,6 +43,25 @@ class AnalyzeUrlPagingTest {
         assertTrue(AnalyzeUrl.supportsPageSelection("@js: `https://example.test/list?page=${'$'}{page}`"))
     }
 
+    /**
+     * 发现页的分类地址末尾带 `#id`，用来路由到具体站点。它不是 query 的一部分，
+     * 不能编码进请求参数——UAA 的接口对多余参数直接回 400，列表永远是空的。
+     */
+    @Test
+    fun siteMarkerAfterQueryIsNotSentAsParameter() {
+        val url = AnalyzeUrl("https://example.test/novel/search?keyword=&page=3&size=20#uaa")
+        assertEquals("https://example.test/novel/search", url.urlNoQuery)
+        assertFalse(url.urlNoQuery.contains("#"))
+        assertFalse(url.urlNoQuery.contains("%23"))
+    }
+
+    /** 没有 query 时，`#id` 同样不能留在请求地址里。 */
+    @Test
+    fun siteMarkerWithoutQueryIsNotSent() {
+        val url = AnalyzeUrl("https://example.test/album?id=1#jmtt")
+        assertEquals("https://example.test/album", url.urlNoQuery)
+    }
+
     @Test
     fun pageTextAndLocalVariablesDoNotEnablePageSelection() {
         val rules = listOf(

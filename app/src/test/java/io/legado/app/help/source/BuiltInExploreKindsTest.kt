@@ -110,6 +110,33 @@ class BuiltInExploreKindsTest {
         }
     }
 
+    /**
+     * jsLib 是共享作用域，里面只有 `java`，没有 `source` / `baseUrl`；
+     * 要用得写成 `this.source`（`login.apply(this)` 与规则求值都会绑 this）。
+     * 裸写 `source.get(...)` 会在真机上抛 EcmaError，登录直接失败。
+     */
+    @Test
+    fun jsLibNeverUsesSourceWithoutThis() {
+        val bareCall = Regex("""(?<![\w.$])source\s*[.\[]""")
+        val bareBase = Regex("""(?<![\w.$])baseUrl\s*[.\[]""")
+        sources.forEach { source ->
+            val lib = source.jsLib ?: return@forEach
+            // 注释里提到 `source.put` 只是说明文字，剥掉注释再判。
+            val code = lib
+                .replace(Regex("""/\*[\s\S]*?\*/"""), "")
+                .replace(Regex("""(?m)//.*$"""), "")
+            listOf("source" to bareCall, "baseUrl" to bareBase).forEach { (word, re) ->
+                re.findAll(code).forEach { m ->
+                    val ctx = code.substring(maxOf(0, m.range.first - 40), m.range.last + 1)
+                    assertTrue(
+                        "${source.bookSourceName} 的 jsLib 里裸用了 $word，真机会抛 EcmaError：…$ctx…",
+                        false
+                    )
+                }
+            }
+        }
+    }
+
     @Test
     fun categoriesComeFromTheSourcesOnlySite() = runBlocking {
         sources.filter { it.bookSourceComment != "仅搜索" }.forEach { source ->
