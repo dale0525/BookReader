@@ -87,7 +87,9 @@ class ImportBookshelfUseCase(
                     async {
                         val name = bookInfo["name"] ?: ""
                         val author = bookInfo["author"] ?: ""
-                        if (name.isEmpty() || bookRepository.getBook(name, author) != null) {
+                        // 简繁归一后再判「已在书架」：书单是简体、库里存的是站点返回的字形，
+                        // 精确比对会把同一本书判成没导入过，重搜一遍再插一行。
+                        if (name.isEmpty() || bookRepository.getBookByAnyScript(name, author) != null) {
                             return@async
                         }
                         semaphore.withPermit {

@@ -769,6 +769,12 @@ interface BookDao {
     @Query("SELECT * FROM books WHERE name = :name and author = :author")
     fun getBook(name: String, author: String): Book?
 
+    // 书名条件放宽成一组字形候选：书单是简体、库里存的是站点返回的字形（可能是繁体），
+    // 只按原样比对会把同一本书判成两本。候选字形由 ChineseUtils.variants 给出，
+    // 最终判等仍走同一份归一规则（见 BookRepository.getBookByAnyScript）。
+    @Query("SELECT * FROM books WHERE name in (:names)")
+    fun getBooksByNames(names: List<String>): List<Book>
+
     @Query("""select distinct bs.* from books, book_sources bs 
         where origin == bookSourceUrl and origin not like '${BookType.localTag}%' 
         and origin not like '${BookType.webDavTag}%'""")
