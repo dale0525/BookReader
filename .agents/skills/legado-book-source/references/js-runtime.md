@@ -59,6 +59,7 @@ s.split('\n')[1]
 | `result.replace(...)` | `result` 是 String 时可用；是 JavaList 时报 `Cannot find function replace in object` |
 | `result[0]` | String 上取到的是**第一个字符**（`来一杯咖啡` → `来`），不是第一个匹配 |
 | `result.length` | String 上是字符数，JavaList 上是元素数，语义不同 |
+| `page` | **只在 `{{}}` 模板里有，`@js:` 规则体里没有**。`ruleExplore.bookList` 里读 `page` 抛 `ReferenceError: "page" is not defined`，被 catch 住就是静默空列表。要翻页只能在 `exploreUrl` 写 `{{page}}` |
 
 实测对照（同一份规则，只有 JS 不同）：
 
