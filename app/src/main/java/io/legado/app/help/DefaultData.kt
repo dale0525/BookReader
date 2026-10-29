@@ -174,6 +174,9 @@ object DefaultData {
         // 18+ 采集接口的孪生源，与同名常规源只差 `/adult` 后缀，内容重复且卡片翻倍。
         "https://zuidazy.co/adult",
         "https://api.wujinapi.me/adult",
+        // 能搜到「持械入宋」但只给一集/一个假 m3u8：目录根本不完整，留着只会误导。
+        "https://api.wujinapi.me",
+        "https://cj.lziapi.com",
         // 拆源前的 6 个聚合源。`agg.example.com` 是 example.com 下的占位域名，
         // 从来没有真实内容，书架上的书不可能靠它读到正文。
         "https://agg.example.com/novel-normal",
