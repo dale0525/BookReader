@@ -144,6 +144,7 @@ UAA小说是官方 App 的 JSON 接口（不是网页），三个限制都是服
 - 搜索必须走 App 签名接口 `/reading/bookapi/search/page/v`。网页版 `/search/{kw}` 的 `searchBookList` 恒为空，服务端只渲染空壳。签名复用番茄短剧那套 `FV_get` + `A551`，所以两个源的 `jsLib` 都带完整签名栈。
 - 目录和正文走网页端免签接口：`/api/reader/directory/detail?bookId=` 一次给全量 `chapterListWithVolume`（带卷名），正文取 reader 页内嵌的 `chapterData.content`。
 - 正文约一半的字被换成私用区码位，靠哈希为 `dc027189e0ba4cd` 的字体渲染。客户端拿不到字体，只能靠 `jsLib` 里的 `FQ_MAP` 逐字还原。
+- 发现页走 `api-lf.fanqiesdk.com` 的榜单接口，**不要用网页端 `/rank/0_1_{id}`**：那个页面的 `book_list` 由客户端 JS 填充，服务端渲染出来是 `[]`，规则解析到空数组不报错，界面只显示「没有更多数据」，和「分类本来没书」完全分不开。`side_type` 选榜单、`type` 选频道（1 男频 / 0 女频）、`offset` 真能翻页；实测 `side_type` 10/11/12 各能翻到 120 本，13/15 翻到第 3 页会回到开头，没有采用。该接口返回的书名不带私用区字符，比解析榜单页 HTML 干净。
 
 `FQ_MAP` 是**位置敏感**的：第 i 个字符就是码位 `0xe3e8 + i` 的真字。该字体在 `0xe3e8`–`0xe55b` 之间有 10 个码位没有字形，表里必须留空字符占位；把空位删掉会让后面全部错位，而且不抛异常，只会安静地把整章正文换成别的字。`FanqieNovelPuaMapTest` 冻结这三条（表长、空位、首尾码位）。
 
