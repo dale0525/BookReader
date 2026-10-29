@@ -1590,7 +1590,7 @@
     <string name="private_feature_enabled">Enable private content</string>
     <string name="private_feature_enabled_summary">Turn off to skip all verification and masking. The local password and book/group marks are kept.</string>
     <string name="private_hide_adult_content">Hide adult content</string>
-    <string name="private_hide_adult_content_summary">Hide sources whose group name contains 18+, and their books, from recent reading, the bookshelf, discovery and source management. Independent of the private feature.</string>
+    <string name="private_hide_adult_content_summary">Hide sources whose group name contains an adult marker (18+, 成人, 🔞, R18), and their books, from recent reading, the bookshelf, discovery and source management. Shelf groups with such a name are hidden too. Independent of the private feature.</string>
     <string name="private_content_display_title">Content display</string>
     <string name="private_unlock_scope_until_background">Until leaving the app</string>
     <string name="private_background_grace_title">Re-verify after leaving</string>

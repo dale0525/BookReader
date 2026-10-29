@@ -1,5 +1,6 @@
 package io.legado.app.data.repository
 
+import io.legado.app.data.entities.BookGroup
 import io.legado.app.data.entities.ExploreSourceSummary
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -77,11 +78,42 @@ class AdultContentFilterTest {
     }
 
     @Test
-    fun `分组名判成人只看 18+ 标记`() {
-        val groups = listOf("小说", "短剧", "玄幻", "小说 · 18+")
+    fun `分组名判成人按标记清单，不只看 18+`() {
+        val groups = listOf("小说", "短剧", "玄幻", "小说 · 18+", "成人", "🔞 本子", "R18")
         assertEquals(
             listOf("小说", "短剧", "玄幻"),
             AdultContentFilter.filterGroups(groups, hideAdult = true)
         )
+    }
+
+    private fun group(id: Long, name: String) = BookGroup(groupId = id, groupName = name)
+
+    @Test
+    fun `书架分组里带成人标记的一起隐藏`() {
+        val groups = listOf(
+            group(BookGroup.IdAll, "全部"),
+            group(0b1, "小说"),
+            group(0b10, "小说 · 18+"),
+            group(0b100, "漫画 · 18+"),
+            group(0b1000, "视频 · 18+"),
+            group(0b10000, "成人自建分组"),
+        )
+        assertEquals(
+            listOf(BookGroup.IdAll, 0b1L),
+            AdultContentFilter.filterShelfGroups(groups, hideAdult = true).map { it.groupId }
+        )
+    }
+
+    @Test
+    fun `开关关闭时书架分组原样返回`() {
+        val groups = listOf(group(BookGroup.IdAll, "全部"), group(0b10, "小说 · 18+"))
+        assertEquals(groups, AdultContentFilter.filterShelfGroups(groups, hideAdult = false))
+    }
+
+    @Test
+    fun `全部分组永不隐藏`() {
+        // 书架清空后没有标签页可显示，所以「全部」即使名字被判成人也留着
+        val groups = listOf(group(BookGroup.IdAll, "18+ 全部"))
+        assertEquals(1, AdultContentFilter.filterShelfGroups(groups, hideAdult = true).size)
     }
 }

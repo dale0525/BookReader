@@ -70,6 +70,29 @@ class AdultContentQueryTest {
     }
 
     @Test
+    fun adultSourceUrls_recognizeEveryMarker() = runBlocking {
+        // Kotlin 侧按 AdultContentPolicy.MARKERS 判，SQL 侧按同一份标记拼 instr。
+        // 少同步一个标记，就会「书架藏了、分组数量没减」或者反过来。
+        val cases = mapOf(
+            "https://a.example.com" to "成人",
+            "https://b.example.com" to "🔞 本子",
+            "https://c.example.com" to "R18",
+            "https://d.example.com" to "r-18 同人",
+            "https://e.example.com" to "2018 书单",
+            "https://f.example.com" to "18 禁",
+        )
+        cases.forEach { (url, group) ->
+            db.bookSourceDao.insert(
+                BookSource(bookSourceUrl = url, bookSourceName = group, bookSourceGroup = group)
+            )
+        }
+
+        val adults = db.bookSourceDao.flowAdultSourceUrls().first().toSet()
+        assertEquals(setOf(adultUrl, "https://a.example.com", "https://b.example.com",
+            "https://c.example.com", "https://d.example.com"), adults)
+    }
+
+    @Test
     fun userGroupCount_dropsAdultBooksWhenHiding() = runBlocking {
         assertEquals(2, db.bookDao.flowUserGroupBookCount(groupId, false).first())
         assertEquals(1, db.bookDao.flowUserGroupBookCount(groupId, true).first())

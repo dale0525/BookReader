@@ -41,7 +41,7 @@ object LocalPreferencesKeys {
     // 私密功能总开关：关掉即整体休眠（不验证、不脱敏、不守卫），密码与标记都留着
     val PRIVATE_ENABLED = booleanPreferencesKey("private_enabled")
 
-    // 隐藏成人内容：默认开启。判定只看书源分组名是否带 18+，与私密功能无关，不受总开关影响
+    // 隐藏成人内容：默认开启。判定只看书源/分组名是否带成人标记，与私密功能无关，不受总开关影响
     val PRIVATE_HIDE_ADULT_CONTENT = booleanPreferencesKey("private_hide_adult_content")
 
     // "离开应用前有效"频率下的宽限期（秒）：0 = 离开即失效

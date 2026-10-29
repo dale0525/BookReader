@@ -11,6 +11,7 @@ import io.legado.app.constant.AppPattern
 import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.BookSourcePart
 import io.legado.app.data.entities.ExploreSourceSummary
+import io.legado.app.help.source.AdultContentPolicy
 import io.legado.app.utils.cnCompare
 import io.legado.app.utils.splitNotBlank
 import kotlinx.coroutines.Dispatchers.IO
@@ -86,11 +87,15 @@ interface BookSourceDao {
     /**
      * 成人书源的 url，供「隐藏成人内容」反查书籍来源。
      *
-     * 只取 url：判定靠 `bookSourceGroup` 里有没有 `18+`，但 `book_sources` 每行带 200KB+ 的
+     * 只取 url：判定靠 `bookSourceGroup` 里有没有成人标记（口径见
+     * `AdultContentPolicy.SQL_GROUP_MATCHES_ADULT`），但 `book_sources` 每行带 200KB+ 的
      * `jsLib`，拉整行只为看一眼分组名不值得。分组匹配用 `instr` 而不是 `like`，免得 `18+`
      * 里的 `+` 在 like 里没有特殊含义却要多想一层。
      */
-    @Query("select bookSourceUrl from book_sources where instr(bookSourceGroup, '18+') > 0")
+    @Query(
+        "select bookSourceUrl from book_sources " +
+            "where ${AdultContentPolicy.SQL_GROUP_MATCHES_ADULT}"
+    )
     fun flowAdultSourceUrls(): Flow<List<String>>
 
     @Query(
