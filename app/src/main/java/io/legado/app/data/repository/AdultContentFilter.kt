@@ -1,12 +1,14 @@
 package io.legado.app.data.repository
 
+import io.legado.app.data.entities.BookGroup
 import io.legado.app.data.entities.ExploreSourceSummary
 import io.legado.app.help.source.AdultContentPolicy
 
 /**
  * 「隐藏成人内容」的过滤动作。判定口径见 [AdultContentPolicy]，这里只负责筛。
  *
- * 用于发现页的源列表与书源管理的分组名列表。书架的书籍过滤走 `BookshelfViewModel`
+ * 用于发现页的源列表、书源管理的分组名列表，以及书架的分组列表（默认的「小说 · 18+」
+ * 那三个分组也按分组名判定，不另存 id 清单）。书架的书籍过滤走 `BookshelfViewModel`
  * 里的 `AdultFilter`：那边要按 `BookShelfItem.origin` 反查、还要和分组数量同步收缩，
  * 就地做比抽成通用函数更清楚。
  */
@@ -30,5 +32,18 @@ object AdultContentFilter {
     fun filterGroups(groups: List<String>, hideAdult: Boolean): List<String> {
         if (!hideAdult) return groups
         return groups.filterNot { AdultContentPolicy.containsMarker(it) }
+    }
+
+    /**
+     * 书架分组列表的过滤。默认的「小说 · 18+」等分组由分组名带上标记，和书源走同一套判定，
+     * 所以不需要另存一份成人分组 id 清单——用户改名或自建分组也一并覆盖。
+     *
+     * 「全部」永远保留：书架清空后没有标签页可显示。
+     */
+    fun filterShelfGroups(groups: List<BookGroup>, hideAdult: Boolean): List<BookGroup> {
+        if (!hideAdult) return groups
+        return groups.filterNot {
+            it.groupId != BookGroup.IdAll && AdultContentPolicy.containsMarker(it.groupName)
+        }
     }
 }

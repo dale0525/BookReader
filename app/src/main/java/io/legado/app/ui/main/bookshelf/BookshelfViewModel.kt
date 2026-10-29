@@ -11,6 +11,7 @@ import io.legado.app.constant.EventBus
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookGroup
 import io.legado.app.data.entities.BookSource
+import io.legado.app.data.repository.AdultContentFilter
 import io.legado.app.data.repository.BookGroupRepository
 import io.legado.app.data.repository.BookRepository
 import io.legado.app.data.repository.BookSourceRepository
@@ -35,6 +36,7 @@ import io.legado.app.domain.usecase.RefreshTocUseCase
 import io.legado.app.domain.usecase.UpdateBooksGroupUseCase
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.coroutine.Coroutine
+import io.legado.app.help.source.AdultContentPolicy
 import io.legado.app.model.CacheBook
 import io.legado.app.model.SourceCallBack
 import io.legado.app.service.CacheBookService
@@ -168,7 +170,29 @@ class BookshelfViewModel(
     private val _effects = MutableSharedFlow<BookshelfEffect>(extraBufferCapacity = 16)
     val effects = _effects.asSharedFlow()
 
-    val groupsFlow: SharedFlow<List<BookGroup>> = bookGroupRepository.flowShow()
+    /**
+     * 「隐藏成人内容」的开关。初始快照取 [PrivateAccessSettings] 的默认值（开启），
+     * 与偏好默认一致；`groupsFlow` 要等它才能决定藏不藏成人分组，等到真值再发会让成人分组
+     * 先闪一下，所以宁可先按「开启」发首帧。
+     */
+    private val privateAccessSettingsFlow: StateFlow<PrivateAccessSettings> =
+        privateAccessGateway.settings
+            .stateIn(viewModelScope, SharingStarted.Eagerly, PrivateAccessSettings())
+
+    /**
+     * 书架实际展示的分组列表。除「隐藏空分组」之外，「隐藏成人内容」开启时还要滤掉分组名
+     * 带成人标记的分组——默认建的那三个「小说 · 18+」「漫画 · 18+」「视频 · 18+」正是靠
+     * 分组名被认出来的，不需要另存一份 id 清单。
+     *
+     * 过滤只放在这一个入口：标签页、分组菜单、左右翻页、标题全都从它派生，各自再判一遍
+     * 就会出现「菜单里没有、翻页还能翻到」这种半藏状态。
+     */
+    val groupsFlow: SharedFlow<List<BookGroup>> = combine(
+        bookGroupRepository.flowShow(),
+        privateAccessSettingsFlow.map { it.hideAdultContent }.distinctUntilChanged()
+    ) { groups, hideAdult ->
+        AdultContentFilter.filterShelfGroups(groups, hideAdult)
+    }
         .onEach {
             if (it.isNotEmpty()) {
                 isInitialLoadingFlow.value = false
@@ -177,6 +201,8 @@ class BookshelfViewModel(
         .shareIn(viewModelScope, SharingStarted.WhileSubscribed(5000), replay = 1)
 
     // 与 uiState 同理：常驻订阅，返回书架时首帧就是最新分组，避免补一次跳动
+    // 故意不过滤成人分组：分组管理与「移动到分组」还要能看见并管理它们，否则打开开关后
+    // 这些分组就再也删不掉了。
     val allGroupsFlow: StateFlow<List<BookGroup>> = bookGroupRepository.flowAll()
         .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -187,10 +213,6 @@ class BookshelfViewModel(
     private val privateAccessStateFlow: StateFlow<PrivateAccessState> =
         privateAccessGateway.state
             .stateIn(viewModelScope, SharingStarted.Eagerly, PrivateAccessState())
-
-    private val privateAccessSettingsFlow: StateFlow<PrivateAccessSettings> =
-        privateAccessGateway.settings
-            .stateIn(viewModelScope, SharingStarted.Eagerly, PrivateAccessSettings())
 
     /** 解锁态与验证时机一起参与渲染，避免"关了验证却仍然显示锁定态"的分叉 */
     private val privateUiStateFlow: StateFlow<Pair<PrivateAccessState, PrivateAccessSettings>> =
@@ -668,6 +690,15 @@ class BookshelfViewModel(
         val allGroups = data.allGroups
         val previews = data.previews
         val internal = data.internal
+        // 「隐藏成人内容」刚打开时，上次停在的成人分组（如「小说 · 18+」）已经被 groupsFlow
+        // 滤掉了，而 groupIdFlow 还指着它。这里直接退回「全部」：否则翻页生效前会先按旧 id
+        // 取一次书，闪出该分组的标题和内容——正是这个开关要挡住的东西。
+        val selectedGroupId = internal.groupId.takeIf { id ->
+            id == BookGroup.IdAll || !privateSettings.hideAdultContent ||
+                !AdultContentPolicy.containsMarker(
+                    allGroups.firstOrNull { it.groupId == id }?.groupName
+                )
+        } ?: BookGroup.IdAll
         val visibleGroupBooks =
             if (!selectedBooks.isSearchMode || selectedBooks.searchKey.isBlank()) {
                 data.allGroupBooks
@@ -681,15 +712,15 @@ class BookshelfViewModel(
                     ).toImmutableList()
                 }.toImmutableMap()
             }
-        val books = data.allGroupBooks[internal.groupId]
-            ?: selectedBooks.books.takeIf { selectedBooks.groupId == internal.groupId }
+        val books = data.allGroupBooks[selectedGroupId]
+            ?: selectedBooks.books.takeIf { selectedBooks.groupId == selectedGroupId }
             ?: emptyList()
-        val filteredBooks = visibleGroupBooks[internal.groupId]
-            ?: selectedBooks.visibleBooks.takeIf { selectedBooks.groupId == internal.groupId }
+        val filteredBooks = visibleGroupBooks[selectedGroupId]
+            ?: selectedBooks.visibleBooks.takeIf { selectedBooks.groupId == selectedGroupId }
             ?: emptyList()
-        val selectedGroupIndex = groups.indexOfFirst { it.groupId == internal.groupId }
+        val selectedGroupIndex = groups.indexOfFirst { it.groupId == selectedGroupId }
             .coerceAtLeast(0)
-        val currentGroup = allGroups.firstOrNull { it.groupId == internal.groupId }
+        val currentGroup = allGroups.firstOrNull { it.groupId == selectedGroupId }
             ?: groups.getOrNull(selectedGroupIndex)
         val currentGroupName = currentGroup?.groupName
         val selectedIds = interaction.selectedBookUrls.mapTo(linkedSetOf<Any>()) { it }
@@ -713,7 +744,7 @@ class BookshelfViewModel(
             currentGroupBookCount = books.size,
             allBooksCount = previews.allBookCount,
             selectedGroupIndex = selectedGroupIndex,
-            selectedGroupId = internal.groupId,
+            selectedGroupId = selectedGroupId,
             searchKey = selectedBooks.searchKey,
             isSearch = selectedBooks.isSearchMode,
             isLoading = internal.loadingText != null,
