@@ -11,7 +11,8 @@ description: 为任意小说/漫画站点编写、修复、验证阅读（Legado
 
 - 只写规则，不改站点、不绕过反爬。站点要求登录/验证码/加密正文时，按第 6 节收敛，不实现破解。
 - 规则语义以本仓库 `docs/dev/` 为准（那是 App 自身的文档）。上游语料是二手的，冲突时以 `docs/dev/` 和实测为准。
-- 需要查语法细节再读 `references/`，不要一开始就全读。
+- 本仓库内置书源的整体说明见 `docs/book-source/README.md`；内置资产本身的改动走 `builtin-book-sources` 技能。
+- 本仓库自己的客户端行为（`jsLib` 作用域、`#id` 路由标记、缓存空串）见 `../builtin-book-sources/references/app-runtime-contracts.md`。
 
 ## 1. 环境自检
 
@@ -49,49 +50,23 @@ node <skill>/scripts/bsv.mjs doctor --port 1122
 [{ "bookSourceUrl": "https://example.com", "bookSourceName": "...", "searchUrl": "...", "ruleSearch": {...}, "ruleBookInfo": {...}, "ruleToc": {...}, "ruleContent": {...} }]
 ```
 
-### 定位用哪套语法
-
-| 场景 | 用什么 |
-| --- | --- |
-| 常规 CSS 定位 | 默认规则 `tag.a.0@text`、`class.list@tag.li`，或 `@css:.list li@text` |
-| 按兄弟位置筛 | `:nth-child()`、`:nth-of-type()`、`:first-of-type()`、`:last-of-type()` |
-| 按文本筛 | `:contains(文字)`、`:containsOwn(文字)`、`:matches(正则)` |
-| 按结构筛 | `:has(子选择器)`、`:not(选择器)` |
-| 结果集取第 n 个 | 默认规则的索引语法 `tag.a.0`、`dd.x[0]`、`[0:3]`（`@css:` 段里无效） |
-| 接口返回 JSON | `$.data.list[*]`、`@json:$.x` |
-| 需要计算 | `<js>…</js>` 或 `@js:…` 作最后一段 |
+选哪套定位语法、索引怎么写、清洗怎么写，查 `references/syntax.md`；选择器取到空或取错元素，查 `references/selector-traps.md`。
 
 `<js>` 里的 `result` 是上一步的输出。多数字段走 `getString`，多匹配时已被拼成一个 **String**（换行分隔），不是数组；`kind` 走 `getStringList`，拿到的是 **JavaList**。不确定时先 `<js>Object.prototype.toString.call(result)</js>` 打一发。
 
 ### 硬性禁令
 
-| 禁令 | 后果 | lint |
-| --- | --- | --- |
-| `:first` `:last` `:text` `:visible` `:hidden` `:odd` `:even` | 抛 `SelectorParseException`：写在 `name`/`author` 上整条链路中断，写别处字段为空但 `errors` 里留痕 | error |
-| `:eq(n)` `:lt(n)` `:gt(n)` | jsoup 里是"同级兄弟下标"，不是结果集下标，静默取错元素 | warn |
-| `searchUrl` 用 `;post=key={{key}}` 旧语法 | 本分支没实现，请求参数全丢 | error |
-| `-` 前缀加在 `bookList`/`chapterList` 以外的字段 | 被当成 CSS 选择器的一部分，抛解析异常 | error |
-| 顶层写成对象 `{...}` | 导入直接失败 | error |
+- 不用 `:first` `:last` `:text` `:visible` `:hidden` `:odd` `:even`——jsoup 里不存在，抛 `SelectorParseException`。
+- 不用 `:eq(n)` `:lt(n)` `:gt(n)` 取"结果集第 n 个"——那是同级兄弟下标。用索引语法 `tag.a.0`、`[0]`。
+- `searchUrl` 不用 `;post=key={{key}}` 旧语法（本分支未实现，参数全丢），改 `,{"method":"POST","body":"..."}`。
+- `-` 前缀只用在 `bookList` / `chapterList` 上。
+- 顶层必须是数组，写成对象导入直接失败。
 
-要"结果集第 n 个"用索引语法 `tag.a.0`、`[0]`，不要用 `:eq`。
+各条的实测后果与 `lint` 等级见 `references/selector-traps.md` 与 `references/network.md`。
 
 ### 四条链路的必要字段
 
-- 搜索：`bookList` 必须命中列表容器；`name`、`bookUrl` 不可为空，否则 App 会退化成"把搜索页当详情页"，日志出现 `└列表为空,按详情页解析`，看起来有 1 本书其实是假的。
-- 详情：`name` 必填；`tocUrl` 只在目录不在详情页同址时才需要。
-- 目录：`chapterList` + `chapterName` + `chapterUrl`；有分页时补 `nextTocUrl`（返回单个 URL 会串行翻页，返回数组会并发）。
-- 正文：`content`；正文分页时补 `nextContentUrl`（同样单 URL 串行、数组并发）。判断"下一页"时排除跨章，否则会把下一章正文拼进来。
-
-### 常见字段的清洗
-
-`##` 只有一对匹配/替换。要多处清理就合成一条正则，别叠两个 `##…##`：
-
-| 目标 | 写法 |
-| --- | --- |
-| 书名带 `[武侠]` 前缀 | `h3 a@text##^\[[^\]]*\]##` |
-| 简介去 `简介：`、`【展开】【收起】`、推广尾巴 | `@css:#intro_pc@text##简介：\s*\|【展开】【收起】\|您要是觉得[\s\S]*##` |
-| 站点给的是 `//cdn.x.com/a.jpg` 这类协议相对地址 | `@css:img@src##^//##https://##` |
-| 正文去分页标记 | `@css:article@html##第\(\d+/\d+\)页##` |
+搜索要 `bookList` 命中列表容器且 `name`/`bookUrl` 非空，详情要 `name`，目录要 `chapterList`+`chapterName`+`chapterUrl`（有分页补 `nextTocUrl`），正文要 `content`（有分页补 `nextContentUrl`）。各字段的取值语义、分页串行与并发的区别、跨章判断见 `references/syntax.md`。
 
 ## 4. 静态检查
 
@@ -110,21 +85,11 @@ node <skill>/scripts/bsv.mjs verify --source <bookSourceUrl> --key <一个真实
 
 `verify` 从搜索一路跑到正文，输出每阶段 `ok`、列表大小、书籍总数、目录总数/页数、正文页数与字数、正文预览、错误列表。
 
-判定标准：
+通过的唯一判据是 `ok: true` 且 `search`/`detail`/`toc`/`content` 四段都在、都为 `ok`。任何一段缺失、为 `false`，或 `errors` 非空，都算未通过——逐字段定位查 `references/failure-diagnosis.md`，只看输出里的阶段字段和 `errors`，不要猜。
 
-- `ok: true` 且 `search`/`detail`/`toc`/`content` 四段都在、都为 `ok` —— 通过。
-- `search.listEmptyFallback: true` —— 搜索规则没命中列表，改 `bookList`。
-- `detail.skipped: true` 且 `search.bookUrl` 为空 —— 搜索没取到详情页链接。
-- `toc.chapters` 为 0 或 `errors` 里有 `TocEmptyException` —— 目录规则错。
-- `content.chars` 为 0 或 `errors` 里有 `ContentEmptyException` —— 正文规则错。
-
-只验单条链路时用 `--book-url` / `--toc-url` / `--content-url`，它们分别从详情、目录、正文入口起跑。
-
-验发现页用 `--key '分类名::<发现页 URL>'`，此时输出里是 `explore` 段而不是 `search` 段（`explore.books` 是抓到的书籍数），后续详情/目录/正文照常跑。
-
-搜索被登录墙/验证码挡住但详情、目录、正文正常时，用 `--book-url <一个真实详情页>` 验证后三条，并在交付说明里写清搜索链路未验证。这是诚实的降级，不是通过。
-
-失败时按 `references/failure-diagnosis.md` 的判据定位；只看 `verify` 输出里的 `errors` 和阶段字段，不要猜。
+- 只验单条链路：`--book-url` / `--toc-url` / `--content-url`，分别从详情、目录、正文入口起跑。
+- 验发现页：`--key '分类名::<发现页 URL>'`，输出里是 `explore` 段而不是 `search` 段（`explore.books` 是抓到的书籍数），后续三段照常跑。
+- 搜索被登录墙/验证码挡住但后三条正常：用 `--book-url <真实详情页>` 验证，并在交付说明里写清搜索链路未验证。这是诚实的降级，不是通过。
 
 验证通过后清理测试源：
 
@@ -158,10 +123,10 @@ node <skill>/scripts/bsv.mjs cleanup --source <bookSourceUrl>
 
 | 文件 | 什么时候读 |
 | --- | --- |
-| `references/syntax.md` | 拿不准某条规则该用哪种语法、连接符怎么写 |
+| `references/syntax.md` | 拿不准某条规则该用哪种语法、索引或清洗怎么写 |
 | `references/selector-traps.md` | 选择器取到空或取错元素 |
 | `references/js-runtime.md` | 要写 `<js>`、不确定 `result` 类型或可用 API |
-| `references/network.md` | POST、自定义 header、charset、cookie、登录 |
+| `references/network.md` | POST、自定义 header、charset、cookie、登录、发现页 |
 | `references/failure-diagnosis.md` | `verify` 报错，要定位到具体字段 |
 | `references/upstream-notes.md` | 想知道某个说法出自哪份上游文档 |
 | `references/corpus/` | 查上游原文（两套完整语料，含样例书源） |
