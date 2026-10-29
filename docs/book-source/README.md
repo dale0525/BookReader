@@ -139,6 +139,18 @@ UAA小说是官方 App 的 JSON 接口（不是网页），三个限制都是服
 
 登录走 `loginUi` + `loginUrl`（账号密码换 JWT 存进 `putLoginHeader`），不用 WebView。
 
+番茄小说的三条链路落在不同接口上，正文还有一层字形混淆：
+
+- 搜索必须走 App 签名接口 `/reading/bookapi/search/page/v`。网页版 `/search/{kw}` 的 `searchBookList` 恒为空，服务端只渲染空壳。签名复用番茄短剧那套 `FV_get` + `A551`，所以两个源的 `jsLib` 都带完整签名栈。
+- 目录和正文走网页端免签接口：`/api/reader/directory/detail?bookId=` 一次给全量 `chapterListWithVolume`（带卷名），正文取 reader 页内嵌的 `chapterData.content`。
+- 正文约一半的字被换成私用区码位，靠哈希为 `dc027189e0ba4cd` 的字体渲染。客户端拿不到字体，只能靠 `jsLib` 里的 `FQ_MAP` 逐字还原。
+
+`FQ_MAP` 是**位置敏感**的：第 i 个字符就是码位 `0xe3e8 + i` 的真字。该字体在 `0xe3e8`–`0xe55b` 之间有 10 个码位没有字形，表里必须留空字符占位；把空位删掉会让后面全部错位，而且不抛异常，只会安静地把整章正文换成别的字。`FanqieNovelPuaMapTest` 冻结这三条（表长、空位、首尾码位）。
+
+字体换了之后表会整体失效，表现为正文出现方块或错字。换字体时按「渲染字形 → 与 Source Han Sans SC Normal 同款字体做位图匹配 → 按码位顺序重拼」重建，并用测试里的首尾码位标定。
+
+付费章节（`needPay=1`）拿不到正文，规则只覆盖免费章。
+
 ## 验证
 
 每个源都用本机 App 调试接口跑过搜索 → 详情 → 目录 → 正文四链路，并额外验证了发现页入口。抽样结果：
@@ -152,6 +164,7 @@ UAA小说是官方 App 的 JSON 接口（不是网页），三个限制都是服
 黄果短剧      ok  search 20   toc 10    chars 190      key 总裁
 UAA小说       ok  search 20   toc 463   chars 3330     key 都市
 八叉书库      ok  search 1    toc 1587  chars 4842     key 玄浑道章
+番茄小说      ok  search 6    toc 1496  chars 2540     key 十日终焉
 ```
 
 搜索条数随关键词变化，不是固定值；目录数与正文字数是站点内容量，可作回归对照。

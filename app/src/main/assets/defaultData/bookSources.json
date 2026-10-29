@@ -1385,7 +1385,15 @@
       "bookUrl": "$.bookUrl"
     },
     "ruleBookInfo": {
-      "init": "@js:(function(){var b=FQ_bid(String(baseUrl));var st=FQ_state(FQ_ajax(java,'https://fanqienovel.com/page/'+b));var p=(st&&st.page)||{};var cnt=0;try{var j=JSON.parse(FQ_ajax(java,'https://fanqienovel.com/api/reader/directory/detail?bookId='+b));cnt=((j.data||{}).allItemIds||[]).length;}catch(e){cnt=0;}var kind=[];if(p.category) kind.push(String(p.category));if(cnt) kind.push(cnt+'章');if(p.creationStatus!==undefined) kind.push(String(p.creationStatus)==='0'?'连载中':'已完结');if(p.wordNumber) kind.push((Number(p.wordNumber)/10000).toFixed(0)+'万字');return JSON.stringify({name:String(p.bookName||''),author:String(p.author||''),kind:kind.join(' · '),intro:String(p.abstract||''),coverUrl:String(p.thumbUri||''),tocUrl:'https://fanqienovel.com/api/reader/directory/detail?bookId='+b});})()"
+      "init": "@js:(function(){var b=FQ_bid(String(baseUrl));var st=FQ_state(FQ_ajax(java,'https://fanqienovel.com/page/'+b));var p=(st&&st.page)||{};var cnt=0;try{var j=JSON.parse(FQ_ajax(java,'https://fanqienovel.com/api/reader/directory/detail?bookId='+b));cnt=((j.data||{}).allItemIds||[]).length;}catch(e){cnt=0;}var kind=[];if(p.category) kind.push(String(p.category));if(cnt) kind.push(cnt+'章');if(p.creationStatus!==undefined) kind.push(String(p.creationStatus)==='0'?'连载中':'已完结');if(p.wordNumber) kind.push((Number(p.wordNumber)/10000).toFixed(0)+'万字');return JSON.stringify({name:String(p.bookName||''),author:String(p.author||''),kind:kind.join(' · '),intro:String(p.abstract||''),coverUrl:String(p.thumbUri||''),wordCount:String(p.wordNumber||''),lastChapter:String(p.lastChapterTitle||''),tocUrl:'https://fanqienovel.com/api/reader/directory/detail?bookId='+b});})()",
+      "name": "$.name",
+      "author": "$.author",
+      "intro": "$.intro",
+      "coverUrl": "$.coverUrl",
+      "kind": "$.kind",
+      "wordCount": "$.wordCount",
+      "lastChapter": "$.lastChapter",
+      "tocUrl": "$.tocUrl"
     },
     "ruleToc": {
       "chapterList": "@js:FQ_toc(java,FQ_bid(String(baseUrl)))",
