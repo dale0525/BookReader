@@ -30,7 +30,7 @@ replay_pid*.log
 /.android-sdk/
 /.android-avd/
 
-# 本地构建产物：APK 交付走 WebDAV，不入库
+# 本地构建产物：APK 不入库
 /dist/
 .worktrees/
 

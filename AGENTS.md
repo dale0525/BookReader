@@ -22,11 +22,9 @@
 
 ### 交付
 
-- 构建：`./gradlew assembleAppDebug -PenableAbiSplits=false`
-- 构建产物复制到 WebDAV：`cp app/build/outputs/apk/app/debug/app-app-debug.apk /Volumes/Main/Roaming/APK/`
-  - 该目录已由 Finder 挂载，对应 `http://192.168.123.251:20001/dav/Main/Roaming/APK`。
-  - 挂载点不存在时先 `open "http://192.168.123.251:20001/dav/Main/"` 让系统重新挂载，不要改用 curl 上传（需要凭据）。
-  - 复制后用 `md5 -q` 比对源与目标，确认落盘完整。
+- 构建：`./gradlew assembleAppDebug -PenableAbiSplits=false`。
+- 质量门禁组合：`testAppDebugUnitTest`、`lintAppDebug`、`verifyConfigArchitecture`、`assembleAppDebug`。仓库没有 CI 跑这些，本地按需取用。
+- 调试包不归档、不外发，只在需要装机验证时 `adb install -r app/build/outputs/apk/app/debug/app-app-debug.apk`。
 
 ## 构建与运行环境
 
