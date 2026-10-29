@@ -110,6 +110,20 @@ by appCtx.getSharedPreferences("local", Context.MODE_PRIVATE) {
     val needUpBookSources: Boolean
         get() = !isLastVersion(21, "bookSourceVersion")
 
+    /**
+     * 六个默认书架分组（与发现页分类同名）是否已建过。
+     *
+     * 不挂在 `versionCode` 门禁里：本地构建的 versionCode 恒为 32640，覆盖安装时两边相等，
+     * 整段会被跳过。也不每次启动都建——那样用户删掉的默认分组下次启动又长回来。
+     * 标记只在建组成功之后才置位：建到一半失败（例如某个 id 已占满）时下次启动会重来，
+     * 而 [io.legado.app.help.book.ensureShelfDefaultGroups] 本身是幂等的，重来不会建出第二份。
+     */
+    var shelfDefaultGroupsCreated: Boolean
+        get() = getBoolean("shelfDefaultGroupsCreated")
+        set(value) {
+            putBoolean("shelfDefaultGroupsCreated", value)
+        }
+
     /** 上次成功取到远端内置书的地址；换了地址就不能再带它的 ETag 去问。 */
     var bookSourceRemoteUrl: String?
         get() = getString("bookSourceRemoteUrl", null)

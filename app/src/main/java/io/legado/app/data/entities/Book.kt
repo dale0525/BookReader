@@ -15,6 +15,7 @@ import io.legado.app.data.appDb
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.ContentProcessor
 import io.legado.app.help.book.applyTagGroupRulesForBook
+import io.legado.app.help.book.assignShelfDefaultGroup
 import io.legado.app.help.book.getFolderNameNoCache
 import io.legado.app.help.book.isEpub
 import io.legado.app.help.book.isImage
@@ -440,6 +441,9 @@ data class Book(
 
     fun save() {
         applyTagGroupRulesForBook(this)
+        // 标签规则先跑：规则给了分组就不按源分类归组。必须在 insert 之前——
+        // 落库之后再判断「是不是首次入架」就永远为假了。
+        assignShelfDefaultGroup(this)
         if (appDb.bookDao.has(bookUrl)) {
             appDb.bookDao.update(this)
         } else {

@@ -65,7 +65,9 @@ class AddBookUseCase(
                         otherSettingsGateway.currentSettings.replaceEnableDefault,
                         readSettingsGateway.currentSettings.chineseConverterType,
                     )
-                    bookRepository.insert(bookInfo)
+                    // migrateTo 把旧书的分组复制过来；旧书没有分组就说明用户自己移出过，
+                    // 这里不能再按源分类补一个。
+                    bookRepository.insert(bookInfo, assignDefaultGroup = false)
                     bookRepository.insertChapters(*toc.toTypedArray())
                 } else {
                     bookInfo.order = bookRepository.getMinOrder() - 1

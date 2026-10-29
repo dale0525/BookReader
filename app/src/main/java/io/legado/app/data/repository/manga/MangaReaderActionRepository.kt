@@ -18,6 +18,7 @@ import io.legado.app.domain.gateway.OtherSettingsGateway
 import io.legado.app.domain.gateway.ReadSettingsGateway
 import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.book.BookHelp
+import io.legado.app.help.book.assignShelfDefaultGroup
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.removeType
 import io.legado.app.help.coil.CoverExtras
@@ -115,6 +116,9 @@ class MangaReaderActionRepository(
     private suspend fun persistOnShelf(book: Book, toc: List<BookChapter>) {
         book.removeType(BookType.notShelf)
         if (book.order == 0) book.order = database.bookDao.minOrder - 1
+        // 这条路径直接写 DAO，绕开了 Book.save() 与 BookRepository.insert() 的归组钩子，
+        // 必须自己调一次，否则漫画从阅读器加入书架会漏掉默认分组。
+        assignShelfDefaultGroup(book)
         database.bookDao.insert(book)
         database.bookChapterDao.insert(*toc.toTypedArray())
     }

@@ -11,6 +11,7 @@ import io.legado.app.data.entities.TxtTocRule
 import io.legado.app.help.config.LocalConfig
 import io.legado.app.help.config.ThemeConfigStore
 import io.legado.app.help.config.ReadBookConfig
+import io.legado.app.help.book.ensureShelfDefaultGroups
 import io.legado.app.help.coroutine.Coroutine
 import io.legado.app.help.source.clearExploreKindsCache
 import io.legado.app.model.BookCover
@@ -32,6 +33,11 @@ object DefaultData {
             // 规则更新会被整段跳过。删除重装才会走到，所以只有重装才「修好」。
             if (LocalConfig.needUpBookSources) {
                 importDefaultBookSources()
+            }
+            // 同样不挂版本号门禁：默认分组只在这一次升级建出来，之后用户删掉就不会再回来。
+            if (!LocalConfig.shelfDefaultGroupsCreated) {
+                ensureShelfDefaultGroups()
+                LocalConfig.shelfDefaultGroupsCreated = true
             }
             if (LocalConfig.versionCode < AppConst.appInfo.versionCode) {
                 if (LocalConfig.needUpHttpTTS) {

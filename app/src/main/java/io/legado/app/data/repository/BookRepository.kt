@@ -8,6 +8,7 @@ import io.legado.app.data.dao.GroupBookCount
 import io.legado.app.data.entities.Book
 import io.legado.app.data.entities.BookChapter
 import io.legado.app.data.entities.ShelfBookSummary
+import io.legado.app.help.book.assignShelfDefaultGroup
 import io.legado.app.ui.main.bookshelf.BookShelfItem
 import io.legado.app.utils.ChineseUtils
 import kotlinx.coroutines.Dispatchers
@@ -174,8 +175,15 @@ class BookRepository(
         }
     }
 
-    suspend fun insert(book: Book) {
+    /**
+     * @param assignDefaultGroup 是否允许按书源分类归到默认分组。换源时新书的 `group`
+     *   是从旧书复制来的，旧书本来没有分组就说明用户自己移出过，不能再塞回去。
+     */
+    suspend fun insert(book: Book, assignDefaultGroup: Boolean = true) {
         withContext(Dispatchers.IO) {
+            // 加入书架的各条路径（搜索、详情页、阅读器、书单导入、换源添加）都汇到这里。
+            // 归组条件在 assignShelfDefaultGroup 内部判断：已在架上、已有分组、本地书都不动。
+            if (assignDefaultGroup) assignShelfDefaultGroup(book)
             bookDao.insert(book)
         }
     }

@@ -199,7 +199,9 @@ class AudioPlayViewModel(
                 )
                 book.removeType(BookType.updateError)
                 AudioPlay.book?.delete()
-                bookRepository.insert(book)
+                // 换源不是首次入架：group 是从旧书迁过来的，旧书没有分组就说明用户自己
+                // 移出过，这里不能再按源分类塞一个进去。
+                bookRepository.insert(book, assignDefaultGroup = false)
             }
             if (book.isAudio) {
                 AudioPlay.book = book
