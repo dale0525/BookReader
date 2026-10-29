@@ -152,6 +152,13 @@ UAA小说是官方 App 的 JSON 接口（不是网页），三个限制都是服
 
 付费章节（`needPay=1`）拿不到正文，规则只覆盖免费章。
 
+听书（音频）接不了，实测结论如下，不要重复试：
+
+- `reading/bookapi/audio/toneinfo/?aid=1967&book_id=` 免签可用，能给音色清单（`tts_tones` 七档 AI 音色、`audio_tones` 真人音频书的 `abook_id`、`related_audio_bookids`），但只是元数据。
+- 音频本身拿不到：`audio/abook/{info,detail,catalog,item,chapter,group,album}/v`、`audio/album/*`、`audio/book/*`、`audio/track/*`、`audio/play`、`audio/url` 全部 `404 Page not found`（网关级，路径不存在）；`audio/detail/` 对任何 aid 都是 `200` 空体；`audio/tts/*`、`audio/synthesis`、`audio/text` 全部 404。
+- 网页端 reader 页里 `fmReadEnable` 对多数书是 `false`、`phoneUrl` 为空，没有可用入口。
+- 第三方下载器也不用番茄的音频：`Tomato-Novel-Downloader` 的有声书导出走 `edge_tts`（微软 Edge 朗读），与番茄接口无关。要「听书」应配 TTS 引擎，不要指望抓番茄音频。
+
 ## 验证
 
 每个源都用本机 App 调试接口跑过搜索 → 详情 → 目录 → 正文四链路，并额外验证了发现页入口。抽样结果：
