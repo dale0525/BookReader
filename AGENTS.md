@@ -46,7 +46,7 @@
 - 6 档都是一个 host 一条记录，不靠 `bookSourceUrl` 的路径后缀拆分支。孪生写法（同名常规源加 `/adult` 后缀）会让卡片翻倍而内容完全重复，这类 url 列在 `retiredBookSourceUrls`，每次导入都按它删除并过滤。
 - 发现页只有 6 个分组：`小说` / `漫画` / `视频` / 各自 ` · 18+`，定义在 `constant/ExploreGroups.kt`。界面上的分组**不读** `bookSourceGroup` 字面值，而是经 `ExploreGroups.canonical()` 归一：分组名含「小说/漫画/视频」按它定档，没写或写了别的词（「短剧」「玄幻」）退回 `bookSourceType`（0 文本 / 2 图片 / 4 视频），含 `18+` 归成人档。新增源即使分组名写错也不会多出第 7 个分组标题。
 - 内置源的分组名仍必须原样是那 6 个字符串（含中间空格），`BuiltInExploreKindsTest.everySourceUsesOneOfTheSixGroups` 拦写错的。运行时的归一只是兜底用户自建源，不能用来掩盖内置源的笔误——静默纠正会让人以为改了分组名生效了，实际界面纹丝不动。
-- **判断「某个源是不是成人源」只有一条依据：`bookSourceGroup` 含 `18+`**（`AdultContentPolicy.containsMarker`）。不要用 `assets/18PlusList.txt`——它是 208 个 base64 域名的**禁入黑名单**，`SourceHelp.insertBookSource()` 命中就拒绝导入（「…是18+网址,禁止导入.」），实测内置的 10 个成人源一个都不在里面。拿它当成人标记做显示过滤，结果会是「成人源全都不显示、非成人源一个不少」。
+- **判断「某个源是不是成人源」只有一条依据：`bookSourceGroup` 含 `AdultContentPolicy.MARKERS` 里的任一标记**（`18+`、`成人`、`🔞`、`R18`、`R-18`，裸 `18` 故意不算）。Kotlin 侧走 `containsMarker`，SQL 侧拼 `SQL_GROUP_MATCHES_ADULT`（`instr(lower(…)) > 0`），两处由同一份 `MARKERS` 生成，改一处必须同时改另一处。不要用 `assets/18PlusList.txt`——它是 208 个 base64 域名的**禁入黑名单**，`SourceHelp.insertBookSource()` 命中就拒绝导入（「…是18+网址,禁止导入.」），实测内置的 10 个成人源一个都不在里面。拿它当成人标记做显示过滤，结果会是「成人源全都不显示、非成人源一个不少」。
 - `bookSourceComment` 是发现页卡片的副标题，也是唯一能承载「这个站有多少分类/榜单」的字段。它不在 `bookSource_part` 里，读它必须查 `book_sources`（`BookSourceDao.flowExploreSummaries()`），不要为了显示副标题去拉整行——每行带 200KB+ 的 `jsLib`。同一个投影还要带上 `bookSourceType`，它是归组的依据。
 - 分类缓存按 `md5(bookSourceUrl + exploreUrl)` 存在 ACache（`cache/explore/`）。内置源的 `exploreUrl` 恒为同一段 JS、改的是它背后的 `jsLib`，所以改 `jsLib` 后必须清缓存（`importBookSources` 已调用 `clearExploreKindsCache()`），否则覆盖安装后发现页仍显示旧分类。
 

@@ -15,6 +15,7 @@ import io.legado.app.data.entities.ShelfBookSummary
 import io.legado.app.domain.model.CacheableBook
 import io.legado.app.domain.model.PrivateBookFacts
 import io.legado.app.help.book.isNotShelf
+import io.legado.app.help.source.AdultContentPolicy
 import io.legado.app.ui.main.bookshelf.BookShelfItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -42,7 +43,8 @@ private const val PUBLIC_BOOK_FILTER =
  */
 private const val ADULT_BOOK_FILTER =
     "(:hideAdult = 0 OR origin IS NULL OR origin NOT IN " +
-        "(SELECT bookSourceUrl FROM book_sources WHERE instr(bookSourceGroup, '18+') > 0))"
+        "(SELECT bookSourceUrl FROM book_sources " +
+        "WHERE ${AdultContentPolicy.SQL_GROUP_MATCHES_ADULT}))"
 
 @Dao
 interface BookDao {

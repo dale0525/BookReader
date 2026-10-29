@@ -10,6 +10,7 @@ import io.legado.app.data.entities.readRecord.HomeRecentBookRow
 import io.legado.app.data.entities.readRecord.ReadRecord
 import io.legado.app.data.entities.readRecord.ReadRecordDetail
 import io.legado.app.data.entities.readRecord.ReadRecordSession
+import io.legado.app.help.source.AdultContentPolicy
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -49,7 +50,7 @@ interface ReadRecordDao {
                     AND book.author = record.bookAuthor
                     AND book.origin IN (
                         SELECT bookSourceUrl FROM book_sources
-                        WHERE instr(bookSourceGroup, '18+') > 0
+                        WHERE ${AdultContentPolicy.SQL_GROUP_MATCHES_ADULT}
                     )
             )
             GROUP BY record.bookName, record.bookAuthor
