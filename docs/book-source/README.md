@@ -4,7 +4,7 @@
 
 ## 一个源就是一个站
 
-内置源共 29 个，每个对应一个真实站点，书源列表里就能直接看到站名。发现页不跨源聚合，一张卡片就是一个站，点进去只看这个站的分类和榜单。
+内置源共 30 个，每个对应一个真实站点，书源列表里就能直接看到站名。发现页不跨源聚合，一张卡片就是一个站，点进去只看这个站的分类和榜单。
 
 | 分组 | 源 | 类型 | 入口 |
 | --- | --- | --- | --- |
@@ -13,7 +13,7 @@
 | 视频 | 最大资源、非凡资源、魔都资源、如意资源、饭果短剧、河果短剧、番茄短剧 | 视频 | 分类 |
 | 小说 · 18+ | 八叉书库、成人小说网、腐文小说、BB成人小说、爱丽丝书屋、UAA小说 | 文本 | 分类 + 周期榜单 |
 | 漫画 · 18+ | 开心看漫画、51漫画、favcomic、禁漫天堂 | 图片 | 分类 + 周期榜单 |
-| 视频 · 18+ | 黄果短剧 | 视频 | 分类 |
+| 视频 · 18+ | 黄果短剧、MissAV | 视频 | 分类 |
 
 分组只有这 6 档，没有第 7 档。发现页不读 `bookSourceGroup` 的字面值，而是经 `ExploreGroups.canonical()` 归一：分组名写了「小说 / 漫画 / 视频」就按它定档，没写或写成别的词就退回 `bookSourceType`（0 文本 / 2 图片 / 4 视频），含 `18+` 归到成人档。所以新加的源即使分组名写错标点、或者干脆写了「短剧」，也不会在发现页多出一个分组标题。
 
@@ -21,7 +21,15 @@
 
 每张卡片的副标题是 `bookSourceComment`，写着这个站能提供多少分类和榜单（如 `10 个分类 · 2 个榜单`）。没有分类入口的源写 `仅搜索`，卡片仍留在发现页，只是点进去直接给搜索。
 
-18+ 视频档只有黄果短剧一个独立站点。孪生写法（同名常规源加 `/adult` 后缀）会让卡片翻倍而内容完全重复，最大资源、无尽资源那两条 url 留在 `retiredBookSourceUrls` 里，每次导入都按它删、按它滤。
+18+ 视频档是黄果短剧、MissAV 两个独立站点。孪生写法（同名常规源加 `/adult` 后缀）会让卡片翻倍而内容完全重复，最大资源、无尽资源那两条 url 留在 `retiredBookSourceUrls` 里，每次导入都按它删、按它滤。
+
+MissAV 的两个坑都在请求头上，规则本身很短：站点在 Cloudflare 后面，只带 UA 的请求会拿到 `Just a moment...` 挑战页（实测两种状态码都出现过：200 时正文就是挑战页，解析结果为空列表、不报错；403 时同样只给挑战页）。书源 `header` 里必须给全套浏览器头——`Sec-Fetch-Mode: navigate`、`Sec-Fetch-Site: none`、`Sec-Fetch-Dest: document`、`Sec-Fetch-User: ?1`、`Upgrade-Insecure-Requests: 1`——加上这些之后四链路才通。
+
+MissAV 还带登录：`loginUi` 收账号密码，`loginUrl` 里 `login()` 调 `POST /cn/api/login`（JSON `{email,password,remember}`），成功后 `source.refreshExplore()` 清掉发现页分类缓存。登录态全在 cookie 里——`missav_session`、`remember_web_*`、`XSRF-TOKEN`、`user_uuid`，前三个 HttpOnly + 持久化；`enabledCookieJar: true` 让 `CookieManager.saveResponse` 把它们落进 `cookies` 表，重启后仍在。发现页多出来的「我的收藏」指向 `/cn/saved`，只在 `J.getCookie(base,'missav_session')` 非空时才由 `exploreAll()` 追加——未登录时那个页面本身是空的，摆出来只会让人点进空列表。`loggedIn()` 必须收 `exploreAll(J)` 传进来的 `J` 再调 `J.getCookie(...)`：jsLib 是共享作用域，里面没有 `source`，也没有 `cookie` 绑定，写了会抛 `ReferenceError` 被 `catch` 成「未登录」。
+
+播放地址不在页面里现成写着，而是 `eval(function(p,a,c,k,e,d){…})` 混淆过的 `surrit.com/<uuid>/playlist.m3u8`。`<uuid>` 在详情页里以 `surrit.com\/<uuid>\/seek\/_0.jpg`（进度条缩略图）的形式明文出现，正文规则用 `/surrit\.com\W+([0-9a-f-]{36})/` 从 HTML 里捞它，拼出 m3u8 直链。这条直链同样要 `Referer: https://missav.ai/`，所以 `header` 里的 Referer 不只是给页面用的——`mediaHeadersOf()` 会把它带给播放器，缺了它 m3u8 回 403。
+
+站点按 `dm<数字>` 前缀做 A/B 分流（`/cn/new` → `/dm539/cn/new`），规则里不用管，跟随 301 即可；分类名可以写中文，站点自己会编码。
 
 视频档下线的无尽资源、量子资源是另一回事：它们能搜到「持械入宋」，但前者只给一条「全集」播放地址、后者只给一集，目录根本凑不齐，用户点进去看到的就是一集完结。
 
@@ -170,6 +178,7 @@ UAA小说是官方 App 的 JSON 接口（不是网页），三个限制都是服
 成人小说网    ok  search 11   toc 13    chars 11118    key 剑来
 禁漫天堂      ok  search 2    toc 23    chars 8497     key 斗罗大陆
 黄果短剧      ok  search 20   toc 10    chars 190      key 总裁
+MissAV        ok  search 12   toc 1     chars 69       key 中文
 UAA小说       ok  search 20   toc 463   chars 3330     key 都市
 八叉书库      ok  search 1    toc 1587  chars 4842     key 玄浑道章
 番茄小说      ok  search 6    toc 1496  chars 2540     key 十日终焉
@@ -200,7 +209,7 @@ UAA小说       ok  search 20   toc 463   chars 3330     key 都市
 拿到 JS 结果后直接 `.toString()` 再当 JSON 解析，返回数组对象会得到
 `org.mozilla.javascript.NativeArray@…`，发现页把它当分类名显示，点进去必然报错。
 
-`BuiltInExploreKindsTest` 锁住这条契约：在 Rhino 里对 29 个源逐个跑 `exploreAll(java)`，断言结果是能解析的
+`BuiltInExploreKindsTest` 锁住这条契约：在 Rhino 里对 30 个源逐个跑 `exploreAll(java)`，断言结果是能解析的
 JSON 数组、每项 `url` 都以 http 开头、`rank` 取值合法；除标了「仅搜索」的源外，每个源都必须给出非空入口。
 
 `BuiltInBookSourceUpgradeTest` 锁住另一条：模拟**覆盖安装**（`versionCode` 已等于当前版本）后

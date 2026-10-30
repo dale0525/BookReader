@@ -22,6 +22,8 @@
 
 登录函数同理，必须定义在 `loginUrl` 里——三种写法的实测差别见 `legado-book-source` 技能的 `references/network.md`。
 
+`cookie` 这个绑定也没有。共享函数里要读 cookie，用调用处传进来的 `java` 句柄：`J.getCookie(url, key)` / `J.getCookie(url)`（`J` 即 `exploreAll(J)` 的入参，`AnalyzeRule` 实现了 `JsExtensions`）。写成裸 `cookie.getKey(...)` 或 `source.getCookie(...)` 都会抛 `ReferenceError`；被 `try/catch` 包住时更隐蔽——表现是「登录成功了但分类列表毫无变化」，因为判断函数把异常吞成了「未登录」。
+
 ## 漫画正文图片不经过 `CoverFetcher`
 
 `CoverInterceptor` 会先把在线页下载成本地文件，再以 `data(File)` 交给解码器。任何需要改写图片字节的处理（如禁漫天堂的切条重排）必须接在 `BookHelp.saveImageFile` 的落盘处，并且要绕开 `skipDecode` 的流式直写分支，否则错位原图会被缓存下来反复显示。
