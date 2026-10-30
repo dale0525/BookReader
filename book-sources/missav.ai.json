@@ -1,0 +1,47 @@
+[
+  {
+    "bookSourceUrl": "https://missav.ai",
+    "bookSourceName": "MissAV",
+    "bookSourceGroup": "视频 · 18+",
+    "bookSourceType": 4,
+    "bookSourceComment": "8 个分类 · 4 个榜单（登录后 9 个）",
+    "enabled": true,
+    "enabledExplore": true,
+    "enabledCookieJar": true,
+    "customOrder": 29,
+    "weight": 0,
+    "header": "{\"User-Agent\": \"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36\", \"Accept\": \"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8\", \"Accept-Language\": \"zh-CN,zh;q=0.9,en;q=0.8\", \"Sec-Fetch-Mode\": \"navigate\", \"Sec-Fetch-Site\": \"none\", \"Sec-Fetch-Dest\": \"document\", \"Sec-Fetch-User\": \"?1\", \"Upgrade-Insecure-Requests\": \"1\", \"Referer\": \"https://missav.ai/\"}",
+    "jsLib": "\nvar SITES = [{\"id\":\"missav\",\"n\":\"MissAV\",\"base\":\"https://missav.ai\",\"e\":[{\"t\":\"最近更新\",\"u\":\"/cn/new\",\"r\":\"update\"},{\"t\":\"本周热门\",\"u\":\"/cn/weekly-hot\",\"r\":\"week\"},{\"t\":\"本月热门\",\"u\":\"/cn/monthly-hot\",\"r\":\"month\"},{\"t\":\"今日热门\",\"u\":\"/cn/today-hot\",\"r\":\"all\"},{\"t\":\"新片发布\",\"u\":\"/cn/release\"},{\"t\":\"中文字幕\",\"u\":\"/cn/chinese-subtitle\"},{\"t\":\"无码流出\",\"u\":\"/cn/uncensored-leak\"},{\"t\":\"人妻\",\"u\":\"/cn/genres/%E4%BA%BA%E5%A6%BB\"},{\"t\":\"巨乳\",\"u\":\"/cn/genres/%E5%B7%A8%E4%B9%B3\"},{\"t\":\"熟女\",\"u\":\"/cn/genres/%E7%86%9F%E5%A5%B3\"},{\"t\":\"素人\",\"u\":\"/cn/genres/%E7%B4%A0%E4%BA%BA\"},{\"t\":\"NTR\",\"u\":\"/cn/genres/NTR\"}]}];\n\nfunction strip(u){var i=String(u).indexOf('#');return i<0?String(u):String(u).substring(0,i)}\nfunction abs(b,u){if(!u)return'';u=String(u).replace(/^\\s+|\\s+$/g,'');if(u.indexOf('http')===0)return u;if(u.charAt(0)==='/')return b+u;return b+'/'+u}\nfunction firstLine(u){var a=String(u||'').split('\\n');for(var i=0;i<a.length;i++){if(a[i].replace(/\\s/g,''))return a[i].replace(/^\\s+|\\s+$/g,'')}return''}\nfunction pick(J,rule,el){if(!rule)return'';try{return el?String(J.getString(rule,el)):String(J.getString(rule))}catch(e){return''}}\nfunction pickUrl(J,rule,el){return firstLine(pick(J,rule,el))}\nfunction loggedIn(J){\n  try{ return String(J.getCookie(SITES[0].base,'missav_session')).length>0 }catch(e){ return false }\n}\nfunction exploreAll(J){\n  var s=SITES[0],out=[];\n  if(!s||!s.e)return '[]';\n  for(var i=0;i<s.e.length;i++){\n    var e=s.e[i];\n    out.push({title:e.t,url:abs(s.base,e.u)+'?page={{page}}#'+s.id,rank:e.r||''});\n  }\n  if(loggedIn(J)) out.push({title:'我的收藏',url:abs(s.base,'/cn/saved')+'?page={{page}}#'+s.id,rank:''});\n  return JSON.stringify(out);\n}\nfunction infoLine(J,label){\n  var els=J.getElements('class.text-secondary'),v='';\n  for(var i=0;i<els.size();i++){\n    var t=String(els.get(i).text()).replace(/\\s+/g,' ').trim();\n    if(t.indexOf(label)===0)v=t;\n  }\n  return v;\n}\nfunction genresOf(J){\n  var els=J.getElements('tag.a'),out=[];\n  for(var i=0;i<els.size();i++){\n    var h=String(els.get(i).attr('href')||'');\n    if(h.indexOf('/cn/genres/')>0)out.push(String(els.get(i).text()).trim());\n  }\n  return out.join(',');\n}\nfunction playUrl(h){\n  var m=String(h||'').match(/surrit\\.com\\W+([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/);\n  return m?'https://surrit.com/'+m[1]+'/playlist.m3u8':'';\n}\n",
+    "searchUrl": "<js>var s=SITES[0];abs(s.base,'/cn/search/'+encodeURIComponent(String(key)))+(page>1?'?page='+page:'')</js>",
+    "ruleSearch": {
+      "bookList": "class.thumbnail",
+      "name": "class.my-2@tag.a@text",
+      "bookUrl": "class.my-2@tag.a@href",
+      "coverUrl": "tag.img@data-src"
+    },
+    "exploreUrl": "<js>exploreAll(java)</js>",
+    "ruleExplore": {
+      "bookList": "class.thumbnail",
+      "name": "class.my-2@tag.a@text",
+      "bookUrl": "class.my-2@tag.a@href",
+      "coverUrl": "tag.img@data-src"
+    },
+    "ruleBookInfo": {
+      "name": "@js:var s=SITES[0];pick(java,'tag.h1@text')",
+      "intro": "@js:var a=infoLine(java,'女优'),b=infoLine(java,'发行日期');(a+' '+(b||'')).trim()",
+      "kind": "@js:genresOf(java)",
+      "coverUrl": "@js:var s=SITES[0];abs(s.base,pickUrl(java,'meta[property=og:image]@content'))",
+      "tocUrl": "@js:strip(baseUrl)"
+    },
+    "ruleToc": {
+      "chapterList": "<js>[{t:'正片',h:strip(baseUrl)}]</js>",
+      "chapterName": "$.t",
+      "chapterUrl": "$.h"
+    },
+    "ruleContent": {
+      "content": "<js>playUrl(String(result))</js>"
+    },
+    "loginUrl": "@js:function login(){\n  var m = source.getLoginInfoMap();\n  var em = String(m.get('账号') || '').replace(/^\\s+|\\s+$/g, '');\n  var pw = String(m.get('密码') || '');\n  if (!em || !pw) throw new Error('请先填写 MissAV 账号与密码');\n  var base = SITES[0].base;\n  var hd = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36', 'Accept': 'application/json, text/plain, */*', 'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8', 'Content-Type': 'application/json', 'Origin': base, 'Referer': base + '/cn/new'};\n  var opt = JSON.stringify({method: 'POST', body: JSON.stringify({email: em, password: pw, remember: true}), headers: hd});\n  var resp = String(java.ajax(base + '/cn/api/login,' + opt));\n  var d = null;\n  try { d = JSON.parse(resp) } catch (e) {}\n  if (!d) throw new Error('登录失败：站点返回的不是 JSON（可能被 Cloudflare 拦截或请求过频），请稍后重试');\n  if (!d.user) throw new Error('登录失败：' + resp.substring(0, 140));\n  source.refreshExplore();\n  return em;\n}",
+    "loginUi": "[{\"name\":\"账号\",\"type\":\"text\"},{\"name\":\"密码\",\"type\":\"password\"}]"
+  }
+]

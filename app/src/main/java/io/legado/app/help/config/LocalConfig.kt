@@ -108,7 +108,7 @@ by appCtx.getSharedPreferences("local", Context.MODE_PRIVATE) {
         get() = !isLastVersion(3, "needUpDictRule")
 
     val needUpBookSources: Boolean
-        get() = !isLastVersion(21, "bookSourceVersion")
+        get() = !isLastVersion(22, "bookSourceVersion")
 
     /**
      * 六个默认书架分组（与发现页分类同名）是否已建过。
