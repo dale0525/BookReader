@@ -1,8 +1,10 @@
 package io.legado.app.feature.explore
 
 import android.app.Application
+import android.os.Looper
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
+import io.legado.app.constant.EventBus
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.ExploreSourceSummary
 import io.legado.app.data.entities.SearchBook
@@ -14,6 +16,7 @@ import io.legado.app.domain.model.PrivateAccessState
 import io.legado.app.domain.model.PrivateUnlockTarget
 import io.legado.app.domain.model.settings.PrivateAccessSettings
 import io.legado.app.help.config.AppConfigStore
+import io.legado.app.utils.postEvent
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,6 +40,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -212,6 +216,41 @@ class ExploreMainViewModelTest {
         runCurrent()
 
         assertEquals(listOf("a", "a"), repository.requests)
+    }
+
+    @Test
+    fun `refreshing explore reloads categories for the opened source`() = runTest(dispatcher) {
+        val model = createModel()
+        runCurrent()
+        model.onIntent(ExploreMainIntent.OpenSource("a"))
+        runCurrent()
+        repository.responses.getValue("a").complete(listOf(kind("a")))
+        runCurrent()
+        assertEquals(listOf("a"), repository.requests)
+
+        // 登录成功（MissAV 的「我的收藏」）走的就是这条：书源清缓存后广播，
+        // 页面不重启也要重算一次分类。
+        postEvent(EventBus.EXPLORE_KINDS_INVALIDATED, "a")
+        shadowOf(Looper.getMainLooper()).idle()
+        runCurrent()
+
+        assertEquals(listOf("a", "a"), repository.requests)
+    }
+
+    @Test
+    fun `refreshing another source leaves the opened one alone`() = runTest(dispatcher) {
+        val model = createModel()
+        runCurrent()
+        model.onIntent(ExploreMainIntent.OpenSource("a"))
+        runCurrent()
+        repository.responses.getValue("a").complete(listOf(kind("a")))
+        runCurrent()
+
+        postEvent(EventBus.EXPLORE_KINDS_INVALIDATED, "b")
+        shadowOf(Looper.getMainLooper()).idle()
+        runCurrent()
+
+        assertEquals(listOf("a"), repository.requests)
     }
 
     private fun createModel() = ExploreMainViewModel(

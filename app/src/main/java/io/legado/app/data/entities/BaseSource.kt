@@ -6,6 +6,7 @@ import com.script.buildScriptBindings
 import com.script.rhino.RhinoScriptEngine
 import io.legado.app.constant.AppConst
 import io.legado.app.constant.AppLog
+import io.legado.app.constant.EventBus
 import io.legado.app.data.entities.rule.RowUi
 import io.legado.app.help.CacheManager
 import io.legado.app.help.ConcurrentRateLimiter.Companion.updateConcurrentRate
@@ -21,6 +22,7 @@ import io.legado.app.utils.fromJsonArray
 import io.legado.app.utils.fromJsonObject
 import io.legado.app.utils.has
 import io.legado.app.utils.isMainThread
+import io.legado.app.utils.postEvent
 import kotlinx.coroutines.runBlocking
 import org.intellij.lang.annotations.Language
 
@@ -295,6 +297,11 @@ interface BaseSource : JsExtensions {
 
     /**
      * 刷新发现
+     *
+     * 清缓存只解决「下次求值拿到新结果」；已经打开发现页的用户不会因此看到变化——
+     * 发现页的 ViewModel 只在换源时重算分类。所以清完还要广播一次，
+     * 让正在看这个源的页面把分类重新求值。登录这类会改变分类集合的操作
+     * （MissAV 登录后多出「我的收藏」）全靠这条通知即时生效。
      */
     fun refreshExplore() {
         if (isMainThread) {
@@ -305,6 +312,7 @@ interface BaseSource : JsExtensions {
                 this@BaseSource.clearExploreKindsCache()
             }
         }
+        postEvent(EventBus.EXPLORE_KINDS_INVALIDATED, getKey())
     }
 
     /**
