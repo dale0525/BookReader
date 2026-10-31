@@ -26,7 +26,7 @@ description: 改动随包内置的书源（app/src/main/assets/defaultData/bookS
 
 ## 改动 asset 后的必做动作
 
-1. 改了规则或加了源 → `LocalConfig.needUpBookSources` 的版本号 +1（现为 22），否则老用户拿不到更新。
+1. 改了规则或加了源 → `LocalConfig.needUpBookSources` 的版本号 +1（现为 23），否则老用户拿不到更新。
 2. 改了内置源的分组名 → 把旧值登记进 `DefaultData.legacyBookSourceGroups`，同样 +1 版本号。
 3. asset 与仓库 `main` 分支同路径的那份**一起改**：远端刷新每次冷启动都跑，只改一边会让装机用户拿到的和随包的不一致。
 

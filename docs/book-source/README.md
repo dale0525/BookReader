@@ -139,6 +139,14 @@ var SITES = [ { id, n, base, kind, search, s:{…}, b:{…}, t:{…}, c:{…}, e
 
 台湾小说网的榜单页和全本页**必须带页码段**：`/ranking/hits/`、`/full/` 直接返回 `401`、body 为 0 字节，`/ranking/hits/1.html`、`/full/1.html` 才是 `200`。所以 `rk` 里的 url 一律写成 `{{page}}.html`，不能省。主域用 `https://www.twkan.cc`：裸 `twkan.com` 403，`twkan.cc` 会 301 跳到带 `www` 的地址。
 
+禁漫天堂的搜索是加密接口，`searchUrl` 不能写明文地址：`/search?search_query=…` 一律回 `{"code":401,"errorMsg":"Not legal request."}`，所以明文规则搜任何关键词都是 0 条——包括简体。真正可用的是 App 接口，请求头必须带 `token`（`md5(时间戳 + 站点密钥)`）、`tokenparam`（`时间戳,版本号`）和 `X-Requested-With: com.JMComic3.app`，响应体 `data` 是 AES-256-ECB 密文，密钥就是 `md5(时间戳 + 密钥)` 的十六进制。时间戳由 `jsLib` 存在书源变量里复用，401 或解密失败时换新时间戳重试一次。
+
+因此 `ruleSearch.bookList` 不能走通用的 `searchAll()`，要调 `jmSearch()` → `jmget()` 取到解密后的 JSON，再由 `jmcat()` 拼成列表。`searchUrl` 只留一个指向首页的探路请求——App 会先请求它，再执行 `bookList`，写搜索接口只会多一次必然 401 的日志。
+
+站点的搜索按字面匹配，**不做简繁归一**：简体「钢之炼金术师」命中 4 条、繁体「鋼之鍊金術師」命中 5 条，两个结果集交集为 0；只搜一种字形就丢掉另一半。台湾小说网那种「简体繁体都搜得到」是它站点自己在服务端归一的，规则里没有任何转换代码，照抄「不写转换」在禁漫天堂上只会让另一种字形继续搜不到。
+
+所以 `searchAll()` 里对 `kind==='jm'` 的站点做双向补搜：原词搜完再用 `J.s2t()`、`J.t2s()` 各搜一遍，按详情页地址去重，全部失败才算没搜到。实测「钢之炼金术师」「鋼之鍊金術師」都返回 9 条，「咒术回战」「咒術回戰」都返回 14 条。
+
 UAA小说是官方 App 的 JSON 接口（不是网页），三个限制都是服务端按 `viewId` 算的，写规则时必须知道：
 
 - 每个 `viewId` 终身 10 章，**不按天重置**。匿名只读免费章（通常 4–5 章），登录后 10 章内的会员章节也能读全文。
@@ -176,7 +184,7 @@ UAA小说是官方 App 的 JSON 接口（不是网页），三个限制都是服
 包子漫画      ok  search 33   toc 996   chars 753      key 斗罗大陆
 最大资源      ok  search 107  toc 175   chars 70       key 斗罗
 成人小说网    ok  search 11   toc 13    chars 11118    key 剑来
-禁漫天堂      ok  search 2    toc 23    chars 8497     key 斗罗大陆
+禁漫天堂      ok  search 9    toc 1     chars 2157     key 钢之炼金术师
 黄果短剧      ok  search 20   toc 10    chars 190      key 总裁
 MissAV        ok  search 12   toc 1     chars 69       key 中文
 UAA小说       ok  search 20   toc 463   chars 3330     key 都市
