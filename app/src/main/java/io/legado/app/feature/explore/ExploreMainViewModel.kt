@@ -1,10 +1,12 @@
 package io.legado.app.feature.explore
 
 import androidx.compose.runtime.Stable
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewModelScope
+import io.legado.app.constant.EventBus
 import io.legado.app.constant.ExploreGroups
 import io.legado.app.constant.PreferKey
 import io.legado.app.data.entities.ExploreSourceSummary
@@ -13,14 +15,17 @@ import io.legado.app.data.repository.AdultContentFilter
 import io.legado.app.data.repository.ExploreRepository
 import io.legado.app.data.repository.SettingsRepository
 import io.legado.app.domain.gateway.PrivateAccessGateway
+import io.legado.app.utils.eventObservable
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -112,6 +117,21 @@ class ExploreMainViewModel(
                 publish()
             }
         }
+        // 登录这类操作会让书源自己把分类缓存作废（BaseSource.refreshExplore），
+        // 正在看的页面要跟着重算，否则「我的收藏」得等重启 app 才出现。
+        viewModelScope.launch {
+            eventFlow<String>(EventBus.EXPLORE_KINDS_INVALIDATED).collect { sourceUrl ->
+                if (sourceUrl == local.value.openedSourceUrl) loadKinds(sourceUrl, force = true)
+            }
+        }
+    }
+
+    /** 把 LiveEventBus 的某个事件转成 Flow；订阅在收集结束时一并摘掉。 */
+    private inline fun <reified T> eventFlow(tag: String) = callbackFlow {
+        val observable = eventObservable<T>(tag)
+        val observer = Observer<T> { trySend(it) }
+        observable.observeForever(observer)
+        awaitClose { observable.removeObserver(observer) }
     }
 
     fun onIntent(intent: ExploreMainIntent) {

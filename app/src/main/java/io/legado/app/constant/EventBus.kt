@@ -41,4 +41,7 @@ object EventBus {
 
     /** 局域网请求被本地网络保护拦下，宿主应申请本地网络权限。 */
     const val LOCAL_NETWORK_PERMISSION_REQUIRED = "localNetworkPermissionRequired"
+
+    /** 某书源的发现页分类已作废（登录态变化等），事件值为书源 url。 */
+    const val EXPLORE_KINDS_INVALIDATED = "exploreKindsInvalidated"
 }
