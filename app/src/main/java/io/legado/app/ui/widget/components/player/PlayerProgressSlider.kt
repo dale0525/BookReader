@@ -1,9 +1,10 @@
 package io.legado.app.ui.widget.components.player
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
@@ -14,20 +15,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.RoundRect
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.dp
 import io.legado.app.ui.theme.LegadoTheme
 
 /**
- * 播放器通用的进度条：拖动时放大轨道、松手提交进度。
+ * 播放器通用的进度条：拖动时轨道加粗、滑块变大，松手提交进度；点一下也能直接跳过去。
+ *
+ * 之前轨道只有 2dp、没有滑块，触碰区只有 18dp 高，手指既难压中、压中了也看不出抓在哪。
+ * 现在轨道常态 4dp、拖动时 8dp，末端带一个圆点，触碰区抬到 40dp——
+ * 视觉上仍然是一条细进度条，但可点面积按手指的尺寸给。
  */
 @Composable
 fun PlayerProgressSlider(
@@ -47,18 +47,22 @@ fun PlayerProgressSlider(
             previewFraction = ((value - valueRange.start) / rangeLength).coerceIn(0f, 1f)
         }
     }
-    val trackScale by animateFloatAsState(
-        targetValue = if (isDragging) 1.35f else 1f,
-        animationSpec = tween(durationMillis = 200),
-        label = "player_progress_track_scale",
+    val trackHeight by animateDpAsState(
+        targetValue = if (isDragging) 8.dp else 4.dp,
+        animationSpec = tween(durationMillis = 150),
+        label = "player_progress_track_height",
+    )
+    val thumbRadius by animateDpAsState(
+        targetValue = if (isDragging) 9.dp else 6.dp,
+        animationSpec = tween(durationMillis = 150),
+        label = "player_progress_thumb_radius",
     )
     val activeColor = LegadoTheme.colorScheme.onSurface
     val inactiveColor = LegadoTheme.colorScheme.onSurface.copy(alpha = 0.38f)
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(18.dp)
-            .graphicsLayer { scaleY = trackScale }
+            .height(40.dp)
             .onSizeChanged { widthPx = it.width.toFloat().coerceAtLeast(1f) }
             .pointerInput(valueRange, widthPx) {
                 fun updatePreview(x: Float) {
@@ -79,46 +83,39 @@ fun PlayerProgressSlider(
                         updatePreview(change.position.x)
                     },
                 )
+            }
+            // 最常见的用法是「点一下跳到那里」。只支持拖动等于逼用户精确滑到目标，
+            // 而进度条上一像素对应的时长可能有十几秒。
+            .pointerInput(valueRange, widthPx) {
+                detectTapGestures { offset ->
+                    val fraction = (offset.x / widthPx).coerceIn(0f, 1f)
+                    previewFraction = fraction
+                    onValueChange(valueRange.start + fraction * rangeLength)
+                }
             },
     ) {
         val centerY = size.height / 2f
         val progressX = size.width * previewFraction
-        val trackHeight = 2.dp.toPx()
-        val trackRadius = trackHeight / 2f
-        val trackClip = Path().apply {
-            addRoundRect(
-                RoundRect(
-                    left = 0f,
-                    top = centerY - trackRadius,
-                    right = size.width,
-                    bottom = centerY + trackRadius,
-                    cornerRadius = CornerRadius(trackRadius),
-                )
+        val trackPx = trackHeight.toPx()
+        val thumbPx = thumbRadius.toPx()
+        // 滑块圆心不能压到两端之外，否则起点/终点看起来被截掉一截。
+        val thumbX = progressX.coerceIn(thumbPx, size.width - thumbPx)
+        drawLine(
+            color = inactiveColor,
+            start = Offset(0f, centerY),
+            end = Offset(size.width, centerY),
+            strokeWidth = trackPx,
+            cap = StrokeCap.Round,
+        )
+        if (progressX > 0f) {
+            drawLine(
+                color = activeColor,
+                start = Offset(0f, centerY),
+                end = Offset(progressX, centerY),
+                strokeWidth = trackPx,
+                cap = StrokeCap.Round,
             )
         }
-        val tickSpacing = 4.dp.toPx()
-        val tickHeight = 2.dp.toPx()
-        clipPath(trackClip) {
-            var tickX = 0f
-            while (tickX <= size.width) {
-                drawLine(
-                    color = inactiveColor,
-                    start = Offset(tickX, centerY - tickHeight / 2f),
-                    end = Offset(tickX, centerY + tickHeight / 2f),
-                    strokeWidth = 1.5.dp.toPx(),
-                    cap = StrokeCap.Round,
-                )
-                tickX += tickSpacing
-            }
-            if (progressX > 0f) {
-                drawLine(
-                    color = activeColor,
-                    start = Offset(0f, centerY),
-                    end = Offset(progressX, centerY),
-                    strokeWidth = trackHeight,
-                    cap = StrokeCap.Butt,
-                )
-            }
-        }
+        drawCircle(color = activeColor, radius = thumbPx, center = Offset(thumbX, centerY))
     }
 }

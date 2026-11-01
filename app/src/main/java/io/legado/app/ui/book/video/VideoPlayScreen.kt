@@ -72,6 +72,7 @@ import androidx.media3.ui.PlayerView
 import io.legado.app.R
 import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.widget.components.AppScaffold
+import io.legado.app.ui.widget.components.AppSlider
 import io.legado.app.ui.widget.components.button.series.MediumPlainButton
 import io.legado.app.ui.widget.components.button.series.MediumTonalButton
 import io.legado.app.ui.widget.components.card.TextCard
@@ -93,6 +94,33 @@ private const val CONTROLS_AUTO_HIDE_MS = 3_000L
 
 /** 控制层可选的播放速度。 */
 private val SPEED_OPTIONS = listOf(1f, 1.25f, 1.5f, 2f, 3f)
+
+/**
+ * 手势层的点按/长按处理：单击切控制层、双击左右半屏 ±10 秒、长按 3 倍速。
+ *
+ * 这一层始终挂着，不再只在控制层隐藏时生效——那样想快进得先把控制层点掉，
+ * 而点那一下本来就是要去调控制条。控制层的遮罩与按钮各自消费自己的点击，
+ * 落在画面空白处的点按仍然穿透到这一层。
+ */
+private fun Modifier.playerGestures(
+    onToggleControls: () -> Unit,
+    onDoubleTap: (Long) -> Unit,
+    onFastForwardStart: () -> Unit,
+    onFastForwardEnd: () -> Unit,
+): Modifier = pointerInput(Unit) {
+    detectTapGestures(
+        onTap = { onToggleControls() },
+        onDoubleTap = { offset ->
+            onDoubleTap(if (offset.x > size.width / 2f) SEEK_STEP_MS else -SEEK_STEP_MS)
+        },
+        onLongPress = { onFastForwardStart() },
+        // onLongPress 只在触发那一刻回调一次，收尾靠释放回调。
+        onPress = {
+            val released = tryAwaitRelease()
+            if (released) onFastForwardEnd()
+        },
+    )
+}
 
 /**
  * 视频详情页。
@@ -328,32 +356,18 @@ private fun FullscreenPlayer(
             modifier = Modifier.fillMaxSize(),
         )
 
-        // 控制层隐藏时接管整个画面：单击唤出控制层，双击左右半屏跳转，长按 3 倍速。
-        if (!controlsVisible) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(Unit) {
-                        detectTapGestures(
-                            onTap = { controlsVisible = true },
-                            onDoubleTap = { offset ->
-                                val delta = if (offset.x > size.width / 2f) {
-                                    SEEK_STEP_MS
-                                } else {
-                                    -SEEK_STEP_MS
-                                }
-                                onIntent(VideoPlayIntent.SeekBy(delta))
-                            },
-                            onLongPress = { onIntent(VideoPlayIntent.FastForwardStart) },
-                            // onLongPress 只在触发那一刻回调一次，收尾靠释放回调。
-                            onPress = {
-                                val released = tryAwaitRelease()
-                                if (released) onIntent(VideoPlayIntent.FastForwardEnd)
-                            },
-                        )
-                    },
-            )
-        }
+        // 手势层常驻：控制层显示时双击/长按同样要能快进加速。
+        // 它铺在画面之上、控制层之下，所以遮罩上的单击收起、按钮点击都不受影响。
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .playerGestures(
+                    onToggleControls = { controlsVisible = !controlsVisible },
+                    onDoubleTap = { onIntent(VideoPlayIntent.SeekBy(it)) },
+                    onFastForwardStart = { onIntent(VideoPlayIntent.FastForwardStart) },
+                    onFastForwardEnd = { onIntent(VideoPlayIntent.FastForwardEnd) },
+                ),
+        )
 
         // 控制层：画面区（遮罩 + 中央播放键）与底部控制条放进同一个 Column，
         // 两者是上下分块、永不重叠的兄弟节点。
@@ -365,10 +379,7 @@ private fun FullscreenPlayer(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .background(Color.Black.copy(alpha = 0.45f))
-                        .pointerInput(Unit) {
-                            detectTapGestures(onTap = { controlsVisible = false })
-                        },
+                        .background(Color.Black.copy(alpha = 0.45f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     AnimatedPlayPauseButton(
@@ -442,7 +453,7 @@ private fun PlayerTopBar(
     }
 }
 
-/** 控制层底部：进度条、速度、全屏、静音。 */
+/** 控制层底部：进度条、音量、速度、全屏。 */
 @Composable
 private fun PlayerBottomBar(
     state: VideoPlayUiState,
@@ -481,9 +492,33 @@ private fun PlayerBottomBar(
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            MediumPlainButton(
+                onClick = { onIntent(VideoPlayIntent.ToggleMute) },
+                icon = if (state.isMuted) Icons.AutoMirrored.Filled.VolumeOff
+                else Icons.AutoMirrored.Filled.VolumeUp,
+                contentDescription = stringResource(
+                    if (state.isMuted) R.string.video_unmute else R.string.video_mute
+                ),
+                tint = Color.White,
+            )
+            AppSlider(
+                value = state.volume.toFloat(),
+                onValueChange = { onIntent(VideoPlayIntent.SetVolume(it.toInt())) },
+                valueRange = 0f..100f,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp),
+                accessibilityLabel = stringResource(R.string.video_volume),
+                accessibilityValue = state.volume.toString(),
+            )
+            AppText(
+                text = state.volume.toString(),
+                style = LegadoTheme.typography.labelMedium,
+                color = Color.White,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             SpeedButton(
                 speed = state.speed,
                 onSelect = { onIntent(VideoPlayIntent.SetSpeed(it)) },
@@ -494,16 +529,6 @@ private fun PlayerBottomBar(
                 icon = if (fillScreen) Icons.Default.FullscreenExit else Icons.Default.Fullscreen,
                 contentDescription = stringResource(
                     if (fillScreen) R.string.video_exit_fullscreen else R.string.video_fullscreen
-                ),
-                tint = Color.White,
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            MediumPlainButton(
-                onClick = { onIntent(VideoPlayIntent.ToggleMute) },
-                icon = if (state.isMuted) Icons.AutoMirrored.Filled.VolumeOff
-                else Icons.AutoMirrored.Filled.VolumeUp,
-                contentDescription = stringResource(
-                    if (state.isMuted) R.string.video_unmute else R.string.video_mute
                 ),
                 tint = Color.White,
             )
@@ -646,8 +671,8 @@ private fun PlayerSurface(
         )
     }
 
-    LaunchedEffect(exoPlayer, state.isMuted) {
-        exoPlayer.volume = if (state.isMuted) 0f else 1f
+    LaunchedEffect(exoPlayer, state.volume) {
+        exoPlayer.volume = state.volume.coerceIn(0, 100) / 100f
     }
 
     Box(modifier = modifier) {

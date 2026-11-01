@@ -53,10 +53,14 @@ data class VideoPlayUiState(
     val playCommand: Boolean? = null,
     val speed: Float = 1f,
     /**
-     * 静音状态。播放器音量只由本应用改写，不会被它自己改回去，
-     * 所以这里可以直接作为单向指令驱动 volume，不必像播放/暂停那样走一次性命令。
+     * 音量，1–100。0 等价于静音。
+     *
+     * 播放器音量只由本应用改写，不会被它自己改回去，所以这里可以直接作为单向指令
+     * 驱动 volume，不必像播放/暂停那样走一次性命令。
      */
-    val isMuted: Boolean = false,
+    val volume: Int = 100,
+    /** 静音前的音量，取消静音时恢复到这个值。 */
+    val lastAudibleVolume: Int = 100,
     /** 长按临时 3 倍速快进时为 true；松手回落到 [speed]。 */
     val isFastForwarding: Boolean = false,
     val errorMessage: String? = null,
@@ -65,6 +69,7 @@ data class VideoPlayUiState(
     val canPrevious: Boolean get() = chapterIndex > 0
     val canNext: Boolean get() = chapterIndex < chapters.lastIndex
     val hasVideo: Boolean get() = playUrl.isNotBlank()
+    val isMuted: Boolean get() = volume <= 0
 }
 
 sealed interface VideoPlayIntent {
@@ -79,6 +84,9 @@ sealed interface VideoPlayIntent {
     data object NextChapter : VideoPlayIntent
     data class SelectChapter(val index: Int) : VideoPlayIntent
     data class SetSpeed(val value: Float) : VideoPlayIntent
+    /** 音量，1–100。0 表示静音。 */
+    data class SetVolume(val value: Int) : VideoPlayIntent
+    /** 点静音键：当前有声就静音，本来静音就回到满音量。 */
     data object ToggleMute : VideoPlayIntent
     /** 长按快进开始/结束；结束由 [FastForwardEnd] 表示。 */
     data object FastForwardStart : VideoPlayIntent

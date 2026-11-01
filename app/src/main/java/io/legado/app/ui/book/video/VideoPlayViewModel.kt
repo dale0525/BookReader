@@ -183,7 +183,14 @@ class VideoPlayViewModel(
             VideoPlayIntent.NextChapter -> stepChapter(1)
             is VideoPlayIntent.SelectChapter -> loadPlayUrl(intent.index)
             is VideoPlayIntent.SetSpeed -> _uiState.update { it.copy(speed = intent.value) }
-            VideoPlayIntent.ToggleMute -> _uiState.update { it.copy(isMuted = !it.isMuted) }
+            is VideoPlayIntent.SetVolume ->
+                _uiState.update { it.copy(volume = intent.value.coerceIn(0, 100)) }
+
+            VideoPlayIntent.ToggleMute -> _uiState.update {
+                // 静音前的音量要留住，否则取消静音只能回到一个固定档。
+                if (it.isMuted) it.copy(volume = it.lastAudibleVolume)
+                else it.copy(lastAudibleVolume = it.volume.coerceAtLeast(1), volume = 0)
+            }
             VideoPlayIntent.FastForwardStart ->
                 _uiState.update { it.copy(isFastForwarding = true) }
 
