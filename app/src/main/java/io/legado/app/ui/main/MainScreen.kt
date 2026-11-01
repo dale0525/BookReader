@@ -12,7 +12,6 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -108,7 +107,6 @@ import io.legado.app.ui.widget.components.menuItem.RoundDropdownMenu
 import io.legado.app.ui.widget.components.menuItem.RoundDropdownMenuItem
 import io.legado.app.ui.widget.components.navigation.AppNavigationBar
 import io.legado.app.ui.widget.components.navigation.AppNavigationBarItem
-import io.legado.app.ui.widget.components.pager.rememberPagerFlingPassThroughConnection
 import io.legado.app.ui.widget.components.text.AppText
 import io.legado.app.utils.sendToClip
 import io.legado.app.utils.startActivityForBook
@@ -238,10 +236,6 @@ fun MainScreen(
             currentOnMainDestinationChanged()
         }
     }
-    val pagerNestedScrollConnection = rememberPagerFlingPassThroughConnection(
-        state = pagerState,
-        orientation = Orientation.Horizontal,
-    )
     var bookshelfScrollToTopRequest by remember { mutableLongStateOf(0L) }
     fun requestBookshelfScrollToTop() {
         bookshelfScrollToTopRequest++
@@ -536,7 +530,6 @@ fun MainScreen(
                 ) {
                     HorizontalPager(
                         state = pagerState,
-                        pageNestedScrollConnection = pagerNestedScrollConnection,
                         modifier = Modifier
                             .fillMaxSize()
                             .then(
@@ -544,7 +537,10 @@ fun MainScreen(
                                     if (this != null) Modifier.skipToLookaheadSize() else Modifier
                                 }
                             ),
-                        userScrollEnabled = true,
+                        // 主界面的左右滑动切 tab 关掉：它和书架/发现页自身的横向手势
+                        // （翻页卡片、封面滑动）抢事件，误触时用户看到的是「翻着书突然换页」。
+                        // tab 切换只保留点击底部导航，页面内部的横向滚动不受影响。
+                        userScrollEnabled = false,
                         beyondViewportPageCount = 4
                     ) { page ->
                         val destination = destinations.getOrNull(page) ?: return@HorizontalPager
