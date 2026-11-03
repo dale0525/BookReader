@@ -159,7 +159,6 @@ fun ReadBookScreen(
     val skipDialog = state.activeDialog as? ReadBookDialog.ConfirmSkipToChapter
     val payDialog = state.activeDialog as? ReadBookDialog.ConfirmChapterPay
     val addToBookshelfDialog = state.activeDialog as? ReadBookDialog.ConfirmAddToBookshelf
-    val retranslateDialog = state.activeDialog as? ReadBookDialog.ConfirmRetranslate
     val readRecordAliasDialog = state.activeDialog as? ReadBookDialog.ReadRecordAliasConflict
     val externalUrlDialog = state.activeDialog as? ReadBookDialog.ConfirmOpenExternalUrl
     val context = LocalContext.current
