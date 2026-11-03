@@ -91,6 +91,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import io.legado.app.R
 import io.legado.app.constant.BookType
@@ -128,6 +129,9 @@ import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.androidx.compose.koinViewModel
 
 private val speedOptions = listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f, 2.5f, 3f)
+
+/** 双击左右半屏的跳转步长。 */
+private const val SEEK_STEP_MS = 10_000L
 
 /** 播放区在全屏 / 非全屏之间切换时的尺寸过渡时长。 */
 private const val VIDEO_FULLSCREEN_SIZE_ANIM_MILLIS = 300
@@ -396,6 +400,14 @@ fun VideoPlayerScreen(
                                 player = VideoPlay.player
                             }.also { playerViewRef = it }
                         },
+                        update = { view ->
+                            // 铺满：裁掉超出画面的部分，把黑边吃掉。竖屏片源贴满横屏窗口时用。
+                            view.resizeMode = if (state.fillScreen) {
+                                AspectRatioFrameLayout.RESIZE_MODE_ZOOM
+                            } else {
+                                AspectRatioFrameLayout.RESIZE_MODE_FIT
+                            }
+                        },
                         onRelease = {
                             it.player = null
                             it.visibility = View.INVISIBLE
@@ -404,30 +416,37 @@ fun VideoPlayerScreen(
                     )
 
                     // 画面手势层：压在 PlayerView 上但压不住下面的控制浮层。
-                    // 单击切换控制条，长按临时提速。
+                    // 单击切换控制条，双击左右半屏 ±10 秒，长按临时提速。
                     if (!inPip) {
                         Box(
                             modifier = Modifier
                                 .fillMaxSize()
                                 .pointerInput(Unit) {
-                                    awaitEachGesture {
-                                        awaitFirstDown()
-                                        val up = withTimeoutOrNull(
-                                            viewConfiguration.longPressTimeoutMillis
-                                        ) { waitForUpOrCancellation() }
-                                        if (up == null) {
-                                            // 长按：临时提速，抬手恢复
+                                    detectTapGestures(
+                                        onTap = { controlsVisible = !controlsVisible },
+                                        // 以画面中线分左右：左半屏后退、右半屏前进
+                                        onDoubleTap = { offset ->
+                                            viewModel.onIntent(
+                                                VideoPlayerIntent.SeekBy(
+                                                    if (offset.x > size.width / 2f) SEEK_STEP_MS
+                                                    else -SEEK_STEP_MS
+                                                )
+                                            )
+                                        },
+                                        onLongPress = {
                                             viewModel.onIntent(
                                                 VideoPlayerIntent.LongPressSpeed(true)
                                             )
-                                            waitForUpOrCancellation()
-                                            viewModel.onIntent(
-                                                VideoPlayerIntent.LongPressSpeed(false)
-                                            )
-                                        } else {
-                                            controlsVisible = !controlsVisible
-                                        }
-                                    }
+                                        },
+                                        // 抬手恢复常驻倍速；长按没触发时这次恢复是无害的空转
+                                        onPress = {
+                                            if (tryAwaitRelease()) {
+                                                viewModel.onIntent(
+                                                    VideoPlayerIntent.LongPressSpeed(false)
+                                                )
+                                            }
+                                        },
+                                    )
                                 },
                         )
                     }
@@ -460,6 +479,9 @@ fun VideoPlayerScreen(
                             canPrevious = state.episodeIndex > 0 || state.volumeIndex > 0,
                             canNext = state.episodeIndex < state.episodes.lastIndex ||
                                 state.volumeIndex < state.volumes.lastIndex,
+                            volume = state.volume,
+                            isMuted = state.isMuted,
+                            fillScreen = state.fillScreen,
                             onBack = exitPlayer,
                             onTogglePlay = {
                                 viewModel.onIntent(VideoPlayerIntent.TogglePlay)
@@ -1049,6 +1071,9 @@ private fun VideoPlayerOverlay(
     hasCustomButton: Boolean,
     canPrevious: Boolean,
     canNext: Boolean,
+    volume: Int,
+    isMuted: Boolean,
+    fillScreen: Boolean,
     onBack: () -> Unit,
     onTogglePlay: () -> Unit,
     onSeek: (Long) -> Unit,
@@ -1144,11 +1169,38 @@ private fun VideoPlayerOverlay(
                     onIntent(VideoPlayerIntent.NextEpisode)
                 }
                 Spacer(Modifier.weight(1f))
+                // 音量只在全屏时给：竖屏时系统音量键与通知栏都能调，控制条留给播放相关动作
+                if (fullscreen) {
+                    OverlayIconButton(
+                        icon = if (isMuted) AppIcons.Mute else AppIcons.Volume,
+                        contentDescription = stringResource(
+                            if (isMuted) R.string.video_unmute else R.string.video_mute
+                        ),
+                    ) {
+                        onIntent(VideoPlayerIntent.ToggleMute)
+                    }
+                    AppSlider(
+                        value = volume.toFloat(),
+                        onValueChange = { onIntent(VideoPlayerIntent.SetVolume(it.toInt())) },
+                        valueRange = 0f..100f,
+                        modifier = Modifier.width(96.dp),
+                        accessibilityLabel = stringResource(R.string.video_volume),
+                        accessibilityValue = volume.toString(),
+                    )
+                }
                 OverlayIconButton(
                     icon = AppIcons.Speed,
                     contentDescription = stringResource(R.string.play_speed),
                 ) {
                     onIntent(VideoPlayerIntent.OpenSheet(VideoPlayerSheet.SPEED))
+                }
+                OverlayIconButton(
+                    icon = if (fillScreen) AppIcons.FitScreen else AppIcons.FillScreen,
+                    contentDescription = stringResource(
+                        if (fillScreen) R.string.video_fit_screen else R.string.video_fill_screen
+                    ),
+                ) {
+                    onIntent(VideoPlayerIntent.ToggleFillScreen)
                 }
                 OverlayIconButton(
                     icon = if (fullscreen) AppIcons.FullscreenExit else AppIcons.Fullscreen,

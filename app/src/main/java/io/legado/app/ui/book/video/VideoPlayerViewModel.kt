@@ -78,6 +78,8 @@ class VideoPlayerViewModel : ViewModel() {
                         isLoading = state.isLoading,
                         isPlaying = state.isPlaying,
                         error = state.error,
+                        volume = state.volume,
+                        isMuted = state.isMuted,
                         showDanmaku = VideoPlay.danmakuShow,
                         bookSourceUrl = source?.bookSourceUrl.orEmpty(),
                         bookSourceName = source?.bookSourceName.orEmpty(),
@@ -216,6 +218,13 @@ class VideoPlayerViewModel : ViewModel() {
                 VideoPlay.player.playbackParameters =
                     VideoPlay.player.playbackParameters.withSpeed(speed)
             }
+
+            VideoPlayerIntent.ToggleFillScreen ->
+                _uiState.update { it.copy(fillScreen = !it.fillScreen) }
+
+            is VideoPlayerIntent.SeekBy -> VideoPlay.seekBy(intent.deltaMs)
+            is VideoPlayerIntent.SetVolume -> VideoPlay.setVolume(intent.volume)
+            VideoPlayerIntent.ToggleMute -> VideoPlay.toggleMute()
         }
     }
 

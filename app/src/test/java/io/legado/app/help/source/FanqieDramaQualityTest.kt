@@ -23,7 +23,7 @@ import splitties.init.injectAsAppCtx
  * 平台自己的默认值，不能拿它当「最高档」用。
  *
  * 规则一度把默认档位写死成 360p（注释理由是「体积小、解密快」），但解密并不在
- * 列表页发生：`VideoPlayViewModel.loadPlayUrl()` 是点播放之后才调正文规则，
+ * 列表页发生：`VideoPlay` 是点播放之后才调正文规则（`loadMedia`），
  * 期间 `isLoadingUrl = true`，播放器已经在转圈。也就是说 360p 换来的「快」用户
  * 根本感觉不到，只换来更糊的画面。现在改成未设置 `hgq` 时取接口给出的最高档。
  *
