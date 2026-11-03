@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MimeTypes
+import androidx.media3.exoplayer.mediacodec.MediaCodecUtil
 import androidx.media3.database.StandaloneDatabaseProvider
 import androidx.media3.datasource.FileDataSource
 import androidx.media3.datasource.ResolvingDataSource
@@ -15,6 +16,7 @@ import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import com.google.gson.reflect.TypeToken
@@ -47,20 +49,36 @@ object ExoPlayerHelper {
         return builder.build()
     }
 
-    fun createHttpExoPlayer(context: Context): ExoPlayer {
-        return ExoPlayer.Builder(context).setLoadControl(
-            DefaultLoadControl.Builder().setBufferDurationsMs(
-                DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
-                DefaultLoadControl.DEFAULT_MAX_BUFFER_MS,
-                DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS / 10,
-                DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS / 10
-            ).build()
+    /**
+     * 视频播放器。
+     *
+     * [softwareDecodeOnly] 为 true 时只保留软解码器：部分设备的硬解码器初始化成功、
+     * 喂数据时才失败，`setEnableDecoderFallback` 只在初始化阶段生效，那一路靠重建播放器兜住。
+     */
+    fun createHttpExoPlayer(context: Context, softwareDecodeOnly: Boolean = false): ExoPlayer {
+        val renderersFactory = if (softwareDecodeOnly) {
+            DefaultRenderersFactory(context).setMediaCodecSelector { mimeType, secure, tunneling ->
+                MediaCodecUtil.getDecoderInfos(mimeType, secure, tunneling)
+                    .filter { it.softwareOnly }
+            }
+        } else {
+            DefaultRenderersFactory(context).setEnableDecoderFallback(true)
+        }
+        return ExoPlayer.Builder(context)
+            .setRenderersFactory(renderersFactory)
+            .setLoadControl(
+                DefaultLoadControl.Builder().setBufferDurationsMs(
+                    DefaultLoadControl.DEFAULT_MIN_BUFFER_MS,
+                    DefaultLoadControl.DEFAULT_MAX_BUFFER_MS,
+                    DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS / 10,
+                    DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS / 10
+                ).build()
 
-        ).setMediaSourceFactory(
-            DefaultMediaSourceFactory(context)
-                .setDataSourceFactory(resolvingDataSource)
-                .setLiveTargetOffsetMs(5000)
-        ).build()
+            ).setMediaSourceFactory(
+                DefaultMediaSourceFactory(context)
+                    .setDataSourceFactory(resolvingDataSource)
+                    .setLiveTargetOffsetMs(5000)
+            ).build()
     }
 
 

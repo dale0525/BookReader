@@ -436,6 +436,37 @@ class VideoPlaySessionTest {
         awaitWrites()
     }
 
+    // ——————————————————— 播放器音量与跳转 ———————————————————
+
+    @Test
+    fun toggleMuteRestoresTheVolumeTheUserHad() = runBlocking {
+        VideoPlay.attachPlayer(player.instance)
+
+        VideoPlay.setVolume(35)
+        VideoPlay.toggleMute()
+        assertEquals(0, VideoPlay.state.value.volume)
+        assertTrue(VideoPlay.state.value.isMuted)
+
+        VideoPlay.toggleMute()
+        // 取消静音回到用户自己调的那一档，而不是某个固定档
+        assertEquals(35, VideoPlay.state.value.volume)
+        assertFalse(VideoPlay.state.value.isMuted)
+    }
+
+    @Test
+    fun seekByStaysInsideTheMedia() = runBlocking {
+        VideoPlay.attachPlayer(player.instance)
+        player.position = 5_000L
+        player.duration = 60_000L
+
+        VideoPlay.seekBy(-10_000L)
+        assertEquals(0L, player.position)
+
+        player.position = 55_000L
+        VideoPlay.seekBy(10_000L)
+        assertEquals(60_000L, player.position)
+    }
+
     @Test
     fun uiStateHasNoSourceCapabilitiesForRssArticle() = runBlocking {
         val article = RssArticle(
@@ -546,6 +577,8 @@ class VideoPlaySessionTest {
 
     private class TestPlayer {
         var position = 0L
+        var duration = 0L
+        var volume = 1f
         var pauseCalls = 0
         var released = false
         private var playing = false
@@ -556,10 +589,22 @@ class VideoPlaySessionTest {
         ) { _, method, args ->
             when (method.name) {
                 "getCurrentPosition" -> position
+                "getDuration" -> duration
+                "getVolume" -> volume
+                "setVolume" -> {
+                    volume = args!![0] as Float
+                    null
+                }
+
                 "getMediaItemCount" -> mediaItemCount
                 "setMediaItem" -> {
                     mediaItemCount = 1
                     if (args != null && args.size > 1) position = args[1] as Long
+                    null
+                }
+
+                "seekTo" -> {
+                    position = args!![0] as Long
                     null
                 }
 

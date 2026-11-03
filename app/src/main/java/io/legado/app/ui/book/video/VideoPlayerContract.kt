@@ -26,8 +26,13 @@ data class VideoPlayerUiState(
     val isLoading: Boolean = false,
     val isPlaying: Boolean = false,
     val isFullscreen: Boolean = false,
+    /** 铺满：裁掉超出画面的部分，把黑边吃掉。 */
+    val fillScreen: Boolean = false,
     val error: String? = null,
     val speed: Float = 1f,
+    /** 播放器音量，0–100；与系统媒体音量无关。 */
+    val volume: Int = 100,
+    val isMuted: Boolean = false,
     val showDanmaku: Boolean = true,
     val autoPlay: Boolean = true,
     val startFull: Boolean = false,
@@ -131,6 +136,18 @@ sealed interface VideoPlayerIntent {
 
     /** 长按加速期间临时提速，松手恢复常驻倍速。 */
     data class LongPressSpeed(val active: Boolean) : VideoPlayerIntent
+
+    /** 双击左右半屏相对跳转，负值后退。 */
+    data class SeekBy(val deltaMs: Long) : VideoPlayerIntent
+
+    /** 播放器音量，0–100。 */
+    data class SetVolume(val volume: Int) : VideoPlayerIntent
+
+    /** 在静音与上一次可听音量之间切换。 */
+    data object ToggleMute : VideoPlayerIntent
+
+    /** 铺满与等比适应之间切换。 */
+    data object ToggleFillScreen : VideoPlayerIntent
 }
 
 sealed interface VideoPlayerEffect {

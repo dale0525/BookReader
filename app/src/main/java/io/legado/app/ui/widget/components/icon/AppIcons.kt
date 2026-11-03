@@ -4,6 +4,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.LibraryBooks
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.automirrored.outlined.LibraryBooks
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.BugReport
@@ -31,6 +33,8 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.ZoomInMap
+import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material.icons.outlined.Home
@@ -155,6 +159,22 @@ object AppIcons {
     val Speed: ImageVector
         @Composable
         get() = Icons.Default.Speed
+
+    val Volume: ImageVector
+        @Composable
+        get() = Icons.AutoMirrored.Filled.VolumeUp
+
+    val Mute: ImageVector
+        @Composable
+        get() = Icons.AutoMirrored.Filled.VolumeOff
+
+    val FillScreen: ImageVector
+        @Composable
+        get() = Icons.Default.ZoomOutMap
+
+    val FitScreen: ImageVector
+        @Composable
+        get() = Icons.Default.ZoomInMap
 
     val Episodes: ImageVector
         @Composable

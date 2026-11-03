@@ -3,6 +3,7 @@ package io.legado.app.model
 import android.annotation.SuppressLint
 import androidx.annotation.VisibleForTesting
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import io.legado.app.R
@@ -50,6 +51,9 @@ data class VideoPlayState(
     val error: String? = null,
     val playUrl: String? = null,
     val danmaku: String? = null,
+    /** 播放器音量，0–100；与系统媒体音量无关。 */
+    val volume: Int = 100,
+    val isMuted: Boolean = false,
 )
 
 /**
@@ -124,12 +128,22 @@ object VideoPlay : CoroutineScope by MainScope() {
 
     private var playerInstance: ExoPlayer? = null
 
+    /** 静音前那一档音量，取消静音时恢复。 */
+    private var lastAudibleVolume = 100
+
     val player: ExoPlayer
-        get() = playerInstance ?: ExoPlayerHelper.createHttpExoPlayer(appCtx)
+        get() = playerInstance ?: ExoPlayerHelper.createHttpExoPlayer(appCtx, softwareDecodeOnly)
             .also { created ->
                 created.addListener(playerListener)
+                created.volume = _state.value.volume / 100f
                 playerInstance = created
             }
+
+    /** 硬解失败过一次后，后续重建的播放器只用软解码器。 */
+    private var softwareDecodeOnly = false
+
+    /** 当前播的那条媒体，重建播放器时原样搬过去。 */
+    private var currentMedia: VideoMedia? = null
 
     /** 测试与宿主替换播放器实例时使用；会话内只应有一个实例。 */
     @VisibleForTesting
@@ -156,6 +170,36 @@ object VideoPlay : CoroutineScope by MainScope() {
                 upDurIndex(1)
             }
         }
+
+        override fun onPlayerError(error: PlaybackException) {
+            // 硬解崩了就用软解重来一次：初始化阶段失败由 setEnableDecoderFallback 兜住，
+            // 这里是「初始化成功、喂数据才失败」那一路。已经是软解还失败就不再重建，避免死循环。
+            if (!softwareDecodeOnly) {
+                softwareDecodeOnly = true
+                rebuildPlayer()
+            } else {
+                fail(error)
+            }
+        }
+    }
+
+    /**
+     * 换一个播放器实例继续播当前位置。
+     *
+     * 解码器在构建播放器时就绑定了，换软解只能重建实例；位置和播放状态要自己搬过去，
+     * 否则用户会看到「报错后回到片头」。
+     */
+    private fun rebuildPlayer() {
+        val position = runCatching { playerInstance?.currentPosition }.getOrNull()
+            ?: durChapterPos.toLong()
+        val wasPlaying = runCatching { playerInstance?.isPlaying }.getOrNull() ?: false
+        val media = currentMedia
+        runCatching { playerInstance?.release() }
+        playerInstance = null
+        val rebuilt = player
+        if (media != null) rebuilt.setMediaItem(media.mediaItem, position.coerceAtLeast(0))
+        rebuilt.prepare()
+        if (wasPlaying || autoPlay) rebuilt.play()
     }
 
     private var isReleasing = false
@@ -258,6 +302,7 @@ object VideoPlay : CoroutineScope by MainScope() {
             )
         }
         player.setMediaItem(MediaItem.fromUri(url), durChapterPos.toLong())
+        currentMedia = VideoMedia(MediaItem.fromUri(url), url)
         player.prepare()
         if (autoPlay) player.play()
     }
@@ -322,6 +367,7 @@ object VideoPlay : CoroutineScope by MainScope() {
         }
         playUrl = url
         player.setMediaItem(MediaItem.fromUri(url), durChapterPos.coerceAtLeast(0).toLong())
+        currentMedia = VideoMedia(MediaItem.fromUri(url), url)
         player.playbackParameters = player.playbackParameters.withSpeed(playSpeed)
         player.prepare()
         if (autoPlay) player.play()
@@ -409,6 +455,7 @@ object VideoPlay : CoroutineScope by MainScope() {
             return
         }
         linkCache[key] = CachedMedia(media, System.currentTimeMillis())
+        currentMedia = media
         this.chapter = chapter
         playUrl = media.playUrl
         danmaku = media.danmaku
@@ -503,6 +550,31 @@ object VideoPlay : CoroutineScope by MainScope() {
 
     fun seekTo(positionMs: Long) {
         player.seekTo(positionMs.coerceAtLeast(0))
+    }
+
+    /** 按相对位置跳转；双击左右半屏用。 */
+    fun seekBy(deltaMs: Long) {
+        val duration = runCatching { player.duration }.getOrDefault(0L)
+        val target = (runCatching { player.currentPosition }.getOrDefault(0L) + deltaMs)
+            .coerceAtLeast(0L)
+        seekTo(if (duration > 0) target.coerceAtMost(duration) else target)
+    }
+
+    /**
+     * 播放器音量，0–100。
+     *
+     * 不走系统媒体音量：播放页的音量滑条只该影响这一路播放，改系统音量会把通知、
+     * 其他应用一起拖下去。静音前的音量留住，取消静音才能回到用户自己调的那一档。
+     */
+    fun setVolume(volume: Int) {
+        val clamped = volume.coerceIn(0, 100)
+        if (clamped > 0) lastAudibleVolume = clamped
+        player.volume = clamped / 100f
+        _state.update { it.copy(volume = clamped, isMuted = clamped == 0) }
+    }
+
+    fun toggleMute() {
+        setVolume(if (_state.value.isMuted) lastAudibleVolume else 0)
     }
 
     // ——————————————————————————— 进度与收尾 ———————————————————————————
