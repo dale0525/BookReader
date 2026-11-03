@@ -24,6 +24,17 @@ fork 已把版本号发过版，同一版本号换了 schema，覆盖安装的�
 - 轻则编译期才暴露；
 - 重则编译通过，但留下一个点了没反应的入口。
 
+最坏的一档是**导航 entry 被注册两次**：编译、单测、打包全过，装机后冷启动直接崩。navigation3 的 `EntryProviderScope` 不允许同一个 `NavKey` 注册两个 entry，组装导航图时抛 `IllegalArgumentException: An \`entry\` with the same \`clazz\` has already been added`。0.3.13 就是这么崩的——upstream 带入的播放页 entry 和 fork 自己的那份同时留在 `MainNavGraph.kt` 里，R8 混淆后的栈只看得出 `MainActivity.z` 与一堆 `q3.d`，认不出是路由问题，且与机型无关。
+
+合并后除跑校验脚本，再扫一次全仓 entry 唯一性：
+
+```bash
+grep -rhno "entry<[A-Za-z0-9_]*>" --include=*.kt app/src/main \
+  | sed -E 's/.*entry<([A-Za-z0-9_]*)>/\1/' | sort | uniq -c | awk '$1>1'
+```
+
+无输出才算通过。这类重复 `check-fork-deletions.sh` 发现不了——它查路径与关键词，而这里两个 entry 都在同一个现存文件里。
+
 合并裁定完、提交前跑一次校验脚本，它会查三类情况：已删路径重新出现、已删功能的特征关键词有新命中、最新 schema 里含已删的表。
 
 ```bash
