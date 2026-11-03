@@ -93,7 +93,6 @@ fun RssReadRouteScreen(
     startPage: Boolean,
     onBackClick: () -> Unit,
     onOpenArticles: (sortUrl: String?, targetOrigin: String?) -> Unit,
-    onOpenVideoPlayer: (RssArticle) -> Unit,
     viewModel: ReadRssViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
@@ -346,16 +345,6 @@ fun RssReadRouteScreen(
                                         } ?: context.toastOnUi(R.string.null_url)
                                     }
                             )
-                                if (viewModel.rssArticle?.type == 2) {
-                                    RoundDropdownMenuItem(
-                                        text = stringResource(R.string.play_video),
-                                        leadingIcon = { MenuItemIcon(Icons.Default.PlayArrow) },
-                                        onClick = {
-                                            dismiss()
-                                            viewModel.rssArticle?.let(onOpenVideoPlayer)
-                                        }
-                                    )
-                                }
                                 RoundDropdownMenuItem(
                                     text = if (isSpeaking) stringResource(R.string.aloud_stop) else stringResource(
                                         R.string.read_aloud
