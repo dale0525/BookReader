@@ -33,10 +33,10 @@ import io.legado.app.data.repository.BookImportRepository
 import io.legado.app.data.repository.BookKnowledgeRepository
 import io.legado.app.data.repository.BookMarkingRepository
 import io.legado.app.data.repository.BookRepository
+import io.legado.app.data.repository.VideoContentRepository
 import io.legado.app.data.repository.BookSourceCallbackRepository
 import io.legado.app.data.repository.BookSourceCheckRepository
 import io.legado.app.data.repository.BookSourceRepository
-import io.legado.app.data.repository.VideoContentRepository
 import io.legado.app.data.repository.BookmarkRepository
 import io.legado.app.data.repository.BookshelfAutoGroupPromptRepository
 import io.legado.app.data.repository.BookshelfAutoGroupRepository
@@ -271,7 +271,7 @@ import io.legado.app.ui.book.source.manage.BookSourceViewModel
 import io.legado.app.ui.book.toc.TocViewModel
 import io.legado.app.ui.book.toc.rule.TxtTocRuleViewModel
 import io.legado.app.ui.book.toc.rule.preview.TxtTocRulePreviewViewModel
-import io.legado.app.ui.book.video.VideoPlayerViewModel
+import io.legado.app.ui.book.video.VideoPlayViewModel
 import io.legado.app.ui.browser.WebViewModel
 import io.legado.app.ui.config.ai.AiConfigViewModel
 import io.legado.app.ui.config.ai.AiModelEditViewModel
@@ -756,7 +756,12 @@ val appModule = module {
         )
     }
     viewModelOf(::MangaReaderViewModel)
-    viewModelOf(::VideoPlayerViewModel)
+    viewModel {
+        VideoPlayViewModel(
+            application = get(),
+            bookRepository = get(),
+        )
+    }
     viewModelOf(::ReaderSessionViewModel)
     viewModel {
         ReadBookViewModel(

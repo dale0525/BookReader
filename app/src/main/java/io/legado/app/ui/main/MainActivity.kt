@@ -84,12 +84,10 @@ import io.legado.app.help.storage.Backup
 import io.legado.app.help.update.AppUpdateGitHub
 import io.legado.app.lib.dialogs.alert
 import io.legado.app.model.AudioPlay
-import io.legado.app.model.VideoPlay
 import io.legado.app.service.WebService
 import io.legado.app.ui.widget.components.modalBottomSheet.MarkdownSheet
 import io.legado.app.ui.about.UpdateDialog
 import io.legado.app.ui.book.audio.AudioPlayViewModel
-import io.legado.app.ui.book.video.enterVideoPip
 import io.legado.app.ui.book.read.ReadAloudControlsRequestBus
 import io.legado.app.ui.book.read.ReadBookInputHandler
 import io.legado.app.ui.book.read.ReadBookRouteHost
@@ -169,14 +167,6 @@ open class MainActivity : BaseComposeActivity(), AudioPlay.CallBack {
 
         @Volatile
         var hasActiveSourceLoginRoute: Boolean = false
-
-        /** 画中画状态；可被 Compose 观测，视频播放页据此只保留画面。 */
-        var isInPip by mutableStateOf(false)
-            private set
-
-        /** 栈顶是否为视频播放页：onUserLeaveHint 自动进画中画的前置条件。 */
-        @Volatile
-        var isVideoRouteOnTop: Boolean = false
 
         fun createLauncherIntent(context: Context): Intent =
             MainIntent.createLauncherIntent(context)
@@ -400,25 +390,6 @@ open class MainActivity : BaseComposeActivity(), AudioPlay.CallBack {
 
     /** 听书/朗读播放浮层是否可见：可见期间由浮层接管系统栏，覆盖阅读器的隐藏策略。 */
     private var isPlaybackOverlayVisible = false
-
-    override fun onPictureInPictureModeChanged(
-        isInPictureInPictureMode: Boolean,
-        newConfig: Configuration,
-    ) {
-        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
-        isInPip = isInPictureInPictureMode
-    }
-
-    /**
-     * 播放中离开应用时自动进画中画（Android 12+ 也可用 setAutoEnterEnabled，
-     * 这里统一走手动入口，行为在各版本一致）。
-     */
-    override fun onUserLeaveHint() {
-        super.onUserLeaveHint()
-        if (!isVideoRouteOnTop) return
-        if (!VideoPlay.state.value.isPlaying) return
-        enterVideoPip()
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -773,7 +744,6 @@ open class MainActivity : BaseComposeActivity(), AudioPlay.CallBack {
 
         SideEffect {
             shouldApplyDefaultToRead = false
-            isVideoRouteOnTop = activeRoute is MainRouteVideoPlay
         }
 
         LaunchedEffect(activeRoute) {

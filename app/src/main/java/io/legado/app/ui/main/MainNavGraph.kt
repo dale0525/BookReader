@@ -135,7 +135,9 @@ import io.legado.app.ui.book.toc.TocRouteScreen
 import io.legado.app.ui.book.toc.TocViewModel
 import io.legado.app.ui.book.toc.rule.TxtRuleRouteScreen
 import io.legado.app.ui.book.toc.rule.preview.TxtTocRulePreviewRouteScreen
-import io.legado.app.ui.book.video.VideoPlayerScreen
+import io.legado.app.ui.book.video.VideoPlayScreen
+import io.legado.app.ui.book.video.VideoPlayIntent
+import io.legado.app.ui.book.video.VideoPlayViewModel
 import io.legado.app.ui.browser.WebViewModel
 import io.legado.app.ui.browser.WebViewRouteScreen
 import io.legado.app.ui.config.ConfigNavScreen
@@ -1140,58 +1142,22 @@ fun MainActivity.mainEntryProvider(
         )
     }
 
-    entry<MainRouteVideoPlay> { route ->
-        val bookUrl = route.bookUrl
-        val rssArticle = route.rssLink?.let { link ->
-            RssArticle(
-                origin = route.rssOrigin.orEmpty(),
-                sort = route.rssSort.orEmpty(),
-                title = route.rssTitle.orEmpty(),
-                link = link,
-                type = 2,
-            )
+    entry<MainRouteVideoPlay>(metadata = modalOverlayEntryMetadata()) { route ->
+        val videoViewModel = koinViewModel<VideoPlayViewModel>(
+            key = "VideoPlay:${route.bookUrl ?: "last"}"
+        )
+        LaunchedEffect(route) {
+            videoViewModel.onIntent(VideoPlayIntent.Init(route.bookUrl.orEmpty()))
         }
-        if (bookUrl == null && rssArticle == null) {
-            LaunchedEffect(Unit) { onNavigateBack() }
-        } else {
-            // 播放页是栈底时（深链、恢复的栈）不能落到 navigateBack 的 finish() 分支：
-            // 那会让「按返回」直接退出应用回到桌面。与朗读播放页入口保持一致，回落到主页。
-            val exitVideoRoute: () -> Unit = {
-                if (backStack.size > 1) {
-                    MainNavigator.navigateBack(
-                        this@mainEntryProvider,
-                        backStack,
-                        navRouteTracker,
-                        fromRoute = route,
-                    )
-                } else {
-                    backStack.clear()
-                    backStack.add(MainRouteHome)
-                }
-            }
-            // 与阅读器入口一致：未授权时播放器不会被组合，也就不会初始化或显示书名/章节名
-            PrivateReadGate(
-                bookUrl = bookUrl ?: rssArticle!!.link,
-                onExit = exitVideoRoute,
-                onOpenLocalPasswordSettings = {
-                    onNavigateToRoute(MainRouteSettingsPrivate)
-                },
-            ) {
-                VideoPlayerScreen(
-                    bookUrl = bookUrl,
-                    rssArticle = rssArticle,
-                    onBack = exitVideoRoute,
-                    onOpenSourceLogin = { sourceUrl ->
-                        onNavigateToRoute(
-                            MainRouteSourceLogin(SourceLoginType.BookSource, sourceUrl)
-                        )
-                    },
-                    onOpenSourceEdit = { sourceUrl ->
-                        onNavigateToRoute(MainRouteBookSourceEdit(sourceUrl))
-                    },
-                )
-            }
-        }
+        val state by videoViewModel.uiState.collectAsStateWithLifecycle()
+        VideoPlayScreen(
+            state = state,
+            onIntent = videoViewModel::onIntent,
+            onBack = { onNavigateBack() },
+            onPlaybackStateChanged = videoViewModel::onPlaybackStateChanged,
+            onProgress = videoViewModel::onProgress,
+            onPlaybackEnded = videoViewModel::onPlaybackEnded,
+        )
     }
 
     entry<MainRouteReadAloudPlayer>(metadata = modalOverlayEntryMetadata()) {
@@ -1322,16 +1288,6 @@ fun MainActivity.mainEntryProvider(
                     MainRouteRssSort(
                         sourceUrl = targetOrigin ?: route.origin,
                         sortUrl = sortUrl
-                    )
-                )
-            },
-            onOpenVideoPlayer = { article ->
-                onNavigateToRoute(
-                    MainRouteVideoPlay(
-                        rssOrigin = article.origin,
-                        rssLink = article.link,
-                        rssSort = article.sort,
-                        rssTitle = article.title,
                     )
                 )
             },
