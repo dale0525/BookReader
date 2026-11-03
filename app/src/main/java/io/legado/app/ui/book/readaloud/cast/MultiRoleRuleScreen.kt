@@ -34,6 +34,7 @@ fun MultiRoleRuleRouteScreen(
     onNavigateToVoiceEffect: () -> Unit,
     onNavigateToCapsuleStyle: () -> Unit,
     onNavigateToRegexCast: () -> Unit,
+    onNavigateToCastModel: () -> Unit,
 ) {
     val scrollBehavior = GlassTopAppBarDefaults.defaultScrollBehavior()
     AppScaffold(
@@ -91,6 +92,10 @@ fun MultiRoleRuleRouteScreen(
                         title = stringResource(R.string.regex_cast_rule),
                         description = stringResource(R.string.regex_cast_rule_summary),
                         onClick = onNavigateToRegexCast,
+                    )
+                    ClickableSettingItem(
+                        title = stringResource(R.string.ai_config),
+                        onClick = onNavigateToCastModel,
                     )
                 }
             }

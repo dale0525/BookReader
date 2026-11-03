@@ -38,3 +38,8 @@ replay_pid*.log
 /keystore/
 *.jks
 *.keystore
+
+.gstack/
+
+# 本地测试书源，不入库
+/resource/

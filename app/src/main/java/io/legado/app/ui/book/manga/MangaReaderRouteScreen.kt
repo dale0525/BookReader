@@ -2,6 +2,9 @@ package io.legado.app.ui.book.manga
 
 import android.view.KeyEvent
 import android.view.WindowManager
+import androidx.core.net.toUri
+import kotlinx.collections.immutable.toImmutableList
+import org.koin.androidx.compose.koinViewModel
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
@@ -14,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.lifecycle.Lifecycle

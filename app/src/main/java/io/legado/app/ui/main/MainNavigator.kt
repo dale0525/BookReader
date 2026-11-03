@@ -131,6 +131,7 @@ object MainNavigator {
 
             MainRouteSettingsOther,
             MainRouteSettingsRead,
+            is MainRouteSettingsManga,
             MainRouteSettingsCover,
             MainRouteSettingsTheme,
             MainRouteSettingsBackup,
@@ -348,12 +349,16 @@ object MainNavigator {
 
             // 朗读设置的子页（设置 hub 与阅读界面朗读设置卡片两处入口）都只压栈、不清栈：
             // 从阅读界面进来要能直接返回阅读界面。
+            // 段评气泡管理同理：阅读页「排版 → 正文」「气泡样式」面板里都能进来。
             MainRouteVoicePool,
             MainRouteBgmPool,
             MainRouteVoiceEffect,
             MainRouteCastCapsuleStyle,
             MainRouteRegexCastRule,
-            MainRouteMultiRoleRecognition -> backStack.add(route)
+            MainRouteMultiRoleRecognition,
+            MainRouteSettingsBubble -> backStack.add(route)
+
+            MainRouteThirdPartyLicenses -> backStack.add(route)
 
             MainRouteAbout -> {
                 if (currentRoute == MainRouteHome) {
@@ -528,11 +533,13 @@ object MainNavigator {
             MainRouteConst.ROUTE_SETTINGS -> MainRouteSettings
             MainRouteConst.ROUTE_SETTINGS_OTHER -> MainRouteSettingsOther
             MainRouteConst.ROUTE_SETTINGS_READ -> MainRouteSettingsRead
+            MainRouteConst.ROUTE_SETTINGS_MANGA -> MainRouteSettingsManga()
             MainRouteConst.ROUTE_SETTINGS_COVER -> MainRouteSettingsCover
             MainRouteConst.ROUTE_SETTINGS_THEME -> MainRouteSettingsTheme
             MainRouteConst.ROUTE_SETTINGS_BACKUP -> MainRouteSettingsBackup
             MainRouteConst.ROUTE_SETTINGS_AI -> MainRouteSettingsAi
             MainRouteConst.ROUTE_SETTINGS_CUSTOM_THEME -> MainRouteSettingsCustomTheme
+            MainRouteConst.ROUTE_SETTINGS_BUBBLE -> MainRouteSettingsBubble
             MainRouteConst.ROUTE_SETTINGS_PRIVATE -> MainRouteSettingsPrivate
             MainRouteConst.ROUTE_SETTINGS_DOWNLOAD_CACHE -> MainRouteSettingsDownloadCache
             MainRouteConst.ROUTE_IMPORT_LOCAL -> MainRouteImportLocal

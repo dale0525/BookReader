@@ -332,6 +332,7 @@ fun Book.upType() {
         type = when (type) {
             BookSourceType.image -> BookType.image
             BookSourceType.audio -> BookType.audio
+            BookSourceType.video -> BookType.video
             BookSourceType.file -> BookType.webFile
             BookSourceType.video -> BookType.video
             else -> BookType.text

@@ -24,6 +24,22 @@ enum class AppVariant {
 
 }
 
+/**
+ * 上游按本地推理引擎把产物拆成轻量与完整两个包；本 fork 只发布单包。
+ * 枚举与资产名解析保留，用于兼容读取上游历史 Release 的资产名
+ * （形如 `legado-<version>-core-arm64-v8a.apk`），单包下不再区分产品。
+ */
+enum class AppProduct(val tag: String) {
+    CORE("core"),
+    FULL("full");
+
+    companion object {
+        /** 单包发布自身没有产品标记；[selectCompatibleAssets] 对无标记资产回退为全收。 */
+        val current: AppProduct
+            get() = FULL
+    }
+}
+
 @Keep
 data class GithubRelease(
     val assets: List<Asset>?,
@@ -37,12 +53,13 @@ data class GithubRelease(
     val createdAt: String?
 ) {
     fun gitReleaseToAppReleaseInfo(
-        supportedAbis: List<String> = Build.SUPPORTED_ABIS.asList()
+        supportedAbis: List<String> = Build.SUPPORTED_ABIS.asList(),
+        product: AppProduct = AppProduct.current
     ): List<AppReleaseInfo> {
         assets ?: throw NoStackTraceException("获取新版本出错")
 
         val version = tagName
-        return selectCompatibleAssets(assets, supportedAbis)
+        return selectCompatibleAssets(assets, supportedAbis, product)
             .map { it.assetToAppReleaseInfo(isPreRelease, body.orEmpty(), version) }
     }
 }
@@ -57,7 +74,8 @@ private val releaseAbis = listOf(
 
 internal fun selectCompatibleAssets(
     assets: List<Asset>,
-    supportedAbis: List<String>
+    supportedAbis: List<String>,
+    product: AppProduct? = null
 ): List<Asset> {
     val validAssets = assets.filter { it.isValid }
 
@@ -65,14 +83,24 @@ internal fun selectCompatibleAssets(
         val matchingAssets = validAssets.filter { asset ->
             asset.releaseAbi.equals(supportedAbi, ignoreCase = true)
         }
-        if (matchingAssets.isNotEmpty()) return matchingAssets
+        if (matchingAssets.isNotEmpty()) return matchingAssets.ofProduct(product)
     }
 
-    return validAssets.filter { it.releaseAbi == null }
+    return validAssets.filter { it.releaseAbi == null }.ofProduct(product)
 }
 
 private val Asset.releaseAbi: String?
     get() = releaseAbis.firstOrNull { name.contains(it, ignoreCase = true) }
+
+/** 单个包的旧 Release 没有产品标记，此时保持原行为，不把更新判成"没有新版本"。 */
+private fun List<Asset>.ofProduct(product: AppProduct?): List<Asset> {
+    if (product == null) return this
+    val tagged = filter { it.releaseProduct != null }
+    return if (tagged.isEmpty()) this else tagged.filter { it.releaseProduct == product }
+}
+
+private val Asset.releaseProduct: AppProduct?
+    get() = AppProduct.entries.firstOrNull { name.contains("-${it.tag}-", ignoreCase = true) }
 
 @Keep
 data class Asset(

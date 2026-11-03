@@ -4,6 +4,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.android.application)
+    alias(libs.plugins.aboutlibraries.android)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.room)
@@ -12,6 +13,12 @@ plugins {
 }
 
 apply(from = "download.gradle")
+
+aboutLibraries {
+    collect {
+        configPath = file("aboutlibraries")
+    }
+}
 
 
 val versionPropsFile = file("version.properties")
@@ -131,7 +138,7 @@ android {
         }
     }
 
-    flavorDimensions += "mode"
+    flavorDimensions += listOf("mode")
     productFlavors {
         create("app") {
             dimension = "mode"
@@ -222,6 +229,7 @@ dependencies {
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.exoplayer.hls)
     implementation(libs.media3.ui)
+    implementation(libs.media3.exoplayer.dash)
     implementation(libs.media3.datasource.okhttp)
     implementation(libs.splitties.appctx)
     implementation(libs.splitties.systemservices)
@@ -283,6 +291,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.aboutlibraries.core)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.coil.compose)
     implementation(libs.coil.gif)

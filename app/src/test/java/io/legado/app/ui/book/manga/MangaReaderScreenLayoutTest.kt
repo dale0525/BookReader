@@ -3,12 +3,23 @@ package io.legado.app.ui.book.manga
 import android.app.Application
 import android.graphics.Bitmap
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import io.legado.app.ui.theme.LocalLegadoColorScheme
+import io.legado.app.ui.theme.LocalLegadoTypography
+import io.legado.app.ui.theme.toLegadoColorScheme
+import io.legado.app.ui.theme.toLegadoTypography
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -69,6 +80,7 @@ class MangaReaderScreenLayoutTest {
     private val visible = mutableStateOf(true)
     private val reports = mutableListOf<MangaReaderIntent.VisibleItemChanged>()
     private val intents = mutableListOf<MangaReaderIntent>()
+    private val prefetchOutcomes = java.util.Collections.synchronizedList(mutableListOf<String>())
 
     /** 按 imageUrl 覆盖原图尺寸，预览可以使用不同的采样比例。 */
     private val imageSizes = mutableMapOf<String, Pair<Int, Int>>()
@@ -86,7 +98,10 @@ class MangaReaderScreenLayoutTest {
                     chain.request.extras[CoverExtras.MangaFileOwner]?.setAspectRatio(ratio)
                     chain.request.extras[CoverExtras.MangaAspectRatio]?.invoke(ratio)
                 }
-                chain.proceed()
+                chain.proceed().also { result ->
+                    if (chain.request.extras[CoverExtras.MangaDataPrefetch] == true) prefetchOutcomes +=
+                        if (result is coil3.request.ErrorResult) result.throwable.toString() else result.javaClass.simpleName
+                }
             })
             // Render the actual reader without source rules, storage or network variability.
             add(Fetcher.Factory<Any> { data, _, _ ->
@@ -107,14 +122,31 @@ class MangaReaderScreenLayoutTest {
         }.build()
         compose.setContent {
             val savedState = rememberSaveableStateHolder()
+            // 阅读器里的文字样式与颜色直接读 LegadoTheme；测试只补这两个 local，
+            // 不套 AppTheme，避免背景绘制打断截图中未绘制区域的黑色断言。
             MaterialTheme {
-                if (visible.value) savedState.SaveableStateProvider("reader") {
-                    MangaReaderScreen(
-                        reader.value,
-                        ::onIntent,
-                        imageLoader = imageLoader,
-                        canHandleBack = false
-                    )
+                val colorScheme = MaterialTheme.colorScheme
+                val typography = MaterialTheme.typography
+                CompositionLocalProvider(
+                    LocalLegadoColorScheme provides remember(colorScheme) {
+                        colorScheme.toLegadoColorScheme()
+                    },
+                    LocalLegadoTypography provides remember(typography) {
+                        typography.toLegadoTypography()
+                    },
+                ) {
+                    if (visible.value) savedState.SaveableStateProvider("reader") {
+                        val content: @Composable () -> Unit = {
+                            MangaReaderScreen(
+                                reader.value,
+                                ::onIntent,
+                                imageLoader = imageLoader,
+                                canHandleBack = false,
+
+                            )
+                        }
+                        content()
+                    }
                 }
             }
         }
@@ -139,6 +171,18 @@ class MangaReaderScreenLayoutTest {
     fun tearDown() {
         imageLoader.shutdown()
         images.values.filterIsInstance<BitmapImage>().forEach { it.bitmap.recycle() }
+    }
+
+    @Test fun `data prefetch reports source readiness for pages outside the viewport`() {
+        compose.runOnIdle { reader.value = reader.value.copy(settings = reader.value.settings.copy(preDownloadCount = 10)) }
+        compose.waitForIdle()
+        try { compose.waitUntil(10_000) {
+            intents.filterIsInstance<MangaReaderIntent.PageSourceLoaded>().map { it.requestId.key }.toSet().size == currentPages.size
+        } } catch (failure: Throwable) {
+            throw AssertionError("Source callbacks: ${intents.filterIsInstance<MangaReaderIntent.PageSourceLoaded>()}; prefetch results: $prefetchOutcomes", failure)
+        }
+        assertTrue(intents.filterIsInstance<MangaReaderIntent.PageSourceLoaded>().any { it.requestId.key == "page:1:56" })
+        assertEquals(0, reader.value.currentPage)
     }
 
     @Test

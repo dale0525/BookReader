@@ -42,6 +42,7 @@ import io.legado.app.help.IntentHelp
 import io.legado.app.help.book.isAudio
 import io.legado.app.help.book.isVideo
 import io.legado.app.help.book.isImage
+import io.legado.app.help.book.isVideo
 import io.legado.app.help.config.AppConfigStore
 import io.legado.app.help.config.SettingsWriter
 import io.legado.app.domain.gateway.BookshelfSettingsGateway

@@ -18,6 +18,7 @@ import io.legado.app.help.book.isAudio
 import io.legado.app.help.book.isVideo
 import io.legado.app.help.book.isImage
 import io.legado.app.help.book.isLocal
+import io.legado.app.help.book.isVideo
 import io.legado.app.domain.gateway.MangaSettingsGateway
 import io.legado.app.ui.main.MainActivity
 import org.koin.core.context.GlobalContext

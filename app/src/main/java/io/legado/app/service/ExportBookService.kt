@@ -24,6 +24,7 @@ import io.legado.app.exception.NoStackTraceException
 import io.legado.app.help.AppWebDav
 import io.legado.app.help.book.BookHelp
 import io.legado.app.help.book.ContentProcessor
+import io.legado.app.help.book.MixedContentSegments
 import io.legado.app.help.book.getExportFileName
 import io.legado.app.help.book.isLocalModified
 import io.legado.app.model.ReadBook
@@ -361,7 +362,7 @@ class ExportBookService : BaseService(), KoinComponent {
             ).toString()
         if (currentExportSettings.exportPictureFile) {
             val srcList = arrayListOf<SrcData>()
-            content?.split("\n")?.forEachIndexed { index, text ->
+            MixedContentSegments.toPlainText(content.orEmpty()).split("\n").forEachIndexed { index, text ->
                 for (m in AppPattern.imgPattern.findAll(text)) {
                     m.groupValues[1].takeIf { it.isNotEmpty() }?.let {
                         val src = NetworkUtils.getAbsoluteURL(chapter.url, it)

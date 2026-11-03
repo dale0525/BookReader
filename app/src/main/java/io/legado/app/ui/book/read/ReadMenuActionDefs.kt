@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Brightness6
 import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Extension
@@ -239,16 +240,6 @@ internal fun readMenuButtonInfos(context: Context): List<ReadMenuButtonInfo> = l
         context.getString(R.string.menu_refresh_dur),
     ),
     ReadMenuButtonInfo(
-        "ai_summary",
-        Icons.Default.AutoAwesome,
-        context.getString(R.string.ai_chapter_summary),
-    ),
-    ReadMenuButtonInfo(
-        "ai_rewrite",
-        Icons.Default.Edit,
-        context.getString(R.string.ai_text_rewrite),
-    ),
-    ReadMenuButtonInfo(
         "multi_role_read",
         Icons.Default.Groups,
         context.getString(R.string.use_multi_speaker),
@@ -444,12 +435,6 @@ internal fun buildReadMenuActionDefs(
         },
         def("refresh_current") {
             onIntent(ReadBookIntent.RefreshCurrentChapter)
-        },
-        def("ai_summary") {
-            onIntent(ReadBookIntent.OpenChapterSummary)
-        },
-        def("ai_rewrite") {
-            onIntent(ReadBookIntent.OpenAiCurrentChapterRewrite)
         },
         def("multi_role_read", isActive = state.useMultiSpeaker) {
             onIntent(ReadBookIntent.SetUseMultiSpeaker(!state.useMultiSpeaker))

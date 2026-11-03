@@ -247,7 +247,9 @@ object BookHelp {
         book: Book,
         bookChapter: BookChapter,
         content: String,
-        saveToSource: Boolean = false
+        saveToSource: Boolean = false,
+        // Initial EPUB extraction only populates a cache; its semantic source is unchanged.
+        notifyContentChange: Boolean = true,
     ) {
         if (content.isEmpty()) return
         if (book.isLocalTxt && saveToSource) {
@@ -260,6 +262,7 @@ object BookHelp {
         }
         // 保存阅读缓存文本(.nb)
         getChapterContentFile(book, bookChapter).apply { parentFile?.mkdirs() }.writeText(content)
+        if (notifyContentChange) ContentProcessor.invalidateSemanticContent(book.bookUrl, bookChapter.index)
         if (book.isOnLineTxt && readGateway.currentSettings.tocCountWords) {
             // 正文里携带的 <img src="data:base64">、内联 SVG 等富文本源码会把章节字数虚抬
             // 几倍（3 页正文显示 3000+ 字）。这里剔除标签/Base64 后按可读纯文本计数，
@@ -279,6 +282,7 @@ object BookHelp {
     fun saveChapterTitle(bookChapter: BookChapter, title: String) {
         bookChapter.title = title
         appDb.bookChapterDao.update(bookChapter)
+        ContentProcessor.invalidateSemanticContent(bookChapter.bookUrl, bookChapter.index)
     }
 
     private fun saveToLocalTxt(book: Book, bookChapter: BookChapter, content: String) {
@@ -890,15 +894,19 @@ object BookHelp {
         val file = cachedChapterContentFile(book, bookChapter)
         if (file.exists()) {
             val string = file.readText()
-            if (string.isEmpty()) {
-                return null
+            if (string.isNotEmpty()) {
+                return string
             }
-            return string
+            // A stale empty cache (e.g. a title-only chapter cached before blank
+            // pages were supported) must not read as a load failure: drop it and
+            // reload. Local books reparse to a blank page; online books fall
+            // through to null so the caller still triggers a download.
+            file.delete()
         }
         if (book.isLocal) {
             val string = LocalBook.getContent(book, bookChapter)
             if (string != null && book.isEpub) {
-                saveText(book, bookChapter, string)
+                saveText(book, bookChapter, string, notifyContentChange = false)
             }
             return string
         }
@@ -962,6 +970,7 @@ object BookHelp {
         legacyChapterContentFile(book, bookChapter).delete()
         // 章节目录里可能还有图片，非空时 delete 会失败，不会误删。
         file.parentFile?.delete()
+        ContentProcessor.invalidateSemanticContent(book.bookUrl, bookChapter.index)
     }
 
     /**
@@ -978,6 +987,7 @@ object BookHelp {
             FileUtils.createFileIfNotExist(getChapterContentFile(book, bookChapter, "nr").absolutePath)
             contentProcessor.removeSameTitleCache.add(fileName)
         }
+        ContentProcessor.invalidateSemanticContent(book.bookUrl, bookChapter.index)
     }
 
     /**

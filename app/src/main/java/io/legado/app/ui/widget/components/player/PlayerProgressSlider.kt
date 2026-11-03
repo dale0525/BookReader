@@ -16,6 +16,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -34,7 +37,10 @@ fun PlayerProgressSlider(
     value: Float,
     onValueChange: (Float) -> Unit,
     valueRange: ClosedFloatingPointRange<Float>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    /** 压在深色画面（视频播放器浮层）上时传浅色，默认跟随主题。 */
+    activeColor: Color = LegadoTheme.colorScheme.onSurface,
+    inactiveColor: Color = LegadoTheme.colorScheme.onSurface.copy(alpha = 0.38f),
 ) {
     val rangeLength = (valueRange.endInclusive - valueRange.start).coerceAtLeast(1f)
     var isDragging by remember { mutableStateOf(false) }
@@ -57,8 +63,6 @@ fun PlayerProgressSlider(
         animationSpec = tween(durationMillis = 150),
         label = "player_progress_thumb_radius",
     )
-    val activeColor = LegadoTheme.colorScheme.onSurface
-    val inactiveColor = LegadoTheme.colorScheme.onSurface.copy(alpha = 0.38f)
     Canvas(
         modifier = modifier
             .fillMaxWidth()

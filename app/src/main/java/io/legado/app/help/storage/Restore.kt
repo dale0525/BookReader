@@ -48,6 +48,7 @@ import io.legado.app.help.book.isLocal
 import io.legado.app.help.readaloud.speech.HttpTtsCatalogParser
 import io.legado.app.help.book.upType
 import io.legado.app.help.config.AppConfigStore
+import io.legado.app.help.config.BubblePackageManager
 import io.legado.app.help.config.LocalConfig
 import io.legado.app.help.config.ReadBookConfig
 import io.legado.app.help.config.SettingsWriter
@@ -68,6 +69,7 @@ import io.legado.app.utils.isJsonArray
 import io.legado.app.utils.isUri
 import io.legado.app.utils.openInputStream
 import io.legado.app.utils.toastOnUi
+import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -78,6 +80,7 @@ import org.xmlpull.v1.XmlPullParserFactory
 import splitties.init.appCtx
 import java.io.File
 import java.io.FileInputStream
+import java.util.UUID
 
 /**
  * 恢复
@@ -363,6 +366,22 @@ object Restore : KoinComponent {
                 )
             )
         }
+        // 恢复段评气泡包：新版备份是整棵 bubblePackages/ 目录，走目录事务整体替换；
+        // 旧版备份（bubblePackages.zip）仍按逐包原子安装合并，老备份不能失效。
+        val bubbleDir = File(path, Backup.bubblePackagesDirName)
+        if (bubbleDir.isDirectory) {
+            runCatching { restoreBubblePackageTree(bubbleDir) }.onFailure {
+                AppLog.put("恢复段评气泡出错\n${it.localizedMessage}", it)
+            }
+        } else {
+            File(path, Backup.legacyBubblePackagesFileName).takeIf { it.exists() }?.runCatching {
+                restoreBubblePackages(this)
+            }?.onFailure {
+                AppLog.put("恢复段评气泡出错\n${it.localizedMessage}", it)
+            }
+        }
+
+
         // 恢复配置文件 (手动解析 XML，替代反射逻辑)
         val configFile = File(path, "config.xml")
         if (configFile.exists()) {
@@ -620,4 +639,52 @@ object Restore : KoinComponent {
         return null
     }
 
+    private suspend fun restoreBubblePackageTree(sourceDir: File) = withContext(IO) {
+        val parentDir = BubblePackageManager.rootDir.parentFile
+            ?: error("bubble package root has no parent")
+        parentDir.mkdirs()
+        val staging = File(parentDir, ".bubblePackages.restore-${UUID.randomUUID()}")
+            .apply { mkdirs() }
+        try {
+            sourceDir.listFiles()
+                ?.filter { it.isDirectory && !it.name.startsWith('.') }
+                ?.forEach { dir ->
+                    check(dir.copyRecursively(File(staging, dir.name), overwrite = true)) {
+                        "failed to stage ${dir.name}"
+                    }
+                }
+            if (staging.listFiles().isNullOrEmpty()) {
+                AppLog.put("恢复段评气泡：备份里没有可恢复的包")
+                return@withContext
+            }
+            BubblePackageManager.replacePackageTree(staging)
+        } finally {
+            staging.deleteRecursively()
+        }
+    }
+
+    /**
+     * 旧版备份（`bubblePackages.zip`）的恢复：解压到 rootDir 下的隐藏暂存目录（同分区才能走原子
+     * move），再逐个包校验清单后原子安装；坏包只记日志，不影响其余备份项。
+     */
+    private suspend fun restoreBubblePackages(zipFile: File) = withContext(IO) {
+        val rootDir = BubblePackageManager.rootDir.apply { mkdirs() }
+        val stagingRoot = File(rootDir, ".restore-${UUID.randomUUID()}").apply { mkdirs() }
+        try {
+            ZipUtils.unZipToPath(zipFile, stagingRoot)
+            val container = File(stagingRoot, "bubblePackages").takeIf { it.isDirectory }
+                ?: stagingRoot
+            container.listFiles()
+                ?.filter { it.isDirectory && !it.name.startsWith('.') }
+                ?.forEach { staged ->
+                    runCatching { BubblePackageManager.installStagedPackage(staged) }
+                        .onFailure {
+                            AppLog.put("恢复气泡包失败：${staged.name}\n${it.localizedMessage}", it)
+                        }
+                }
+            BubblePackageManager.invalidateCurrentEntry()
+        } finally {
+            stagingRoot.deleteRecursively()
+        }
+    }
 }

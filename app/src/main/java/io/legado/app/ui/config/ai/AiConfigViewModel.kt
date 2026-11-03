@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import io.legado.app.domain.gateway.AiProfileGateway
 import io.legado.app.domain.model.AiTaskType
+import io.legado.app.domain.model.AiImageModels
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,7 +52,8 @@ class AiConfigViewModel(
                         contextWindow = model.contextWindow,
                         maxOutputTokens = model.maxOutputTokens,
                         enabled = provider.enabled && model.enabled,
-                        isCurrent = model.id == currentModelProfileId
+                        isCurrent = model.id == currentModelProfileId,
+                        text = AiImageModels.isTextModel(provider.protocol, model.modelId, model.capabilities),
                     )
                 }
                 val modelItemsByProvider = modelItems.groupBy { it.providerId }

@@ -56,6 +56,35 @@ object DefaultData {
         }.onError {
             it.printOnDebug()
         }
+        Coroutine.async {
+            // 每项独立执行：单项失败不影响其余项；
+            // 只有导入成功才提交标记，失败的项下次冷启动会重试。
+            migrate(LocalConfig.needUpHttpTTS, ::importDefaultHttpTTS, LocalConfig::markHttpTTSUpToDate)
+            migrate(
+                LocalConfig.needUpTxtTocRule,
+                ::importDefaultTocRules,
+                LocalConfig::markTxtTocRuleUpToDate
+            )
+            migrate(
+                LocalConfig.needUpRssSources,
+                ::importDefaultRssSources,
+                LocalConfig::markRssSourcesUpToDate
+            )
+            migrate(LocalConfig.needUpDictRule, ::importDefaultDictRules, LocalConfig::markDictRuleUpToDate)
+        }.onError {
+            it.printOnDebug()
+        }
+    }
+
+    private val hasPendingMigration: Boolean
+        get() = LocalConfig.needUpHttpTTS || LocalConfig.needUpTxtTocRule ||
+                LocalConfig.needUpRssSources || LocalConfig.needUpDictRule
+
+    private fun migrate(needed: Boolean, import: () -> Unit, mark: () -> Unit) {
+        if (!needed) return
+        runCatching(import)
+            .onSuccess { mark() }
+            .onFailure { it.printOnDebug() }
     }
 
     val httpTTS: List<HttpTTS> by lazy {
