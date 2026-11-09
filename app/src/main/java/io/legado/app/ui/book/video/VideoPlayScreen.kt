@@ -1,5 +1,3 @@
-@file:OptIn(androidx.media3.common.util.UnstableApi::class)
-
 package io.legado.app.ui.book.video
 
 import android.app.Activity
@@ -570,6 +568,7 @@ private fun SpeedButton(
  *
  * [fillScreen] 为 true 时裁切铺满整屏（横版视频用），否则按原始比例居中。
  */
+@androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 private fun PlayerSurface(
     state: VideoPlayUiState,
