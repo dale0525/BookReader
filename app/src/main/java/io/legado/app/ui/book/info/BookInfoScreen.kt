@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Message
 import android.view.MotionEvent
 import android.view.View
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
@@ -89,8 +90,9 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -111,21 +113,23 @@ import io.legado.app.data.entities.BookSource
 import io.legado.app.data.entities.SearchBook
 import io.legado.app.help.WebCacheManager
 import io.legado.app.help.coil.CoverExtras
+import io.legado.app.help.http.handleRenderProcessGone
 import io.legado.app.help.webView.WebJsExtensions
 import io.legado.app.ui.association.OnLineImportActivity
 import io.legado.app.ui.main.homepage.modules.BannerModule
+import io.legado.app.ui.theme.ComposeEngine
 import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.theme.LocalAppUiConfiguration
 import io.legado.app.ui.theme.LocalHazeState
 import io.legado.app.ui.theme.LocalLegadoThemeColors
 import io.legado.app.ui.theme.ProvideColorSchemeOverride
 import io.legado.app.ui.theme.ThemeOverrideState
-import io.legado.app.ui.theme.ThemeResolver
 import io.legado.app.ui.theme.animateColorSchemeAsState
 import io.legado.app.ui.theme.fadingEdge
 import io.legado.app.ui.theme.rememberImageSeedColor
 import io.legado.app.ui.theme.rememberThemeOverride
 import io.legado.app.ui.theme.responsiveHazeEffectFixedStyle
+import io.legado.app.ui.theme.miuixBarBlur
 import io.legado.app.ui.widget.components.AppPullToRefresh
 import io.legado.app.ui.widget.components.AppScaffold
 import io.legado.app.ui.widget.components.AppTextField
@@ -161,9 +165,9 @@ import io.legado.app.ui.widget.components.topbar.M3GlassScrollBehavior
 import io.legado.app.ui.widget.components.topbar.MiuixGlassScrollBehavior
 import io.legado.app.ui.widget.components.topbar.TopBarActionButton
 import io.legado.app.ui.widget.components.topbar.TopBarActionsRow
+import io.legado.app.ui.widget.components.mochi.ProvideMochiScrollBlurProgress
 import io.legado.app.ui.widget.components.topbar.TopBarNavigationButton
-import io.legado.app.ui.widget.components.topbar.miuixTopBarActionsEndPadding
-import io.legado.app.ui.widget.components.topbar.miuixTopBarSlotPadding
+import ui.feice.mochi.basic.MochiButtonDefaults
 import io.legado.app.ui.widget.components.variable.VariableEditorSheet
 import io.legado.app.utils.ColorUtils
 import io.legado.app.utils.HtmlFormatter
@@ -297,7 +301,7 @@ private fun BookInfoScreenContent(
     onNetworkCoverLoadError: (String?) -> Unit,
     onOpenExplore: (title: String, url: String) -> Unit,
 ) {
-    val isMiuix = ThemeResolver.isMiuixEngine(LegadoTheme.composeEngine)
+    val isMiuix = LegadoTheme.composeEngine == ComposeEngine.Miuix
     val scrollBehavior = if (isMiuix) {
         MiuixGlassScrollBehavior(MiuixScrollBehavior())
     } else {
@@ -753,7 +757,10 @@ private fun BookInfoTransparentTopAppBar(
     scrollBehavior: GlassTopAppBarScrollBehavior,
 ) {
     val hazeState = LocalHazeState.current
-    val isMiuix = ThemeResolver.isMiuixEngine(LegadoTheme.composeEngine)
+    val isMiuix = LegadoTheme.composeEngine == ComposeEngine.Miuix
+    val isMochi = LegadoTheme.composeEngine == ComposeEngine.Mochi
+    // The M3 host supplies 4dp inside each slot. Complete the engine's outer margin.
+    val slotEdgePadding = if (isMochi) MochiButtonDefaults.BarHorizontalPadding - 4.dp else 12.dp
     val collapsedColor = if (isMiuix) {
         GlassTopAppBarDefaults.getMiuixAppBarColor()
     } else {
@@ -768,38 +775,34 @@ private fun BookInfoTransparentTopAppBar(
 
     if (isMiuix) {
         MiuixTopAppBar(
-            modifier = hazeState?.let { Modifier.responsiveHazeEffectFixedStyle(it) } ?: Modifier,
+            modifier = Modifier.miuixBarBlur(fixedStyle = true),
             title = "",
             subtitle = "",
             navigationIcon = {
                 TopBarNavigationButton(onClick = onBackPressed)
             },
             actions = {
-                TopBarActionsRow(
-                    modifier = Modifier.padding(
-                        end = miuixTopBarActionsEndPadding()
-                    )
-                ) {
-                    BookInfoTopBarActions(
-                        state = state,
-                        onMenuAction = onMenuAction,
-                    )
-                }
+                BookInfoTopBarActions(state = state, onMenuAction = onMenuAction)
             },
             color = resolvedColor,
-            navigationIconPadding = miuixTopBarSlotPadding(),
-            actionIconPadding = miuixTopBarSlotPadding(),
             scrollBehavior = (scrollBehavior as? MiuixGlassScrollBehavior)?.miuixBehavior,
         )
     } else {
+        if (isMochi) ProvideMochiScrollBlurProgress { scrollBehavior.collapsedFraction }
         MediumFlexibleTopAppBar(
             modifier = hazeState?.let { Modifier.responsiveHazeEffectFixedStyle(it) } ?: Modifier,
             title = { AppText(text = "", maxLines = 1) },
             navigationIcon = {
-                TopBarNavigationButton(onClick = onBackPressed)
+                // This M3 slot contributes 4dp itself. Complete Mochi's 16dp edge margin.
+                TopBarNavigationButton(
+                    onClick = onBackPressed,
+                    modifier = if (isMochi) {
+                        Modifier.padding(start = slotEdgePadding)
+                    } else Modifier,
+                )
             },
             actions = {
-                Box(modifier = Modifier.padding(end = 12.dp)) {
+                Box(modifier = Modifier.padding(end = slotEdgePadding)) {
                     TopBarActionsRow {
                         BookInfoTopBarActions(
                             state = state,
@@ -1789,7 +1792,6 @@ private fun parseBookInfoIntro(intro: String?): BookInfoIntroContent? {
  * 在 Android 16 HWUI Vulkan 后端上引发 drawVk SIGTRAP 原生崩溃（issue #2468）。
  */
 @Composable
-@SuppressLint("SetJavaScriptEnabled")
 private fun BookInfoWebIntro(
     html: String,
     baseUrl: String?,
@@ -1798,7 +1800,10 @@ private fun BookInfoWebIntro(
 ) {
     val context = LocalContext.current
     // 初始高度先给一屏，否则 WebView 在 0 高度下不会被布局，也就无法测量内容高度
-    val pageHeight = LocalConfiguration.current.screenHeightDp.dp.coerceAtLeast(320.dp)
+    // 分屏/折叠屏下物理屏高不等于容器高，初始占位高度按窗口容器算
+    val pageHeight = with(LocalDensity.current) {
+        LocalWindowInfo.current.containerSize.height.toDp()
+    }.coerceAtLeast(320.dp)
     val textColor = LegadoTheme.colorScheme.onSurface
     val textColorHex = remember(textColor) {
         ColorUtils.intToString(textColor.toArgb())
@@ -1877,6 +1882,7 @@ private fun BookInfoWebIntro(
  * 详情页 `<useweb>` 简介的 WebView：实例级配置（settings、JS 桥接、ChromeClient），
  * 随 [WebViewContainerCompose] 的 factory 创建。
  */
+@SuppressLint("SetJavaScriptEnabled")
 private fun createBookInfoWebIntroWebView(context: Context, bookSource: BookSource?): WebView =
     WebView(context).apply {
         setBackgroundColor(android.graphics.Color.TRANSPARENT)
@@ -1939,6 +1945,8 @@ private fun buildBookInfoWebIntroHtml(html: String, textColorHex: String): Strin
     </html>
 """.trimIndent()
 
+// MissingOnRenderProcessGone：该规则按 Java PSI 查构造调用，看不到 Kotlin 匿名对象里的 override。
+@SuppressLint("MissingOnRenderProcessGone")
 private fun buildBookInfoWebIntroClient(
     context: Context,
     isCurrentLoad: () -> Boolean,
@@ -1971,6 +1979,10 @@ private fun buildBookInfoWebIntroClient(
         }
     }
 
+    // 渲染进程被系统回收时默认会连带杀掉宿主进程
+    override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean =
+        view.handleRenderProcessGone()
+
     override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
         super.onPageStarted(view, url, favicon)
         view?.let { runCatching { it.evaluateJavascript(injectionString, null) } }
@@ -1989,7 +2001,9 @@ private fun buildBookInfoWebIntroClient(
     }
 }
 
-@SuppressLint("SetJavaScriptEnabled")
+// MissingOnRenderProcessGone：onCreateWindow 里的弹窗 WebViewClient 已实现该回调，
+// 但规则按 Java PSI 查构造调用，看不到 Kotlin 匿名对象里的 override。
+@SuppressLint("SetJavaScriptEnabled", "MissingOnRenderProcessGone")
 private fun buildBookInfoWebChromeClient(): WebChromeClient = object : WebChromeClient() {
 
     override fun onCreateWindow(
@@ -2003,6 +2017,11 @@ private fun buildBookInfoWebChromeClient(): WebChromeClient = object : WebChrome
         val popup = WebView(host.context).apply {
             settings.javaScriptEnabled = true
             webViewClient = object : WebViewClient() {
+                override fun onRenderProcessGone(
+                    view: WebView,
+                    detail: RenderProcessGoneDetail,
+                ): Boolean = view.handleRenderProcessGone()
+
                 override fun shouldOverrideUrlLoading(
                     popupView: WebView?,
                     request: WebResourceRequest?,

@@ -5,6 +5,7 @@ import android.graphics.BitmapShader
 import android.graphics.Paint
 import android.graphics.Shader
 import android.graphics.drawable.Drawable
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -2029,7 +2030,7 @@ private val batteryClassicTypeface: android.graphics.Typeface? by lazy {
 
 /** View 版 `BatteryView` 使用的轮廓；绘制时复用原有 `ic_battery` 矢量资源。 */
 private val batteryOutlineState: Drawable.ConstantState? by lazy {
-    appCtx.getDrawable(R.drawable.ic_battery)?.constantState
+    AppCompatResources.getDrawable(appCtx, R.drawable.ic_battery)?.constantState
 }
 
 private fun ReaderPage.scrollViewportExtentPx(): Float =
@@ -2088,13 +2089,13 @@ private fun ScrollPageStack(
             val cachedSources = sources.mapNotNull { source ->
                 ReaderTextBackgroundLoader.cached(source)?.let { source to it }
             }.toMap()
-            if (cachedSources.isNotEmpty()) data.textBackgroundRevision.value++
+            if (cachedSources.isNotEmpty()) data.textBackgroundRevision.intValue++
             val loadedSources = withContext(Dispatchers.IO) {
                 sources.mapNotNull { source ->
                     ReaderTextBackgroundLoader.load(source)?.let { source to it }
                 }.toMap()
             }
-            if (loadedSources.isNotEmpty()) data.textBackgroundRevision.value++
+            if (loadedSources.isNotEmpty()) data.textBackgroundRevision.intValue++
         }
         windowPages.forEach { page ->
             page.elements.filterIsInstance<ReaderElement.Image>().forEach { element ->
@@ -2179,7 +2180,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawScrollPageConte
     val visibleDecorationCache = if (selectionPreviewStyle != null && activeSelection != null) {
         ReaderPageDecorationDrawCache.create(page.withoutSelectionDecorations(activeSelection))
     } else data.decorationDrawCache
-    data.textBackgroundRevision.value
+    data.textBackgroundRevision.intValue
     val previewing = selectionPreviewStyle != null && activeSelection != null
     val previewBounds = if (previewing) {
         data.textElements.filter { activeSelection.contains(it, page.id.chapterIndex) }
@@ -2459,13 +2460,14 @@ private fun SimulationPageStack(
 
 /**
  * 一页位图快照的身份。任何会改变该页像素的输入都必须进来，否则会命中过期位图：
- * 页 id/revision/layoutRevision（图片刷新会改 revision）、背景色/背景图及其透明度、
+ * 页 id/revision/layoutRevision（图片刷新会改 revision）、排版元素、背景色/背景图及其透明度、
  * 选区与朗读高亮色、活动选区、选区预览样式、视口尺寸。
  */
 internal data class PageSnapshotKey(
     val pageId: ReaderPageId,
     val revision: Long,
     val layoutRevision: Long,
+    val elementsKey: ReaderPageElementsKey,
     val backgroundArgb: Int,
     val backgroundImageIdentity: Int,
     val backgroundImageAlpha: Float,
@@ -2492,6 +2494,7 @@ private fun pageSnapshotKey(
     pageId = page.id,
     revision = page.revision,
     layoutRevision = page.layoutRevision,
+    elementsKey = ReaderPageElementsKey(page.elements),
     backgroundArgb = background.toArgb(),
     backgroundImageIdentity = System.identityHashCode(backgroundImage),
     backgroundImageAlpha = backgroundImageAlpha,

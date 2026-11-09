@@ -14,6 +14,8 @@ import io.legado.app.domain.model.settings.AppShellSettings
 import io.legado.app.domain.model.settings.BackupSettings
 import io.legado.app.domain.model.settings.CoverSettings
 import io.legado.app.domain.model.settings.DownloadCacheSettings
+import io.legado.app.domain.model.settings.NavigationAnimationStyle
+import io.legado.app.domain.model.settings.TextAnimationLevel
 import io.legado.app.domain.model.settings.OtherSettings
 import io.legado.app.domain.model.settings.ThemeSettings
 import io.legado.app.help.config.AppConfigStore
@@ -217,6 +219,10 @@ internal fun Preferences.toAppShellSettings(): AppShellSettings = AppShellSettin
     showStatusBar = compatDsBoolean(PreferKey.showStatusBar) ?: true,
     swipeAnimation = compatDsBoolean(PreferKey.swipeAnimation) ?: true,
     predictiveBackEnabled = compatDsBoolean(PreferKey.isPredictiveBackEnabled) ?: true,
+    navigationAnimationStyle = NavigationAnimationStyle.fromStoredValue(
+        compatDsString(PreferKey.navigationAnimationStyle)
+    ),
+    textAnimationLevel = TextAnimationLevel.fromStoredValue(compatDsString(PreferKey.textAnimationLevel)),
     readerSharedElementEnabled = compatDsBoolean(PreferKey.readerSharedElementEnabled) ?: true,
     showBottomView = compatDsBoolean(PreferKey.showBottomView) ?: true,
     useFloatingBottomBar = compatDsBoolean(PreferKey.useFloatingBottomBar) ?: false,
@@ -252,6 +258,8 @@ internal fun AppShellSettings.toPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.showStatusBar to showStatusBar,
     PreferKey.swipeAnimation to swipeAnimation,
     PreferKey.isPredictiveBackEnabled to predictiveBackEnabled,
+    PreferKey.navigationAnimationStyle to navigationAnimationStyle.storedValue,
+    PreferKey.textAnimationLevel to textAnimationLevel.storedValue,
     PreferKey.readerSharedElementEnabled to readerSharedElementEnabled,
     PreferKey.showBottomView to showBottomView,
     PreferKey.useFloatingBottomBar to useFloatingBottomBar,
@@ -331,6 +339,9 @@ internal fun Preferences.toThemeSettings(): ThemeSettings = ThemeSettings(
     useFlexibleTopAppBar = compatDsBoolean(PreferKey.useFlexibleTopAppBar) ?: true,
     topBarButtonStyle = compatDsString(PreferKey.topBarButtonStyle) ?: "tonal",
     mergeTopBarActions = compatDsBoolean(PreferKey.mergeTopBarActions) ?: false,
+    mochiTopBarLiquidGlass = compatDsBoolean(PreferKey.mochiTopBarLiquidGlass) ?: true,
+    mochiScrollEdgeBlurEnabled = compatDsBoolean(PreferKey.mochiScrollEdgeBlurEnabled) ?: true,
+    miuixTopBarLiquidGlass = compatDsBoolean(PreferKey.miuixTopBarLiquidGlass) ?: false,
     bookInfoFollowCoverColor = compatDsBoolean(PreferKey.bookInfoFollowCoverColor) ?: true,
     bookInfoNetworkCoverBackground =
         compatDsString(PreferKey.bookInfoNetworkCoverBackground) ?: "on",
@@ -414,6 +425,9 @@ internal fun ThemeSettings.toGatewayPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.useFlexibleTopAppBar to useFlexibleTopAppBar,
     PreferKey.topBarButtonStyle to topBarButtonStyle,
     PreferKey.mergeTopBarActions to mergeTopBarActions,
+    PreferKey.mochiTopBarLiquidGlass to mochiTopBarLiquidGlass,
+    PreferKey.mochiScrollEdgeBlurEnabled to mochiScrollEdgeBlurEnabled,
+    PreferKey.miuixTopBarLiquidGlass to miuixTopBarLiquidGlass,
     PreferKey.bookInfoFollowCoverColor to bookInfoFollowCoverColor,
     PreferKey.bookInfoNetworkCoverBackground to bookInfoNetworkCoverBackground,
     PreferKey.bookInfoDefaultCoverBackground to bookInfoDefaultCoverBackground,
@@ -449,7 +463,8 @@ internal fun Preferences.toOtherSettings(): OtherSettings {
     val rawSourceEditMaxLine = compatDsInt(PreferKey.sourceEditMaxLine) ?: Int.MAX_VALUE
     return OtherSettings(
         updateToVariant = compatDsString(PreferKey.updateToVariant) ?: "official_version",
-        autoCheckUpdateOnStart = compatDsBoolean(PreferKey.autoCheckUpdateOnStart) ?: false,
+        updateEndpoint = compatDsString(PreferKey.updateEndpoint) ?: "auto",
+        autoCheckUpdateOnStart = compatDsBoolean(PreferKey.autoCheckUpdateOnStart) ?: true,
         webServiceAutoStart = compatDsBoolean(PreferKey.webServiceAutoStart) ?: false,
         autoRefresh = compatDsBoolean(PreferKey.autoRefresh) ?: false,
         defaultToRead = compatDsBoolean(PreferKey.defaultToRead) ?: false,
@@ -478,6 +493,7 @@ internal fun Preferences.toOtherSettings(): OtherSettings {
 
 internal fun OtherSettings.toPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.updateToVariant to updateToVariant,
+    PreferKey.updateEndpoint to updateEndpoint,
     PreferKey.autoCheckUpdateOnStart to autoCheckUpdateOnStart,
     PreferKey.webServiceAutoStart to webServiceAutoStart,
     PreferKey.autoRefresh to autoRefresh,

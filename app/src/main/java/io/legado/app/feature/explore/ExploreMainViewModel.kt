@@ -212,7 +212,6 @@ class ExploreMainViewModel(
 
     override fun onCleared() {
         viewModelStore.clear()
-        super.onCleared()
     }
 
     /** 分类页各自持有 ExploreShowViewModel，换源时必须整体释放，否则旧源的列表会留在内存里。 */

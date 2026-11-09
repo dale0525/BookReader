@@ -1,3 +1,5 @@
+@file:OptIn(androidx.media3.common.util.UnstableApi::class)
+
 package io.legado.app.ui.book.video
 
 import android.app.Activity

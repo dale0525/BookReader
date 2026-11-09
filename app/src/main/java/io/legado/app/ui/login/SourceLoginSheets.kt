@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.net.Uri
 import android.net.http.SslError
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -42,10 +43,11 @@ import androidx.compose.ui.unit.dp
 import io.legado.app.R
 import io.legado.app.constant.AppConst
 import io.legado.app.data.entities.rule.ExploreKind
+import io.legado.app.help.http.handleRenderProcessGone
 import io.legado.app.ui.widget.components.modalBottomSheet.MarkdownSheet
 import io.legado.app.ui.rss.read.VisibleWebViewCompose
+import io.legado.app.ui.theme.ComposeEngine
 import io.legado.app.ui.theme.LegadoTheme
-import io.legado.app.ui.theme.ThemeResolver
 import io.legado.app.ui.widget.components.AppTextField
 import io.legado.app.ui.widget.components.button.series.MediumTonalButton
 import io.legado.app.ui.widget.components.explore.ExploreKindMultiTypeItem
@@ -233,7 +235,7 @@ private fun SourceLoginRow(
                 modifier = modifier,
                 backgroundColor = LegadoTheme.colorScheme.surface,
                 minHeight = 44.dp,
-                isMiuix = ThemeResolver.isMiuixEngine(LegadoTheme.composeEngine),
+                isMiuix = LegadoTheme.composeEngine == ComposeEngine.Miuix,
                 displayNameOverride = row.title,
                 valueOverride = value,
                 onValueChange = onValueChange,
@@ -308,7 +310,8 @@ private fun SourceLoginWebSheet(
     }
 }
 
-@SuppressLint("SetJavaScriptEnabled", "WebViewClientOnReceivedSslError")
+// MissingOnRenderProcessGone：该规则按 Java PSI 查构造调用，看不到 Kotlin 匿名对象里的 override。
+@SuppressLint("SetJavaScriptEnabled", "WebViewClientOnReceivedSslError", "MissingOnRenderProcessGone")
 @Composable
 private fun SourceLoginWebView(
     state: SourceLoginUiState,
@@ -351,6 +354,12 @@ private fun SourceLoginWebView(
                         @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
                         override fun shouldOverrideUrlLoading(view: WebView, url: String) =
                             handleUrl(Uri.parse(url))
+
+                        // 渲染进程被系统回收时默认会连带杀掉宿主进程
+                        override fun onRenderProcessGone(
+                            view: WebView,
+                            detail: RenderProcessGoneDetail,
+                        ): Boolean = view.handleRenderProcessGone()
 
                         private fun handleUrl(uri: Uri): Boolean {
                             if (uri.scheme == "http" || uri.scheme == "https") return false

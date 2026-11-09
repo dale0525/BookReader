@@ -133,7 +133,7 @@ val appDb by lazy {
 }
 
 @Database(
-    version = 134,
+    version = 135,
     exportSchema = true,
     entities = [Book::class, BookGroup::class, BookSource::class, BookChapter::class,
         ReplaceRule::class, SearchBook::class, SearchKeyword::class, Cookie::class,
@@ -281,6 +281,9 @@ val appDb by lazy {
         // 上游原本把它放在 132→133，但 133 已随 0.1.0 发出去（那版删的是 AI 对话两张表），
         // 同一个版本号不能换 schema，所以边框三列改落在 134。
         AutoMigration(from = 133, to = 134),
+        // 旧下载记录只有成功文件清单，无法从中判断是否整章完成。
+        // 上游把它放在 133→134，但该版本号已被 fork 的边框三列占用，顺延到 135。
+        AutoMigration(from = 134, to = 135),
     ]
 )
 abstract class AppDatabase : RoomDatabase() {

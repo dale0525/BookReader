@@ -1,11 +1,14 @@
 package io.legado.app.ui.book.manga
 
+import android.content.Intent
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.core.net.toUri
 import kotlinx.collections.immutable.toImmutableList
 import org.koin.androidx.compose.koinViewModel
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -36,6 +39,7 @@ import io.legado.app.ui.main.readerSharedBounds
 import io.legado.app.utils.NetworkUtils
 import io.legado.app.utils.openUrl
 import io.legado.app.utils.share
+import io.legado.app.utils.takePersistablePermissionSafely
 import io.legado.app.utils.toggleSystemBar
 import kotlinx.coroutines.flow.collectLatest
 

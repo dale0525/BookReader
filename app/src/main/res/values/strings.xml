@@ -35,6 +35,17 @@
     <string name="manual_contrast_value_label">Manual value [-1, 1]</string>
     <string name="manual_contrast_invalid">Enter a valid number between -1 and 1</string>
     <string name="predictive_back">Predictive Back Gestures</string>
+    <string name="navigation_animation">Navigation Animation</string>
+    <string name="navigation_animation_scale">Scale</string>
+    <string name="text_animation_level">Text animation level</string>
+    <string name="text_animation_slide">Slide (default)</string>
+    <string name="text_animation_subtle">Subtle</string>
+    <string name="text_animation_standard">Standard</string>
+    <string name="text_animation_strong">Pronounced</string>
+    <string name="text_animation_preview">Text animation preview</string>
+    <string name="text_animation_preview_summary">Tap to change the sample text</string>
+    <string name="text_animation_example_reading">Reading</string>
+    <string name="text_animation_example_finished">Finished</string>
     <string name="reader_shared_element">Reader shared element transition</string>
     <string name="reader_shared_element_summary">Expand the cover when opening the reader. Use a fade transition when disabled.</string>
     <string name="predictive_back_summary">Enable system predictive back gestures</string>
@@ -749,6 +760,8 @@
     <string name="black">Black</string>
     <string name="content_empty">No content</string>
     <string name="on_change_source">Changing source, wait please</string>
+    <string name="local_manga_requires_reader">Open local comics in the manga reader.</string>
+    <string name="local_manga_directory_unavailable">Cannot access this local comic. Reselect its folder to grant access.</string>
     <string name="chapter_list_empty">Chapters is empty</string>
     <string name="text_letter_spacing">Word spacing</string>
 
@@ -1714,6 +1727,11 @@
     <string name="update_to_variant_summary">Look for other signature variants when checking for updates</string>
     <string name="auto_check_update_on_start_title">Check for updates on startup</string>
     <string name="auto_check_update_on_start_summary">Only checks after the app process fully restarts; returning from the background will not trigger a check</string>
+    <string name="update_endpoint_title">Update Source</string>
+    <string name="update_endpoint_summary">Try GitHub first and fall back to a mirror; you can also pin a single source</string>
+    <string name="update_endpoint_auto">Auto (GitHub first, mirror on failure)</string>
+    <string name="update_endpoint_github">GitHub only</string>
+    <string name="update_endpoint_mirror">Mirror only</string>
     <string name="default_version">Current</string>
     <string name="official_version">Official</string>
     <string name="beta_release_version">Beta</string>
@@ -1953,6 +1971,19 @@
     <string name="start_downloading_chapter">Downloading chapter</string>
     <string name="all_chapters_cached">All chapters are cached</string>
     <string name="start_downloading_remaining_chapters">Downloading remaining %1$d chapters</string>
+    <string name="start_cache">Start caching</string>
+    <string name="cache_range_title">Range</string>
+    <string name="cache_range_after_current">After this chapter</string>
+    <string name="cache_range_from_current">From this chapter</string>
+    <string name="cache_range_all">Whole book</string>
+    <string name="cache_progress_summary">%1$d / %2$d chapters cached</string>
+    <string name="cache_progress_loading">Counting cached chapters…</string>
+    <string name="cache_range_summary">%1$d chapters selected, cached ones are skipped</string>
+    <string name="cache_range_summary_pending">%1$d chapters selected, %2$d without cached text</string>
+    <string name="cache_range_out_of_range">Enter a chapter number between 1 and %1$d</string>
+    <string name="cache_range_order_error">Start chapter must not be after end chapter</string>
+    <string name="cache_range_empty_toc">The chapter list is empty</string>
+    <string name="cache_task_running">Waiting %1$d · Downloading %2$d · Paused %3$d · Failed %4$d</string>
     <string name="read_end">Finished Reading</string>
     <string name="system_engine">System Engine</string>
     <string name="copy_from">Import from Clipboard</string>
@@ -1969,6 +2000,8 @@
     <string name="show_bottom_nav">Show Navigation Bar</string>
     <string name="floating_bottom_bar">Floating Bottom Bar</string>
     <string name="floating_bottom_bar_summary">Use a detached capsule style for the bottom navigation bar</string>
+    <string name="top_bar_button_liquid_glass">Liquid Glass Top Bar Buttons</string>
+    <string name="top_bar_button_liquid_glass_summary">Enable backdrop blur and refraction on top bar buttons. Requires Android 13 or later.</string>
     <string name="floating_bottom_bar_liquid_glass">Liquid Glass Effect</string>
     <string name="floating_bottom_bar_liquid_glass_summary">Enable the liquid glass highlight for the floating bar. Requires blur and Android 13+</string>
     <string name="nav_label_mode">Navigation Bar Label Mode</string>
@@ -2599,6 +2632,10 @@
     <string name="folder_list_style">Folder List Style</string>
     <string name="horizontal_cover_count">Horizontal Cover Count</string>
     <string name="grid_cover_width">Grid Cover Width</string>
+    <string name="bookshelf_grid_fixed_columns">Fixed Column Count</string>
+    <string name="bookshelf_grid_fixed_columns_summary">When off, columns follow the cover width</string>
+    <string name="bookshelf_grid_fixed_cover_width">Fixed Cover Width</string>
+    <string name="bookshelf_grid_fixed_cover_width_summary">When off, covers fill the column width and scale with the column count</string>
     <string name="day_card_bg_color">Day Card Background Color</string>
     <string name="night_card_bg_color">Night Card Background Color</string>
     <string name="compact_details">Compact Details</string>
@@ -3806,6 +3843,8 @@
     <string name="read_aloud_audio_download_chapter_bar">Chapters</string>
     <string name="read_aloud_audio_download_chapter_hint">This chapter is downloaded (%1$d sentences); reading aloud plays the local audio</string>
     <string name="read_aloud_audio_download_chapter_none">This chapter is not downloaded yet</string>
+    <string name="read_aloud_audio_download_partial">%1$d/%2$d sentences downloaded</string>
+    <string name="read_aloud_audio_download_unverified">%1$d sentences saved. Run the download again to verify the chapter.</string>
     <string name="read_aloud_audio_download_sentence_bar">Sentences</string>
     <string name="read_aloud_audio_download_downloaded">Downloaded chapters</string>
     <string name="read_aloud_audio_download_empty">Nothing downloaded yet</string>
@@ -3815,6 +3854,8 @@
     <string name="read_aloud_audio_download_deleted_chapters">Deleted downloaded audio of %1$d chapters</string>
     <string name="read_aloud_audio_download_invalid_range">Check the chapter range</string>
     <string name="read_aloud_audio_download_state">Audiobook downloaded</string>
+    <string name="read_aloud_audio_download_partial_state">Audiobook partially downloaded</string>
+    <string name="read_aloud_audio_download_unverified_state">Audiobook audio saved. Chapter completeness unverified</string>
     <string name="read_aloud_audio_download_section_range">Range</string>
     <string name="read_aloud_audio_download_range_count">%1$d chapters</string>
     <string name="read_aloud_audio_download_section_progress">Progress</string>
@@ -3903,6 +3944,9 @@
     <string name="a11y_reorder_position">Position %1$d of %2$d</string>
     <string name="bubble_config">Paragraph bubbles</string>
     <string name="bubble_config_entry_summary">Bubble styles used by paragraph comments</string>
+    <string name="paragraph_comment_height">Paragraph comment popup height</string>
+    <string name="paragraph_comment_height_follow_source">Follow book source</string>
+    <string name="paragraph_comment_height_percent">%1$d%%</string>
     <string name="bubble_config_summary">Paragraph bubbles turn the comment counters in a book source into native SVG bubbles. Tap a style to apply it.</string>
     <string name="bubble_force_software">Always draw software bubbles</string>
     <string name="bubble_force_software_desc">Detect comment entries that a book source draws as images and render them with the current bubble style</string>

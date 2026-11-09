@@ -3,6 +3,7 @@ package io.legado.app.ui.book.read
 import android.net.Uri
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
+import io.legado.app.domain.model.readaloud.ReadAloudProgress
 import io.legado.app.constant.ReadMenuBlurMode
 import io.legado.app.constant.ReadMenuBlurStyle
 import io.legado.app.data.entities.Book
@@ -204,6 +205,22 @@ data class ReadSheetConfigUiState(
     val configNames: ImmutableList<String> = persistentListOf(),
 )
 
+/**
+ * 离线缓存弹窗的范围预览。
+ *
+ * [pendingChapters] 只按「正文是否已存在」统计（与目录的已缓存判定一致），
+ * 严格的图片完整性判定留到派发时逐章进行，避免打开弹窗就扫全书的图片索引。
+ */
+@Stable
+data class CacheRangePreview(
+    val bookUrl: String,
+    val start: Int,
+    val end: Int,
+    val totalChapters: Int,
+    val cachedChapters: Int,
+    val pendingChapters: Int,
+)
+
 /** 书签/笔记跳转前校验未通过的目标，弹「仍跳转」确认框。 */
 @Stable
 data class PendingBookmarkTarget(
@@ -281,6 +298,8 @@ data class ReadBookUiState(
     val activeDialog: ReadBookDialog? = null,
     /** 书签/笔记跳转前校验不通过时的待确认目标（弹确认框）。 */
     val pendingBookmarkTarget: PendingBookmarkTarget? = null,
+    /** 离线缓存弹窗的范围预览，由输入防抖后回填。 */
+    val cacheRangePreview: CacheRangePreview? = null,
     // Menu state (for overflow menu)
     val isLocalTxt: Boolean = false,
     val isEpub: Boolean = false,
@@ -921,7 +940,7 @@ sealed interface ReadBookIntent {
 
     // Media / TTS
     data class MediaButtonPressed(val play: Boolean) : ReadBookIntent
-    data class TtsProgress(val chapterStart: Int) : ReadBookIntent
+    data class TtsProgress(val progress: ReadAloudProgress) : ReadBookIntent
 
     // Dialog callback bridge
     data object ReadAloudAction : ReadBookIntent
@@ -1124,6 +1143,9 @@ sealed interface ReadBookIntent {
     // Download chapters
     data class DownloadChapters(val start: Int, val end: Int) : ReadBookIntent
 
+    // 预览离线缓存范围：弹窗输入防抖后触发，只回填计数
+    data class ScanCacheRange(val start: Int, val end: Int) : ReadBookIntent
+
     // Save chapter content (from chapter source change)
     data class SaveChapterContent(val content: String, val chapterIndex: Int) : ReadBookIntent
 
@@ -1260,8 +1282,8 @@ sealed interface ReadBookEffect {
     data class InvalidateReaderImage(val source: String) : ReadBookEffect
     data class InvalidateReaderImages(val sources: Set<String>) : ReadBookEffect
 
-    // Download chapters — Activity calls CacheBook.start()
-    data class DownloadChapters(val start: Int, val end: Int) : ReadBookEffect
+    // Download chapters — Activity calls CacheBook.start()；只带真正需要下载的章节（已剔除卷与已缓存）
+    data class DownloadChapters(val indices: List<Int>) : ReadBookEffect
 
     // Other route-level Activity operations
     data object SetOrientation : ReadBookEffect
@@ -2006,6 +2028,9 @@ sealed interface ConfigUpdate {
     }
 
     data class BookmarkBadgeSize(val value: Int) : ConfigUpdate {
+        override val actions = emptySet<ConfigUpdateAction>()
+    }
+    data class ParagraphCommentHeight(val percent: Int) : ConfigUpdate {
         override val actions = emptySet<ConfigUpdateAction>()
     }
     data class SliderVibrator(val value: Boolean) : ConfigUpdate {

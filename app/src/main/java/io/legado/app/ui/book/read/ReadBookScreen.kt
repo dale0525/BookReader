@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -312,7 +313,7 @@ fun ReadBookScreen(
     // Keep each layer keyed and mounted until its own sheet exit animation has finished.
     // Native modal windows must be created in stack order, including after recreation.
     val layers = remember { androidx.compose.runtime.mutableStateListOf<ReaderSheetLayer>() }
-    var nextLayerId by rememberSaveable { mutableStateOf(0L) }
+    var nextLayerId by rememberSaveable { mutableLongStateOf(0L) }
     var activeLayerIds by rememberSaveable { mutableStateOf<Map<String, Long>>(emptyMap()) }
     LaunchedEffect(state.sheetStack) {
         val previous = layers.filter { it.present }
@@ -663,6 +664,7 @@ private fun ReadBookSheetContent(
         MoreConfigSheet(
             show = visibleState.findSheet<ReadBookSheet.MoreConfig>() != null,
             onDismissRequest = dismissSheet(visibleState.findSheet<ReadBookSheet.MoreConfig>()),
+            preferences = preferences,
             onIntent = onIntent,
             onOpenClickRegionalConfig = {
                 onIntent(ReadBookIntent.ShowSheet(ReadBookSheet.ClickActionConfig))
@@ -851,6 +853,10 @@ private fun ReadBookSheetContent(
 
                 is ReadBookSheet.Download -> {
                     DownloadSheet(
+                        preview = state.cacheRangePreview,
+                        onScanRange = { start, end ->
+                            onIntent(ReadBookIntent.ScanCacheRange(start, end))
+                        },
                         onDismissRequest = dismissSheet,
                         onDownload = { start, end ->
                             onIntent(ReadBookIntent.DismissSheet)
