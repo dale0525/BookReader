@@ -25,6 +25,9 @@ jobs:
         with:
           # COMMIT_NUMBER 用提交总数换算 versionCode，需要完整历史。
           fetch-depth: 0
+          # 上游把 miuix/coui/mochi 拆成 git 子模块，settings.gradle 会校验
+          # modules/miuix/settings.gradle.kts 是否存在，未初始化直接抛 GradleException。
+          submodules: true
 
       - name: Set up JDK 21
         uses: actions/setup-java@v5
@@ -34,6 +37,10 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      # 子模块只是源码，COUI/Mochi 的 Maven 产物仍需在 CI 内构建（无发布凭据）。
+      - name: Prepare pinned UI forks
+        uses: ./.github/actions/prepare-ui-forks
 
       # settings.gradle 里的 aliyun 镜像面向国内开发机，在 GitHub runner 上会 502，
       # 且 Gradle 一旦判定某仓库失败就整个禁用它。
