@@ -41,10 +41,6 @@
     <string name="text_animation_subtle">轻柔</string>
     <string name="text_animation_standard">标准</string>
     <string name="text_animation_strong">明显</string>
-    <string name="text_animation_preview">文字动画示例</string>
-    <string name="text_animation_preview_summary">点按切换示例文字</string>
-    <string name="text_animation_example_reading">正在阅读</string>
-    <string name="text_animation_example_finished">已读完</string>
     <string name="reader_shared_element">阅读界面共享元素动画</string>
     <string name="reader_shared_element_summary">进入阅读界面时从封面展开，关闭后使用渐变过渡</string>
     <string name="predictive_back_summary">启用系统预见性返回手势</string>
@@ -459,7 +455,6 @@
     <string name="book_source_export_failed">导出失败：%1$s</string>
     <string name="book_source_upload_success">上传成功：%1$s</string>
     <string name="book_source_upload_failed">上传失败：%1$s</string>
-    <string name="check_select_source">校验所选</string>
     <string name="progress_show">%1$s      进度 %2$d/%3$d</string>
     <string name="tts_fix">请安装并选择中文 TTS！</string>
     <string name="tts_init_failed">TTS 初始化失败！</string>
@@ -1236,8 +1231,8 @@
     <string name="autobackup_fail">自动备份失败\n%s</string>
     <string name="end">结束</string>
     <string name="custom_group_summary">关闭替换分组/开启添加分组</string>
-    <string name="pref_media_button_per_next">媒体按钮 • 上一首|下一首</string>
-    <string name="pref_media_button_per_next_summary">上一段|下一段/上一章|下一章</string>
+    <string name="pref_media_button_per_next">媒体按钮按章节切换</string>
+    <string name="pref_media_button_per_next_summary">开启后，通知栏、锁屏和耳机键的上一/下一用于切换章节；关闭时用于段落快进/后退</string>
     <string name="read_aloud_by_page_summary">及时翻页，翻页时会停顿一下</string>
     <string name="check_source_show_debug_message">校验显示详细信息</string>
     <string name="check_source_show_debug_message_summary">书源校验时显示网络请求步骤和时间</string>
@@ -1318,12 +1313,14 @@
 
     <!-- check source config string -->
     <string name="check_source_config">校验设置</string>
-    <string name="check_source_item">校验项目</string>
     <string name="check_source_timeout">单个书源校验超时（秒）</string>
+    <string name="check_source_thread_count">校验并发数（1-64）</string>
+    <string name="check_source_quick_mode">快速完整校验模式</string>
+    <string name="domain">域名</string>
+    <string name="write_source_comment">写入源注释</string>
     <string name="timeout">超时</string>
     <string name="seconds">秒</string>
     <string name="less_than">小于</string>
-    <string name="check_source_config_summary">校验超时: %1$s秒\n校验项目: %2$s</string>
     <string name="record_debug_log">记录调试日志</string>
     <string name="sub_dir">子文件夹</string>
     <string name="general">全局</string>
@@ -1936,15 +1933,18 @@
     <string name="dark_mode">深色</string>
     <string name="pure_black">纯黑深色模式</string>
     <string name="miuix_monet">自定义主题色</string>
-    <string name="miuix_monet_summary">为 Miuix 使用自定义主题配色</string>
+    <string name="miuix_monet_summary">为主题风格使用自定义配色，关闭时由内置配色决定</string>
     <string name="transparent_theme_alarm">透明主题请于设置背景图片后设置</string>
     <string name="seed_color_summary">使用种子颜色生成主题颜色</string>
     <string name="seed_color">种子色</string>
     <string name="custom_mode">自定义模式</string>
     <string name="be_swiped">仍可滑动切换页面</string>
     <string name="show_bottom_nav">显示导航栏</string>
+    <string name="use_pager_top_bar">横划顶栏</string>
+    <string name="use_pager_top_bar_summary">主页面使用 OxygenX 横划顶栏，并隐藏底部导航栏</string>
     <string name="floating_bottom_bar">悬浮底栏</string>
     <string name="floating_bottom_bar_summary">底部导航栏使用悬浮胶囊样式</string>
+    <string name="coui_floating_bottom_bar_summary">COUI 的底部导航固定使用悬浮样式</string>
     <string name="top_bar_button_liquid_glass">顶栏按钮液态玻璃</string>
     <string name="top_bar_button_liquid_glass_summary">为顶栏按钮启用背景模糊和折射，需要 Android 13 或更高版本</string>
     <string name="floating_bottom_bar_liquid_glass">液态玻璃效果</string>
@@ -2072,6 +2072,7 @@
     <string name="use_underline">总是使用下划线表示强调文本</string>
     <string name="adapt_special_style">适配特殊样式</string>
     <string name="compose_engine">主题风格</string>
+    <string name="coui_theme_requires_android_14">COUI（需要 Android 14 与系统模糊支持）</string>
     <string name="container_opacity">容器背景不透明度</string>
     <string name="container_opacity_summary">%d</string>
     <string name="top_bar_opacity">顶栏不透明度</string>
@@ -2338,6 +2339,7 @@
     <string name="ai_text_clean_rule_group">AI 净化</string>
     <string name="ai_text_clean_rule_created">已保存 AI 正文处理。</string>
     <string name="ai_text_rewrite">AI 改写</string>
+    <string name="extend_selection_to_next_page">向后扩展一页</string>
     <string name="ai_text_rewrite_saved">已保存 AI 改写。</string>
     <string name="ai_generate">生成</string>
     <string name="ai_rewrite_requirements">改写要求</string>
@@ -2746,6 +2748,9 @@
     <string name="switch_to_light_mode_action">切换到浅色模式</string>
     <string name="switch_action">切换</string>
     <string name="cover_albums">封面图集</string>
+    <string name="cover_picker_online_section">在线封面</string>
+    <string name="cover_picker_album_no_images">该封面图集暂无图片</string>
+    <string name="cover_picker_select_cover">选择封面：%1$s</string>
     <string name="manage_cover_albums">管理封面图集</string>
     <string name="select_cover_album">选择封面图集</string>
     <string name="cover_album_none">应用内置封面</string>
@@ -3090,6 +3095,8 @@
     <string name="cast_bgm_pool">背景音乐池</string>
     <string name="bgm_assign">背景音乐分配</string>
     <string name="bgm_assign_summary">在正文段首显示配乐胶囊，朗读时按场景播放背景音乐；胶囊只作视觉提示，朗读不会念出</string>
+    <string name="read_aloud_chapter_title">朗读章节标题</string>
+    <string name="read_aloud_chapter_title_summary">每章开头先念标题；关闭后从正文开始读，只有卷名没有正文的章节仍会念标题。与正文是否显示标题互不影响，修改后从下一章开始生效</string>
     <string name="cast_bgm_track">曲目</string>
     <string name="cast_bgm_scene_title">场景配乐</string>
     <string name="cast_bgm_scene_follow">跟随池随机播放</string>
@@ -3491,7 +3498,7 @@
     <string name="cache_maintenance_tab_wordcount">字数重算</string>
     <string name="cache_maintenance_action_scan">立即扫描</string>
     <string name="cache_maintenance_action_scanning">正在扫描 %1$d / %2$d，点击取消</string>
-    <string name="cache_maintenance_action_deleting">正在删除，点击取消</string>
+    <string name="cache_maintenance_action_deleting">正在删除 %1$d / %2$d，点击取消</string>
     <string name="cache_maintenance_action_recounting">正在重算 %1$d / %2$d，点击取消</string>
     <string name="cache_maintenance_action_select_all">全选 / 全不选</string>
     <string name="cache_maintenance_action_delete">删除选中</string>
@@ -3502,10 +3509,20 @@
     <string name="cache_maintenance_recount_desc">%1$d 章待重算</string>
     <string name="cache_maintenance_recount_blocked">%1$d 章既无缓存也无字数，整书字数保持为空</string>
     <string name="cache_maintenance_result_delete">已删除 %1$d 项，释放 %2$s</string>
-    <string name="cache_maintenance_result_delete_skipped">%1$d 本因正在下载或阅读被跳过</string>
+    <string name="cache_maintenance_result_delete_skipped">%1$d 本书未处理：正在下载或阅读、或章节列表读取失败</string>
+    <string name="cache_maintenance_result_delete_skipped_entries">%1$d 项因图片文件仍在使用而保留</string>
     <string name="cache_maintenance_result_recount">已更新 %1$d 章、%2$d 本书字数</string>
     <string name="cache_maintenance_confirm_delete_title">删除孤立章节缓存</string>
     <string name="cache_maintenance_confirm_delete_text">仅删除在书籍章节列表中查不到对应章节的缓存条目，删除后无法恢复。</string>
+    <string name="cache_maintenance_status_idle">尚未扫描</string>
+    <string name="cache_maintenance_status_running">任务执行中</string>
+    <string name="cache_maintenance_status_done">扫描完成</string>
+    <string name="cache_maintenance_intro_orphan">检查章节列表里已不存在、但磁盘上仍留着的正文缓存。进入本页不会自动执行任务，需点击下方「立即扫描」；扫描只读，不会删除任何文件。</string>
+    <string name="cache_maintenance_intro_wordcount">检查在线书籍的章节列表：章节有缓存却没记录字数时重算并写回；整本重算完成、且整书字数原本为空时，才汇总补回整书字数。进入本页不会自动执行，需点击下方「立即扫描」。</string>
+    <string name="cache_maintenance_scan_hint">只读扫描全部书籍；点击开始，执行中点进度行可取消。</string>
+    <string name="cache_maintenance_leave_confirm_title">任务进行中要离开？</string>
+    <string name="cache_maintenance_leave_confirm_text">正在执行的任务会被取消。已经完成的删除和字数写入无法回滚。</string>
+    <string name="cache_maintenance_result_cancelled">任务已取消，部分结果已提交，建议重新扫描确认当前状态。</string>
     <string name="tts_cache_total">缓存总量</string>
     <string name="tts_cache_file_count">%d 个文件</string>
     <string name="tts_cache_empty">暂无缓存音频</string>
@@ -3977,4 +3994,6 @@
     <string name="bubble_help_title">模板占位符</string>
     <string name="bubble_help_summary">${num} 与 ${color} 怎么用</string>
     <string name="bubble_help_body">书源把段评入口写成 &lt;img src=“dp:12,{...}”&gt;，其中的 12 会替换模板里的 ${num}；${color} 会被替换成上面配置的颜色（status=emphasis 时用强调色）。气泡包还可以把图片、字体放在 assets/ 下，用 asset://名称 引用。</string>
+    <string name="hyper_os4_components">HyperOS 4 风格组件</string>
+    <string name="hyper_os4_components_summary">在 Miuix 主题下使用玻璃顶栏、标签页与下拉菜单。需要 Android 13 与系统模糊支持。</string>
 </resources>

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.view.KeyEvent
 import android.view.WindowManager
 import androidx.core.net.toUri
+import io.legado.app.data.entities.Book
 import kotlinx.collections.immutable.toImmutableList
 import org.koin.androidx.compose.koinViewModel
 import androidx.activity.compose.LocalActivity
@@ -260,6 +261,11 @@ fun MangaReaderRouteScreen(
         ReaderBookSheetRoute(
             show = true,
             bookUrl = state.bookUrl,
+            book = Book(
+                bookUrl = state.bookUrl,
+                name = state.bookName,
+                author = state.bookAuthor,
+            ),
             initialTab = ReaderBookSheetTab.Toc,
             currentChapterIndex = state.pendingChapterIndex ?: state.chapterIndex,
             onDismissRequest = { viewModel.onIntent(MangaReaderIntent.DismissSheet) },

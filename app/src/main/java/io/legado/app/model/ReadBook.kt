@@ -37,6 +37,7 @@ import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.isLocalManga
 import io.legado.app.help.book.isLocalModified
 import io.legado.app.help.book.isLocalTxt
+import io.legado.app.help.book.isMarkdown
 import io.legado.app.help.book.isPdf
 import io.legado.app.help.book.isSameNameAuthor
 import io.legado.app.help.book.readSimulating
@@ -51,6 +52,7 @@ import io.legado.app.model.ReadBook.renderCallBack
 import io.legado.app.model.ReadBook.snapshot
 import io.legado.app.model.cache.CACHE_DOWNLOAD_RETRY_LIMIT
 import io.legado.app.model.localBook.LocalBook
+import io.legado.app.model.localBook.MarkdownFile
 import io.legado.app.model.localBook.TextFile
 import io.legado.app.model.reader.ReaderChapterInput
 import io.legado.app.model.reader.ReaderChapterInputWindow
@@ -66,6 +68,8 @@ import io.legado.app.ui.book.read.pageestimate.PageEstimateConfig
 import io.legado.app.ui.book.read.pageestimate.RoomExactChapterPageCountStore
 import io.legado.app.ui.book.read.pageestimate.WholeBookPageCoordinator
 import io.legado.app.ui.book.read.pageestimate.WholeBookPageState
+import io.legado.app.utils.HtmlFormatter
+import io.legado.app.utils.StringUtils
 import io.legado.app.utils.buildMainHandler
 import io.legado.app.utils.dpToPx
 import io.legado.app.utils.postEvent
@@ -338,6 +342,7 @@ object ReadBook : CoroutineScope by MainScope(), KoinComponent {
         readingAnchorJumpCount = 0
         webBookProgress = null
         TextFile.clear()
+        MarkdownFile.clear()
         requestWholeBookPageEstimate()
         synchronized(this) {
             loadingChapters.clear()
@@ -420,7 +425,7 @@ object ReadBook : CoroutineScope by MainScope(), KoinComponent {
             useZhLayout = ReadBookConfig.useZhLayout,
             textFullJustify = ReadBookConfig.textFullJustify,
             adaptSpecialStyle = readSettingsGateway.currentSettings.adaptSpecialStyle,
-            imageLayoutKey = book.getImageStyle().orEmpty(),
+            imageLayoutKey = "${book.getImageStyle().orEmpty()}|${style.density}",
             contentKey = buildString {
                 append(book.config.useReplaceRule)
                 append('|').append(book.config.delTag)
@@ -506,6 +511,19 @@ object ReadBook : CoroutineScope by MainScope(), KoinComponent {
                 chineseConverterType = readSettingsGateway.currentSettings.chineseConverterType,
             )
             val processed = processor.getContent(book, chapter, content, includeTitle = false, paragraphIndent = null, includePresentation = true)
+            // 仅补缺失字数，保留 TXT/Markdown 导入时的计数口径。
+            if (readSettingsGateway.currentSettings.tocCountWords
+                && !chapter.isVolume
+                && chapter.wordCount.isNullOrEmpty()
+            ) {
+                val readableLength = HtmlFormatter.countReadableTextLength(content)
+                if (readableLength > 0) {
+                    val wordCount = StringUtils.wordCountFormat(readableLength)
+                    withContext(IO) {
+                        appDb.bookChapterDao.upWordCount(book.bookUrl, chapter.url, wordCount)
+                    }
+                }
+            }
             wholeBookPageCoordinator.updateChapterContent(
                 chapterIndex = chapter.index,
                 actualLength = processed.textList
@@ -1785,6 +1803,9 @@ object ReadBook : CoroutineScope by MainScope(), KoinComponent {
             it.charset = charset
             if (it.isLocalTxt) {
                 TextFile.clear()
+                clearTextChapter()
+            } else if (it.isMarkdown) {
+                BookHelp.clearCache(it)
                 clearTextChapter()
             }
             callBack?.loadChapterList(it)

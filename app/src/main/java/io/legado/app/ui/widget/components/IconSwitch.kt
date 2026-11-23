@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
+import io.legado.app.ui.widget.components.coui.AppCouiSwitch
 import io.legado.app.ui.widget.components.mochi.AppMochiSwitch
 import io.legado.app.ui.theme.ComposeEngine
 import io.legado.app.ui.theme.LegadoTheme
@@ -32,6 +33,11 @@ fun AdaptiveSwitch(
 ) {
     val composeEngine = LegadoTheme.composeEngine
     when (composeEngine) {
+        ComposeEngine.Oxygen -> {
+            io.oxygenx.material3.ProvideMaterial3Content {
+                io.oxygenx.ui.basic.Switch(checked, onCheckedChange, modifier, enabled)
+            }
+        }
         ComposeEngine.Miuix -> {
             MiuixSwitch(
                 checked = checked,
@@ -48,6 +54,9 @@ fun AdaptiveSwitch(
         }
         ComposeEngine.Mochi -> {
             AppMochiSwitch(checked, onCheckedChange, modifier, enabled, includeStateSemantics)
+        }
+        ComposeEngine.Coui -> {
+            AppCouiSwitch(checked, onCheckedChange, modifier, enabled, includeStateSemantics)
         }
         ComposeEngine.Material -> {
             IconSwitch(
@@ -77,6 +86,11 @@ fun TinySwitch(
 ) {
     val composeEngine = LegadoTheme.composeEngine
     when (composeEngine) {
+        ComposeEngine.Oxygen -> {
+            io.oxygenx.material3.ProvideMaterial3Content {
+                io.oxygenx.ui.basic.Switch(checked, onCheckedChange, modifier.scale(0.9f), enabled)
+            }
+        }
         ComposeEngine.Miuix -> {
             MiuixSwitch(
                 checked = checked,
@@ -95,6 +109,9 @@ fun TinySwitch(
         }
         ComposeEngine.Mochi -> {
             AppMochiSwitch(checked, onCheckedChange, modifier, enabled, includeStateSemantics)
+        }
+        ComposeEngine.Coui -> {
+            AppCouiSwitch(checked, onCheckedChange, modifier.scale(0.9f), enabled, includeStateSemantics)
         }
         ComposeEngine.Material -> {
             IconSwitch(

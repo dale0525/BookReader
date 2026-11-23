@@ -60,6 +60,7 @@ import io.legado.app.help.book.ContentProcessor
 import io.legado.app.help.book.isEpub
 import io.legado.app.help.book.isLocal
 import io.legado.app.help.book.isLocalTxt
+import io.legado.app.help.book.isMarkdown
 import io.legado.app.help.book.isMobi
 import io.legado.app.help.book.removeType
 import io.legado.app.help.config.ReadBookConfig
@@ -624,10 +625,8 @@ class ReadBookViewModel(
         _uiState.update { it.copy(isAutoPage = active) }
     }
 
-    fun setTextSelectMenuConfig(value: String) {
-        viewModelScope.launch {
-            readSettingsRepository.update { it.copy(textSelectMenuConfig = value) }
-        }
+    fun setTextSelectMenuConfig(value: String) = viewModelScope.launch {
+        readSettingsRepository.update { it.copy(textSelectMenuConfig = value) }
     }
 
     /** 云端进度同步域；投影目标 isReadingProgressSyncConfigured 仍留在 UiState 供菜单读。 */
@@ -1092,9 +1091,9 @@ class ReadBookViewModel(
             // Menu actions
             is ReadBookIntent.MenuUpdateToc -> {
                 ReadBook.book?.let { book ->
-                    if (book.isEpub) {
+                    if (book.isEpub || book.isMarkdown) {
                         io.legado.app.help.book.BookHelp.clearCache(book)
-                        io.legado.app.model.localBook.EpubFile.clear()
+                        if (book.isEpub) io.legado.app.model.localBook.EpubFile.clear()
                     }
                     if (book.isMobi) {
                         io.legado.app.model.localBook.MobiFile.clear()
@@ -1395,9 +1394,9 @@ class ReadBookViewModel(
             is ReadBookIntent.SetSpeechAnalysisReasoningLevel -> readAloudDelegate.setSpeechAnalysisReasoningLevel(intent.value)
             is ReadBookIntent.SetUseMultiSpeaker ->
                 readAloudDelegate.setUseMultiSpeaker(intent.value)
-            is ReadBookIntent.SetMultiRoleCast ->
-                readAloudDelegate.setMultiRoleCast(intent.value)
+            is ReadBookIntent.SetMultiRoleCast -> readAloudDelegate.setMultiRoleCast(intent.value)
             is ReadBookIntent.SetBgmAssign -> readAloudDelegate.setBgmAssign(intent.value)
+            is ReadBookIntent.SetReadChapterTitle -> readAloudDelegate.setReadChapterTitle(intent.value)
             is ReadBookIntent.SetBgmVolume -> readAloudDelegate.setBgmVolume(intent.value)
             is ReadBookIntent.ConfirmRoleCast -> readAloudCastDelegate.confirm(intent)
             is ReadBookIntent.CreateRoleCast -> readAloudCastDelegate.create(intent)
@@ -1990,8 +1989,11 @@ class ReadBookViewModel(
         titleBottomSpacing = ReadBookConfig.titleBottomSpacing,
         titleColor = ReadBookConfig.titleColor,
         titleColorNight = ReadBookConfig.titleColorNight,
-        textColorDay = ReadBookConfig.textColor,
+        // 白天/夜间各自那一份（不是当前生效值）：规则弹层要能单独预览另一套。
+        textColorDay = ReadBookConfig.textColorDay,
         textColorNight = ReadBookConfig.textColorNight,
+        bgColorDay = ReadBookConfig.previewBackgroundColor(isNightTheme = false),
+        bgColorNight = ReadBookConfig.previewBackgroundColor(isNightTheme = true),
         textShadow = ReadBookConfig.textShadow,
         textShadowColor = ReadBookConfig.durConfig.curTextShadowColor(),
         shadowRadius = ReadBookConfig.shadowRadius,

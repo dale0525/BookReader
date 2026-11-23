@@ -157,7 +157,6 @@ object PreferKey {
     const val readUrlOpenInBrowser = "readUrlInBrowser"
     const val defaultBookTreeUri = "defaultBookTreeUri"
     const val importBookPath = "importBookPath"
-    const val checkSource = "checkSource"
     const val uploadRule = "uploadRule"
     const val tocUiUseReplace = "tocUiUseReplace"
     const val tocCountWords = "tocCountWords"
@@ -255,6 +254,7 @@ object PreferKey {
     const val mochiTopBarLiquidGlass = "mochiTopBarLiquidGlass"
     const val mochiScrollEdgeBlurEnabled = "mochiScrollEdgeBlurEnabled"
     const val miuixTopBarLiquidGlass = "miuixTopBarLiquidGlass"
+    const val useHyperOs4Components = "useHyperOs4Components"
     const val bookInfoFollowCoverColor = "bookInfoFollowCoverColor"
     const val bookInfoBackgroundBlur = "bookInfoBackgroundBlur"
     const val bookInfoNetworkCoverBackground = "bookInfoNetworkCoverBackground"
@@ -306,9 +306,15 @@ object PreferKey {
     const val multiRoleCast = "multiRoleCast"
     /** 背景音乐分配：正文段首配乐胶囊 + 朗读时的独立配乐轨。 */
     const val bgmAssign = "bgmAssign"
+    /**
+     * 朗读章节标题：与正文「标题位置=隐藏」独立——关掉标题显示、标题仍可能被念出来，
+     * 所以朗读侧单独给一个开关。
+     */
+    const val readAloudChapterTitle = "readAloudChapterTitle"
     const val themePref = "themePref"
     const val bookshelfSortOrder = "bookshelfSortOrder"
     const val showBottomView = "showBottomView"
+    const val usePagerTopBar = "usePagerTopBar"
     const val useFloatingBottomBar = "useFloatingBottomBar"
     const val useFloatingBottomBarLiquidGlass = "useFloatingBottomBarLiquidGlass"
     const val mangaScrollMode = "mangaScrollMode"

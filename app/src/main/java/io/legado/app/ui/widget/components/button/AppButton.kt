@@ -22,6 +22,13 @@ fun PrimaryButton(
     text: String
 ) {
     when (composeEngine) {
+        ComposeEngine.Oxygen -> {
+            io.oxygenx.material3.ProvideMaterial3Content {
+                io.oxygenx.ui.basic.Button(onClick, modifier, enabled) {
+                    io.legado.app.ui.widget.components.text.AppText(text)
+                }
+            }
+        }
         ComposeEngine.Miuix -> {
             MiuixButton(
                 onClick = onClick,
@@ -35,7 +42,7 @@ fun PrimaryButton(
         ComposeEngine.Mochi -> {
             AppMochiButton(onClick, modifier, enabled, text, MochiButtonStyle.Filled)
         }
-        ComposeEngine.Material -> {
+        ComposeEngine.Material, ComposeEngine.Coui -> {
             Button(
                 onClick = onClick,
                 modifier = modifier,
@@ -55,6 +62,13 @@ fun SecondaryButton(
     text: String
 ) {
     when (composeEngine) {
+        ComposeEngine.Oxygen -> {
+            io.oxygenx.material3.ProvideMaterial3Content {
+                io.oxygenx.ui.basic.Button(onClick, modifier, enabled, colors = io.oxygenx.ui.basic.ButtonDefaults.secondaryColors()) {
+                    io.legado.app.ui.widget.components.text.AppText(text)
+                }
+            }
+        }
         ComposeEngine.Miuix -> {
             MiuixButton(
                 onClick = onClick,
@@ -68,7 +82,7 @@ fun SecondaryButton(
         ComposeEngine.Mochi -> {
             AppMochiButton(onClick, modifier, enabled, text, MochiButtonStyle.Outlined)
         }
-        ComposeEngine.Material -> {
+        ComposeEngine.Material, ComposeEngine.Coui -> {
             OutlinedButton(
                 onClick = onClick,
                 modifier = modifier,

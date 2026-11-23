@@ -66,6 +66,9 @@ check_keyword "ToggleTranslation"      "翻译开关被加回" ""
 check_keyword "TranslateChapterUseCase" "章节翻译用例被加回" ""
 check_keyword "MangaLocalEngine"       "本地推理引擎被加回" "app/src/core|app/src/full"
 check_keyword "MANGA_LOCAL_ENGINE"     "本地推理构建开关被加回" ""
+# RSS 视频入口依赖上游播放器引擎，fork 用的是自研 VideoPlayScreen，不提供该入口。
+check_keyword "RssReadMenuPlayVideo"   "RSS 阅读页视频入口被加回" ""
+check_keyword "openRssArticle"         "RSS 视频改走上游播放器引擎" ""
 
 echo "== 3. 数据库 schema 是否含已删除的表 =="
 SCHEMA_DIR="app/schemas/io.legado.app.data.AppDatabase"

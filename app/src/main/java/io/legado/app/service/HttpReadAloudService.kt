@@ -52,6 +52,7 @@ import io.legado.app.domain.model.readaloud.SpeechEngineRoute
 import io.legado.app.domain.model.readaloud.SpeechRoleType
 import io.legado.app.domain.model.readaloud.SpeechVoiceRouter
 import io.legado.app.domain.model.readaloud.SystemTtsVoiceConfig
+import io.legado.app.domain.model.readaloud.shouldSpeakChapterTitle
 import io.legado.app.domain.model.settings.ReadAloudContentSplitMode
 import io.legado.app.domain.model.settings.ReadAloudSettings
 import io.legado.app.exception.NoStackTraceException
@@ -485,10 +486,10 @@ class HttpReadAloudService : BaseReadAloudService(),
     }
 
     /**
-     * 等到这一格**有音频可播**。就绪只看正式名非空，不看 [hasSpeakFile]：引擎拒掉的那一格
-     * （纯符号段只回 `TTS Generation Failed`）合成不出人声，循环给它的只有 [createSilentSound]
-     * 那份占位，而 [hasSpeakFile] 有意不把占位算成命中（占位是失败留下的空壳，认了等于把真失败的
-     * 句子永久静音）。两边共用 hasSpeakFile 的话这一格永远不就绪，续播要白等满
+     * 等到这一格**有音频可播**。就绪只看正式名非空，不看 [hasSpeakFile]：无可发音字符的那一格
+     * （空行、只剩角色标记、`——`/`……` 这类纯符号段）不请求引擎，循环给它的只有
+     * [createSilentSound] 那份占位，而 [hasSpeakFile] 有意不把占位算成命中（占位是空壳，认了等于
+     * 把这一句永久静音）。两边共用 hasSpeakFile 的话这一格永远不就绪，续播要白等满
      * [SPEAK_FILE_WAIT_MILLIS] 才退回 [play]，那段时间播放停死、引擎侧一个请求也没有，
      * 退回后整章重新请求一遍。
      *
@@ -1080,15 +1081,25 @@ class HttpReadAloudService : BaseReadAloudService(),
             paragraphs = readAloudChapter.canonicalSpeechParagraphs(splitByPage, splitPolicy),
             splitPolicy = splitPolicy,
         )
-        val queue = runCatching { buildPlaybackQueue(book.bookUrl, plan).withChapterTitle(displayTitle) }
-            .getOrDefault(ReadAloudPlaybackQueue.Empty)
+        // 与实时朗读共用同一条标题判定：预合成文件名与播放队列必须逐句对齐，
+        // 否则开关关掉后播放端少一条 cue，整章文件下标会错位
+        val paragraphs = readAloudChapter.readAloudParagraphs(splitByPage, splitPolicy)
+        val speakTitle = shouldSpeakChapterTitle(
+            readTitleEnabled = readAloudSettings.readChapterTitle,
+            title = displayTitle,
+            hasReadableParagraphs = paragraphs.isNotEmpty(),
+            startsAtChapterBeginning = true,
+        )
+        val queue = runCatching {
+            buildPlaybackQueue(book.bookUrl, plan)
+                .let { if (speakTitle) it.withChapterTitle(displayTitle) else it }
+        }.getOrDefault(ReadAloudPlaybackQueue.Empty)
         val contentList = if (!queue.isEmpty) {
             queue.cues.map { it.text }
         } else {
             // 与实时朗读同一份单元集合：不发声段不进列表，预合成文件名才会与播放时对上
-            listOf(displayTitle.trim()).filter { it.isNotEmpty() } +
-                    readAloudChapter.readAloudParagraphs(splitByPage, splitPolicy)
-                        .map { it.text }
+            val titleUnits = if (speakTitle) listOf(displayTitle.trim()).filter { it.isNotEmpty() } else emptyList()
+            titleUnits + paragraphs.map { it.text }
         }
         return PreDownloadChapter(displayTitle, queue, contentList)
     }

@@ -13,9 +13,14 @@ import top.yukonga.miuix.kmp.basic.CircularProgressIndicator as MiuixCircularPro
 fun AppCircularProgressIndicator(
     modifier: Modifier = Modifier,
     progress: Float? = null,
-    strokeWidth: Dp = 4.dp,
+    strokeWidth: Dp = if (composeEngine == ComposeEngine.Oxygen) io.oxygenx.ui.feedback.ProgressDefaults.CircularStroke else 4.dp,
 ) {
     when (composeEngine) {
+        ComposeEngine.Oxygen -> {
+            io.oxygenx.material3.ProvideMaterial3Content {
+                io.oxygenx.ui.feedback.CircularProgressIndicator(modifier = modifier, progress = progress, strokeWidth = strokeWidth)
+            }
+        }
         ComposeEngine.Miuix -> {
             MiuixCircularProgressIndicator(
                 modifier = modifier,
@@ -23,7 +28,7 @@ fun AppCircularProgressIndicator(
                 strokeWidth = strokeWidth,
             )
         }
-        ComposeEngine.Material, ComposeEngine.Mochi -> {
+        ComposeEngine.Material, ComposeEngine.Mochi, ComposeEngine.Coui -> {
             if (progress != null) {
                 CircularProgressIndicator(
                     progress = { progress },

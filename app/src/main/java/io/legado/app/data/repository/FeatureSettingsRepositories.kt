@@ -225,6 +225,7 @@ internal fun Preferences.toAppShellSettings(): AppShellSettings = AppShellSettin
     textAnimationLevel = TextAnimationLevel.fromStoredValue(compatDsString(PreferKey.textAnimationLevel)),
     readerSharedElementEnabled = compatDsBoolean(PreferKey.readerSharedElementEnabled) ?: true,
     showBottomView = compatDsBoolean(PreferKey.showBottomView) ?: true,
+    usePagerTopBar = compatDsBoolean(PreferKey.usePagerTopBar) ?: false,
     useFloatingBottomBar = compatDsBoolean(PreferKey.useFloatingBottomBar) ?: false,
     useFloatingBottomBarLiquidGlass =
         compatDsBoolean(PreferKey.useFloatingBottomBarLiquidGlass) ?: false,
@@ -262,6 +263,7 @@ internal fun AppShellSettings.toPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.textAnimationLevel to textAnimationLevel.storedValue,
     PreferKey.readerSharedElementEnabled to readerSharedElementEnabled,
     PreferKey.showBottomView to showBottomView,
+    PreferKey.usePagerTopBar to usePagerTopBar,
     PreferKey.useFloatingBottomBar to useFloatingBottomBar,
     PreferKey.useFloatingBottomBarLiquidGlass to useFloatingBottomBarLiquidGlass,
     PreferKey.tabletInterface to tabletInterface,
@@ -342,6 +344,7 @@ internal fun Preferences.toThemeSettings(): ThemeSettings = ThemeSettings(
     mochiTopBarLiquidGlass = compatDsBoolean(PreferKey.mochiTopBarLiquidGlass) ?: true,
     mochiScrollEdgeBlurEnabled = compatDsBoolean(PreferKey.mochiScrollEdgeBlurEnabled) ?: true,
     miuixTopBarLiquidGlass = compatDsBoolean(PreferKey.miuixTopBarLiquidGlass) ?: false,
+    useHyperOs4Components = compatDsBoolean(PreferKey.useHyperOs4Components) ?: false,
     bookInfoFollowCoverColor = compatDsBoolean(PreferKey.bookInfoFollowCoverColor) ?: true,
     bookInfoNetworkCoverBackground =
         compatDsString(PreferKey.bookInfoNetworkCoverBackground) ?: "on",
@@ -428,6 +431,7 @@ internal fun ThemeSettings.toGatewayPrefMap(): Map<String, Any?> = mapOf(
     PreferKey.mochiTopBarLiquidGlass to mochiTopBarLiquidGlass,
     PreferKey.mochiScrollEdgeBlurEnabled to mochiScrollEdgeBlurEnabled,
     PreferKey.miuixTopBarLiquidGlass to miuixTopBarLiquidGlass,
+    PreferKey.useHyperOs4Components to useHyperOs4Components,
     PreferKey.bookInfoFollowCoverColor to bookInfoFollowCoverColor,
     PreferKey.bookInfoNetworkCoverBackground to bookInfoNetworkCoverBackground,
     PreferKey.bookInfoDefaultCoverBackground to bookInfoDefaultCoverBackground,

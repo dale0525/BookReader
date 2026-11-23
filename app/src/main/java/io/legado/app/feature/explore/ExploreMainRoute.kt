@@ -57,7 +57,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import io.legado.app.R
+import io.legado.app.ui.main.LocalMainPageIndex
+import io.legado.app.ui.main.LocalMainPagerTopBarHost
+import io.legado.app.ui.main.MainPagerPageChromeEffect
 import io.legado.app.data.entities.rule.ExploreKind
 import io.legado.app.ui.theme.LegadoTheme
 import io.legado.app.ui.widget.components.AppScaffold
@@ -147,18 +153,14 @@ private fun SourceGridScreen(
     onIntent: (ExploreMainIntent) -> Unit,
     onOpenSource: (String) -> Unit,
 ) {
+    val pagerTopBarHost = LocalMainPagerTopBarHost.current
+    val mainPageIndex = LocalMainPageIndex.current
     val scrollBehavior = GlassTopAppBarDefaults.defaultScrollBehavior()
     var groupMenuExpanded by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
-    AppScaffold(
-        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
-        topBar = {
-            GlassMediumFlexibleTopAppBar(
-                title = stringResource(R.string.discovery),
-                scrollBehavior = scrollBehavior,
-                actions = {
+    val gridTopBarActions: @Composable RowScope.() -> Unit = {
                     TopBarActionButton(
                         onClick = { onIntent(ExploreMainIntent.ToggleSearch(!state.searchVisible)) },
                         imageVector = io.legado.app.ui.widget.components.icon.AppIcons.Search,
@@ -214,8 +216,8 @@ private fun SourceGridScreen(
                             }
                         }
                     }
-                },
-                bottomContent = {
+    }
+    val gridBottomContent: @Composable ColumnScope.() -> Unit = {
                     AnimatedVisibility(
                         visible = state.searchVisible,
                         enter = expandVertically() + fadeIn(),
@@ -228,8 +230,33 @@ private fun SourceGridScreen(
                             autoFocus = false,
                         )
                     }
-                },
-            )
+    }
+    if (pagerTopBarHost != null) {
+        MainPagerPageChromeEffect(
+            host = pagerTopBarHost,
+            pageIndex = mainPageIndex,
+            subtitle = state.selectedGroup.exploreGroupLabel(),
+            actions = gridTopBarActions,
+            bottomContent = gridBottomContent,
+        )
+    }
+
+    AppScaffold(
+        modifier = if (pagerTopBarHost != null) {
+            Modifier
+        } else {
+            Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+        },
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
+        topBar = {
+            if (pagerTopBarHost == null) {
+                GlassMediumFlexibleTopAppBar(
+                    title = stringResource(R.string.discovery),
+                    scrollBehavior = scrollBehavior,
+                    actions = gridTopBarActions,
+                    bottomContent = gridBottomContent,
+                )
+            }
         },
     ) { padding ->
         if (state.groups.isEmpty()) {
@@ -387,14 +414,11 @@ private fun SourceDetailScreen(
         koinViewModel(key = "$sourceUrl|${exploreKindKey(it)}")
     }
 
-    AppScaffold(
-        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
-        topBar = {
-            GlassMediumFlexibleTopAppBar(
-                title = state.openedSourceName ?: "",
-                scrollBehavior = scrollBehavior,
-                navigationIcon = { TopBarNavigationButton(onClick = onBack) },
-                actions = {
+    val pagerTopBarHost = LocalMainPagerTopBarHost.current
+    val mainPageIndex = LocalMainPageIndex.current
+
+    val detailTopBarActions: @Composable RowScope.() -> Unit = {
+        TopBarNavigationButton(onClick = onBack)
                     Box {
                         TopBarActionButton(
                             onClick = { menuExpanded = true },
@@ -440,8 +464,32 @@ private fun SourceDetailScreen(
                             )
                         }
                     }
-                },
-            )
+    }
+    if (pagerTopBarHost != null) {
+        MainPagerPageChromeEffect(
+            host = pagerTopBarHost,
+            pageIndex = mainPageIndex,
+            subtitle = state.openedSourceName,
+            actions = detailTopBarActions,
+        )
+    }
+
+    AppScaffold(
+        modifier = if (pagerTopBarHost != null) {
+            Modifier
+        } else {
+            Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+        },
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
+        topBar = {
+            if (pagerTopBarHost == null) {
+                GlassMediumFlexibleTopAppBar(
+                    title = state.openedSourceName ?: "",
+                    scrollBehavior = scrollBehavior,
+                    navigationIcon = { TopBarNavigationButton(onClick = onBack) },
+                    actions = detailTopBarActions,
+                )
+            }
         },
     ) { padding ->
         Column(

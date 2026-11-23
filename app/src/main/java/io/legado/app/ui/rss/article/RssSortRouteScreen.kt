@@ -16,6 +16,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.legado.app.R
+import io.legado.app.data.entities.RssArticle
 import io.legado.app.data.entities.RssReadRecord
 import io.legado.app.ui.rss.read.RedirectPolicy
 import io.legado.app.ui.widget.components.variable.VariableEditorUiState
@@ -184,6 +185,7 @@ fun RssSortRouteScreen(
                 paddingValues = paddingValues,
                 onRead = { article ->
                     viewModel.read(article)
+                    // `@js:` 链接是源内的分类跳转，交给上层按原路径处理
                     onOpenRead(article.title, article.origin, article.link, null)
                 }
             )

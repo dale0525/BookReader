@@ -30,6 +30,7 @@ import io.legado.app.help.book.getExportFileName
 import io.legado.app.help.book.isLocalManga
 import io.legado.app.help.book.isLocalModified
 import io.legado.app.help.book.isImage
+import io.legado.app.help.book.isParagraphBubbleImageSrc
 import io.legado.app.model.ReadBook
 import io.legado.app.model.localBook.LocalBook
 import io.legado.app.ui.main.MainActivity
@@ -387,6 +388,8 @@ class ExportBookService : BaseService(), KoinComponent {
             MixedContentSegments.toPlainText(content.orEmpty()).split("\n").forEachIndexed { index, text ->
                 for (m in AppPattern.imgPattern.findAll(text)) {
                     m.groupValues[1].takeIf { it.isNotEmpty() }?.let {
+                        // 段评气泡是排版时现算的，没有可导出的图片文件（#2593）
+                        if (isParagraphBubbleImageSrc(it)) return@let
                         val src = NetworkUtils.getAbsoluteURL(chapter.url, it)
                         srcList.add(SrcData(chapter, index, src))
                     }
@@ -662,6 +665,8 @@ class ExportBookService : BaseService(), KoinComponent {
             var text1 = text
             for (m in AppPattern.imgPattern.findAll(text)) {
                 m.groupValues[1].takeIf { it.isNotEmpty() }?.let { rawSrc ->
+                    // 气泡没有对应的 Images/* 资源；改写会把能渲染的气泡换成坏链（#2593）
+                    if (isParagraphBubbleImageSrc(rawSrc)) return@let
                     val src = NetworkUtils.getAbsoluteURL(chapter.url, rawSrc)
                     val originalHref =
                         "${MD5Utils.md5Encode16(src)}.${BookHelp.getImageSuffix(src)}"

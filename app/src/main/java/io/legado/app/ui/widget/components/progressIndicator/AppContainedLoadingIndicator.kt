@@ -14,12 +14,17 @@ fun AppContainedLoadingIndicator(
     modifier: Modifier = Modifier,
 ) {
     when (composeEngine) {
+        ComposeEngine.Oxygen -> {
+            io.oxygenx.material3.ProvideMaterial3Content {
+                io.oxygenx.ui.feedback.CircularProgressIndicator(modifier = modifier)
+            }
+        }
         ComposeEngine.Miuix -> {
             MiuixInfiniteProgressIndicator(
                 modifier = modifier,
             )
         }
-        ComposeEngine.Material, ComposeEngine.Mochi -> {
+        ComposeEngine.Material, ComposeEngine.Mochi, ComposeEngine.Coui -> {
             ContainedLoadingIndicator(
                 modifier = modifier
             )

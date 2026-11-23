@@ -5,4 +5,6 @@ enum class ComposeEngine {
     Material,
     Miuix,
     Mochi,
+    Coui,
+    Oxygen,
 }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -69,6 +70,7 @@ import io.legado.app.ui.theme.adaptiveContentPadding
 import io.legado.app.ui.theme.adaptiveContentPaddingOnlyVertical
 import io.legado.app.ui.theme.adaptiveHorizontalPadding
 import io.legado.app.ui.widget.components.AppFloatingActionButton
+import io.legado.app.ui.widget.components.coui.rememberAppVerticalOverscrollEffect
 import io.legado.app.ui.widget.components.AppScaffold
 import io.legado.app.ui.widget.components.LoadMoreFooter
 import io.legado.app.ui.widget.components.SearchBar
@@ -154,6 +156,7 @@ fun SearchScreen(
     var previewSharedCoverKey by remember { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
     val groupedListState = rememberLazyListState()
+    val suggestionsListState = rememberLazyListState()
     val lifecycleOwner = LocalLifecycleOwner.current
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -163,7 +166,7 @@ fun SearchScreen(
     val showSuggestionPanel = state.showSuggestions
     val latestQuery by rememberUpdatedState(state.query)
     val scrollBehavior = when (LegadoTheme.composeEngine) {
-        ComposeEngine.Miuix -> {
+        ComposeEngine.Oxygen, ComposeEngine.Miuix, ComposeEngine.Coui -> {
             GlassTopAppBarDefaults.defaultScrollBehavior()
         }
         ComposeEngine.Material, ComposeEngine.Mochi -> {
@@ -318,6 +321,12 @@ fun SearchScreen(
             Column {
                 GlassMediumFlexibleTopAppBar(
                     title = stringResource(R.string.search),
+                    isContentScrolled = when {
+                        showSuggestionPanel -> suggestionsListState.canScrollBackward
+                        state.results.isEmpty() -> false
+                        isSourceGroupedMode -> groupedListState.canScrollBackward
+                        else -> listState.canScrollBackward
+                    },
                     navigationIcon = {
                         TopBarNavigationButton(
                             onClick = onBack,
@@ -375,18 +384,9 @@ fun SearchScreen(
                         onQueryChange = { queryInput = it },
                         onSearch = submitSearch,
                         placeholder = searchLabel,
-                        trailingIcon = {
-                            if (queryInput.isNotEmpty()) {
-                                SmallPlainButton(
-                                    modifier = Modifier.padding(horizontal = 8.dp),
-                                    onClick = {
-                                        queryInput = ""
-                                        onIntent(SearchIntent.UpdateQuery(""))
-                                    },
-                                    icon = AppIcons.Close,
-                                    contentDescription = stringResource(R.string.clear)
-                                )
-                            }
+                        onClear = {
+                            queryInput = ""
+                            onIntent(SearchIntent.UpdateQuery(""))
                         },
                     )
                 }
@@ -422,6 +422,7 @@ fun SearchScreen(
                 if (isSuggestionVisible) {
                     SearchSuggestionPanel(
                         state = state,
+                        listState = suggestionsListState,
                         onUseHistory = { keyword ->
                             queryInput = keyword
                             onIntent(SearchIntent.UseHistoryKeyword(keyword))
@@ -477,6 +478,7 @@ fun SearchScreen(
                             ) { isSourceGrouped ->
                                 if (isSourceGrouped) {
                                     LazyColumn(
+                                        overscrollEffect = rememberAppVerticalOverscrollEffect(),
                                         state = groupedListState,
                                         modifier = Modifier.fillMaxSize(),
                                         contentPadding = adaptiveContentPaddingOnlyVertical(
@@ -532,6 +534,7 @@ fun SearchScreen(
                                     }
                                 } else {
                                     LazyColumn(
+                                        overscrollEffect = rememberAppVerticalOverscrollEffect(),
                                         modifier = Modifier.fillMaxSize(),
                                         state = listState,
                                         contentPadding = adaptiveContentPaddingOnlyVertical(
@@ -960,6 +963,7 @@ private data class SearchFloatingSummary(
 @Composable
 private fun SearchSuggestionPanel(
     state: SearchUiState,
+    listState: LazyListState,
     onUseHistory: (String) -> Unit,
     onDeleteHistory: (SearchKeyword) -> Unit,
     onOpenBook: (BookShelfItem) -> Unit,
@@ -971,7 +975,9 @@ private fun SearchSuggestionPanel(
     val lockedUrls = rememberPrivateLockedBookUrls(state.bookshelfHints.map { it.bookUrl })
     val visibleHints = state.bookshelfHints.filterNot { it.bookUrl in lockedUrls }
     LazyColumn(
+        overscrollEffect = rememberAppVerticalOverscrollEffect(),
         modifier = modifier,
+        state = listState,
         verticalArrangement = Arrangement.spacedBy(8.dp),
         contentPadding = adaptiveContentPadding(
             top = 8.dp,
@@ -1176,6 +1182,7 @@ private fun ExpandedSourceSheet(
         }
 
         LazyColumn(
+            overscrollEffect = rememberAppVerticalOverscrollEffect(),
             state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = adaptiveContentPaddingOnlyVertical(
