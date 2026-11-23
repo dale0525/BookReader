@@ -43,6 +43,15 @@ grep -rhno "entry<[A-Za-z0-9_]*>" --include=*.kt app/src/main \
 
 脚本只报告不改代码——自动删文件在误判时会静默破坏构建，报告误判只是多看一眼。发现新项就人工处理，并把新规则补进脚本的 `DELETED_PATHS` 或 `check_keyword` 调用。
 
+## 上游新测试会对着 fork 已删的实现断言
+
+上游把契约测试一起带进来时，`compileAppDebugKotlin` 不会报错——测试源码不在该任务的编译范围内，要跑 `compileAppDebugUnitTestKotlin` 才暴露。两类失效各有判法：
+
+- **引用了 fork 已删的符号**：如 `fullscreenOrientationOrNull` 只存在于上游播放器引擎。整个测试文件删掉，别为它恢复生产代码。
+- **引用了 fork 不存在的文件路径**：测试用 `sourceOf("io/legado/app/ui/main/explore/ExploreScreen.kt")` 这类路径找源码，fork 侧对应实现搬到了别处或形态不同。先确认该路径在 HEAD 与 fork 里都没有（`git cat-file -e HEAD:<path>`），再摘掉测试里与该路径相关的断言、常量与 ID 表；同文件其余断言（落在 fork 真实存在的路径上）保留。
+
+判据是「这条断言在 fork 上根本无对象」，不是「测试红了就删测试」。删完把文件的类注释一起改——留着描述已不存在页面的注释，下轮会有人照着它去补。
+
 ## 基准线由 merge 自己维护
 
 合并提交的第二个父提交就是上游基准线，`git merge-base HEAD upstream/main` 会算出同一个提交，下次合并只带入基准线之后的提交。**所以同步只能用 `git merge`**：`cherry-pick` 和 `rebase` 不产生基准线，下次会把同样的改动再拉一遍。
@@ -50,3 +59,5 @@ grep -rhno "entry<[A-Za-z0-9_]*>" --include=*.kt app/src/main \
 ## 验收
 
 `verifyConfigArchitecture` 必须过——它拦的正是 `data/`、`domain/` 反向 import UI 配置、`ui/` 里乱加 DAO 依赖这类合并时最容易带回来的架构漂移。再跑一次 `assembleAppDebug`，最后在模拟器上装一次确认数据库迁移没崩。
+
+`compileAppDebugKotlin` 过不代表测试源码能编译，合并后另跑一次 `:app:compileAppDebugUnitTestKotlin`。
